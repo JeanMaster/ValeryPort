@@ -43,7 +43,7 @@ ValeryPort/
 
 - Node.js v20+ (recomendado v24 LTS via nvm)
 - npm v11+
-- Docker Desktop (para PostgreSQL)
+- PostgreSQL v15+ (Local en WSL o Docker Desktop)
 
 ### 1. Clonar el repositorio
 
@@ -74,7 +74,19 @@ cp .env.example .env
 # Editar .env con tus credenciales si es necesario
 ```
 
-### 4. Iniciar PostgreSQL
+### 4. Iniciar Base de Datos
+
+#### Opción A: Local en WSL (Recomendado)
+
+```bash
+# Iniciar servicio PostgreSQL
+sudo service postgresql start
+
+# Verificar estado
+sudo service postgresql status
+```
+
+#### Opción B: Docker Desktop
 
 ```bash
 # En la raíz del proyecto
@@ -83,7 +95,7 @@ docker-compose up -d
 
 Esto iniciará:
 - PostgreSQL en `localhost:5432`
-- pgAdmin en `http://localhost:5050`
+- pgAdmin en `http://localhost:5050` (Solo si usas Docker)
 
 ### 5. Ejecutar migraciones de Prisma
 
@@ -124,16 +136,17 @@ npx prisma studio
 
 Abre en: `http://localhost:5555`
 
-### pgAdmin
+### Conexión a Base de Datos (pgAdmin / DBeaver)
 
-1. Acceder a: `http://localhost:5050`
-2. Login: `admin@valery.local` / `admin`
-3. Agregar servidor:
-   - **Host**: `postgres` (nombre del container)
-   - **Port**: `5432`
-   - **Database**: `valery_db`
-   - **Username**: `valery`
-   - **Password**: `valery_dev_password`
+Si usas un cliente externo (como pgAdmin en Windows o DBeaver):
+
+- **Host**: `localhost` (o `127.0.0.1`)
+- **Port**: `5432`
+- **Database**: `valery_db`
+- **Username**: `valery`
+- **Password**: `valery_dev_password`
+
+> **Nota**: Si usas pgAdmin vía Docker, el host debe ser `host.docker.internal` para conectar al PostgreSQL de WSL/Windows.
 
 ## 📚 Comandos Útiles
 
@@ -172,13 +185,22 @@ npx prisma studio          # GUI de base de datos
 npx prisma format          # Formatear schema.prisma
 ```
 
-### Docker
+### Docker (Opcional)
 
 ```bash
 docker-compose up -d        # Iniciar servicios
 docker-compose down         # Detener servicios
 docker-compose logs -f      # Ver logs
 docker-compose ps           # Ver estado de containers
+```
+
+### Base de Datos Local (WSL)
+
+```bash
+sudo service postgresql start    # Iniciar servicio
+sudo service postgresql stop     # Detener servicio
+sudo service postgresql restart  # Reiniciar servicio
+sudo -u postgres psql           # Acceder a consola SQL
 ```
 
 ## 🔐 Autenticación
