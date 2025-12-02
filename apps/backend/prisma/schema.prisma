@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Modelo inicial de Usuario
@@ -20,4 +21,53 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Client {
+  id            String   @id @default(uuid())
+  rif           String   @unique
+  comercialName String
+  legalName     String?
+  address       String?
+  phone         String?
+  email         String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("clients")
+}
+
+model Supplier {
+  id            String   @id @default(uuid())
+  rif           String   @unique
+  comercialName String
+  legalName     String?
+  contactName   String?
+  address       String?
+  phone         String?
+  email         String?
+  category      String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  sku         String   @unique
+  name        String
+  description String?
+  category    String?
+  salePrice   Decimal  @db.Decimal(10, 2)
+  costPrice   Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  unit        String   @default("UND")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("products")
 }

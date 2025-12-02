@@ -1,0 +1,55 @@
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ProductsService } from './products.service';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+
+@ApiTags('products')
+@Controller('products')
+export class ProductsController {
+    constructor(private readonly productsService: ProductsService) { }
+
+    @Post()
+    @ApiOperation({ summary: 'Crear un nuevo producto' })
+    @ApiResponse({ status: 201, description: 'Producto creado exitosamente' })
+    @ApiResponse({ status: 409, description: 'SKU ya registrado' })
+    create(@Body() createProductDto: CreateProductDto) {
+        return this.productsService.create(createProductDto);
+    }
+
+    @Get()
+    @ApiOperation({ summary: 'Listar todos los productos' })
+    @ApiQuery({ name: 'search', required: false, description: 'Buscar por nombre, SKU o categoría' })
+    @ApiQuery({ name: 'active', required: false, type: Boolean, description: 'Filtrar por activos' })
+    findAll(
+        @Query('search') search?: string,
+        @Query('active') active?: string,
+    ) {
+        const isActive = active === undefined ? true : active === 'true';
+        return this.productsService.findAll(search, isActive);
+    }
+
+    @Get(':id')
+    @ApiOperation({ summary: 'Obtener un producto por ID' })
+    @ApiResponse({ status: 200, description: 'Producto encontrado' })
+    @ApiResponse({ status: 404, description: 'Producto no encontrado' })
+    findOne(@Param('id') id: string) {
+        return this.productsService.findOne(id);
+    }
+
+    @Patch(':id')
+    @ApiOperation({ summary: 'Actualizar un producto' })
+    @ApiResponse({ status: 200, description: 'Producto actualizado' })
+    @ApiResponse({ status: 404, description: 'Producto no encontrado' })
+    update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+        return this.productsService.update(id, updateProductDto);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Eliminar un producto (soft delete)' })
+    @ApiResponse({ status: 200, description: 'Producto marcado como inactivo' })
+    @ApiResponse({ status: 404, description: 'Producto no encontrado' })
+    remove(@Param('id') id: string) {
+        return this.productsService.remove(id);
+    }
+}

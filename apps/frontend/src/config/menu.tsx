@@ -24,9 +24,19 @@ export const menuItems: MenuItem[] = [
         label: 'Dashboard',
     },
     {
+        key: '/clients',
+        icon: <TeamOutlined />,
+        label: 'Clientes',
+    },
+    {
         key: '/inventory',
         icon: <ShopOutlined />,
         label: 'Inventario',
+    },
+    {
+        key: '/suppliers',
+        icon: <ShoppingOutlined />,
+        label: 'Proveedores',
     },
     {
         key: '/sales',
