@@ -7,11 +7,44 @@ export interface Product {
     sku: string;
     name: string;
     description?: string;
-    category?: string;
-    salePrice: number;
+    categoryId: string;
+    category: {
+        id: string;
+        name: string;
+    };
+    subcategoryId?: string;
+    subcategory?: {
+        id: string;
+        name: string;
+    };
+    currencyId: string;
+    currency: {
+        id: string;
+        name: string;
+        symbol: string;
+    };
     costPrice: number;
+    salePrice: number;
+    offerPrice?: number;
+    wholesalePrice?: number;
     stock: number;
-    unit: string;
+    unitId: string;
+    unit: {
+        id: string;
+        name: string;
+        abbreviation: string;
+    };
+    secondaryUnitId?: string;
+    secondaryUnit?: {
+        id: string;
+        name: string;
+        abbreviation: string;
+    };
+    unitsPerSecondaryUnit?: number;
+    secondaryCostPrice?: number;
+    secondarySalePrice?: number;
+    secondaryOfferPrice?: number;
+    secondaryWholesalePrice?: number;
     active: boolean;
     createdAt: string;
     updatedAt: string;
@@ -21,19 +54,47 @@ export interface CreateProductDto {
     sku: string;
     name: string;
     description?: string;
-    category?: string;
-    salePrice: number;
+    categoryId: string;
+    subcategoryId?: string;
+    currencyId: string;
     costPrice: number;
+    salePrice: number;
+    offerPrice?: number;
+    wholesalePrice?: number;
     stock?: number;
-    unit?: string;
+    unitId: string;
+    secondaryUnitId?: string;
+    unitsPerSecondaryUnit?: number;
+    secondaryCostPrice?: number;
+    secondarySalePrice?: number;
+    secondaryOfferPrice?: number;
+    secondaryWholesalePrice?: number;
 }
 
-export interface UpdateProductDto extends Partial<CreateProductDto> { }
+export interface UpdateProductDto {
+    sku?: string;
+    name?: string;
+    description?: string;
+    categoryId?: string;
+    subcategoryId?: string;
+    currencyId?: string;
+    costPrice?: number;
+    salePrice?: number;
+    offerPrice?: number;
+    wholesalePrice?: number;
+    stock?: number;
+    unitId?: string;
+    secondaryUnitId?: string;
+    unitsPerSecondaryUnit?: number;
+    secondaryCostPrice?: number;
+    secondarySalePrice?: number;
+    secondaryOfferPrice?: number;
+    secondaryWholesalePrice?: number;
+}
 
 export const productsApi = {
-    getAll: async (search?: string): Promise<Product[]> => {
-        const params = search ? { search } : {};
-        const { data } = await axios.get(`${API_URL}/products`, { params });
+    getAll: async (): Promise<Product[]> => {
+        const { data } = await axios.get(`${API_URL}/products`);
         return data;
     },
 
@@ -52,8 +113,7 @@ export const productsApi = {
         return data;
     },
 
-    delete: async (id: string): Promise<Product> => {
-        const { data } = await axios.delete(`${API_URL}/products/${id}`);
-        return data;
+    delete: async (id: string): Promise<void> => {
+        await axios.delete(`${API_URL}/products/${id}`);
     },
 };

@@ -1,106 +1,146 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class ProductsService {
     constructor(private prisma: PrismaService) { }
 
-    /**
-     * Crear un nuevo producto
-     */
     async create(createProductDto: CreateProductDto) {
-        try {
-            const product = await this.prisma.product.create({
-                data: createProductDto,
+        // Validar que la subcategoría sea hija de la categoría
+        if (createProductDto.subcategoryId) {
+            const subcategory = await this.prisma.department.findUnique({
+                where: { id: createProductDto.subcategoryId },
+                select: { parentId: true },
             });
-            return {
-                ...product,
-                salePrice: Number(product.salePrice),
-                costPrice: Number(product.costPrice),
-            };
-        } catch (error) {
-            if (error.code === 'P2002') {
-                throw new ConflictException('El SKU ya está registrado');
+
+            if (!subcategory || subcategory.parentId !== createProductDto.categoryId) {
+                throw new BadRequestException(
+                    'La subcategoría seleccionada no pertenece a la categoría especificada',
+                );
             }
+        }
+
+        // Validar que los precios de venta sean >= precio de costo
+        this.validatePrices(createProductDto);
+
+        try {
+            return await this.prisma.product.create({
+                data: {
+                    ...createProductDto,
+                    costPrice: new Decimal(createProductDto.costPrice),
+                    salePrice: new Decimal(createProductDto.salePrice),
+                    offerPrice: createProductDto.offerPrice
+                        ? new Decimal(createProductDto.offerPrice)
+                        : null,
+                    wholesalePrice: createProductDto.wholesalePrice
+                        ? new Decimal(createProductDto.wholesalePrice)
+                        : null,
+                },
+                include: {
+                    category: { select: { id: true, name: true } },
+                    subcategory: { select: { id: true, name: true } },
+                    currency: { select: { id: true, name: true, symbol: true } },
+                    unit: { select: { id: true, name: true, abbreviation: true } },
+                    secondaryUnit: { select: { id: true, name: true, abbreviation: true } },
+                },
+            });
+        } catch (error) {
             throw error;
         }
     }
 
-    /**
-     * Listar todos los productos activos con filtros opcionales
-     */
-    async findAll(search?: string, active: boolean = true) {
-        const where: any = { active };
-
-        if (search) {
-            where.OR = [
-                { name: { contains: search, mode: 'insensitive' } },
-                { sku: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
-            ];
-        }
-
+    async findAll(active: boolean = true) {
         const products = await this.prisma.product.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
+            where: { active },
+            include: {
+                category: { select: { id: true, name: true } },
+                subcategory: { select: { id: true, name: true } },
+                currency: { select: { id: true, name: true, symbol: true } },
+                unit: { select: { id: true, name: true, abbreviation: true } },
+                secondaryUnit: { select: { id: true, name: true, abbreviation: true } },
+            },
+            orderBy: { name: 'asc' },
         });
 
-        // Convert Decimal to number for JSON serialization
-        return products.map(product => ({
-            ...product,
-            salePrice: Number(product.salePrice),
-            costPrice: Number(product.costPrice),
-        }));
+        return products.map((product) => this.convertDecimalsToNumber(product));
     }
 
-    /**
-     * Obtener un producto por ID
-     */
     async findOne(id: string) {
         const product = await this.prisma.product.findUnique({
             where: { id },
+            include: {
+                category: { select: { id: true, name: true } },
+                subcategory: { select: { id: true, name: true } },
+                currency: { select: { id: true, name: true, symbol: true } },
+                unit: { select: { id: true, name: true, abbreviation: true } },
+            },
         });
 
         if (!product) {
             throw new NotFoundException(`Producto con ID ${id} no encontrado`);
         }
 
-        return {
-            ...product,
-            salePrice: Number(product.salePrice),
-            costPrice: Number(product.costPrice),
-        };
+        return this.convertDecimalsToNumber(product);
     }
 
-    /**
-     * Actualizar un producto
-     */
     async update(id: string, updateProductDto: UpdateProductDto) {
         await this.findOne(id);
 
-        try {
-            const product = await this.prisma.product.update({
-                where: { id },
-                data: updateProductDto,
+        // Validar subcategoría si está presente
+        if (updateProductDto.subcategoryId && updateProductDto.categoryId) {
+            const subcategory = await this.prisma.department.findUnique({
+                where: { id: updateProductDto.subcategoryId },
+                select: { parentId: true },
             });
-            return {
-                ...product,
-                salePrice: Number(product.salePrice),
-                costPrice: Number(product.costPrice),
-            };
-        } catch (error) {
-            if (error.code === 'P2002') {
-                throw new ConflictException('El SKU ya está registrado por otro producto');
+
+            if (!subcategory || subcategory.parentId !== updateProductDto.categoryId) {
+                throw new BadRequestException(
+                    'La subcategoría seleccionada no pertenece a la categoría especificada',
+                );
             }
-            throw error;
         }
+
+        // Validar precios
+        if (
+            updateProductDto.costPrice !== undefined ||
+            updateProductDto.salePrice !== undefined ||
+            updateProductDto.offerPrice !== undefined ||
+            updateProductDto.wholesalePrice !== undefined
+        ) {
+            this.validatePrices(updateProductDto);
+        }
+
+        const updatedProduct = await this.prisma.product.update({
+            where: { id },
+            data: {
+                ...updateProductDto,
+                costPrice: updateProductDto.costPrice
+                    ? new Decimal(updateProductDto.costPrice)
+                    : undefined,
+                salePrice: updateProductDto.salePrice
+                    ? new Decimal(updateProductDto.salePrice)
+                    : undefined,
+                offerPrice: updateProductDto.offerPrice
+                    ? new Decimal(updateProductDto.offerPrice)
+                    : undefined,
+                wholesalePrice: updateProductDto.wholesalePrice
+                    ? new Decimal(updateProductDto.wholesalePrice)
+                    : undefined,
+            },
+            include: {
+                category: { select: { id: true, name: true } },
+                subcategory: { select: { id: true, name: true } },
+                currency: { select: { id: true, name: true, symbol: true } },
+                unit: { select: { id: true, name: true, abbreviation: true } },
+            },
+        });
+
+        return this.convertDecimalsToNumber(updatedProduct);
     }
 
-    /**
-     * Soft delete: marcar como inactivo
-     */
     async remove(id: string) {
         await this.findOne(id);
 
@@ -108,5 +148,43 @@ export class ProductsService {
             where: { id },
             data: { active: false },
         });
+    }
+
+    // Validar que los precios de venta sean >= costo
+    private validatePrices(dto: CreateProductDto | UpdateProductDto) {
+        const costPrice = dto.costPrice || 0;
+
+        if (dto.salePrice !== undefined && dto.salePrice < costPrice) {
+            throw new BadRequestException(
+                'El precio de venta no puede ser menor al precio de costo',
+            );
+        }
+
+        if (dto.offerPrice !== undefined && dto.offerPrice < costPrice) {
+            throw new BadRequestException(
+                'El precio en oferta no puede ser menor al precio de costo',
+            );
+        }
+
+        if (dto.wholesalePrice !== undefined && dto.wholesalePrice < costPrice) {
+            throw new BadRequestException(
+                'El precio al mayor no puede ser menor al precio de costo',
+            );
+        }
+    }
+
+    // Convertir Decimals a Numbers para JSON
+    private convertDecimalsToNumber(product: any) {
+        return {
+            ...product,
+            costPrice: Number(product.costPrice),
+            salePrice: Number(product.salePrice),
+            offerPrice: product.offerPrice ? Number(product.offerPrice) : null,
+            wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : null,
+            secondaryCostPrice: product.secondaryCostPrice ? Number(product.secondaryCostPrice) : null,
+            secondarySalePrice: product.secondarySalePrice ? Number(product.secondarySalePrice) : null,
+            secondaryOfferPrice: product.secondaryOfferPrice ? Number(product.secondaryOfferPrice) : null,
+            secondaryWholesalePrice: product.secondaryWholesalePrice ? Number(product.secondaryWholesalePrice) : null,
+        };
     }
 }

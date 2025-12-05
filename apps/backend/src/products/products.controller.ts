@@ -19,14 +19,10 @@ export class ProductsController {
 
     @Get()
     @ApiOperation({ summary: 'Listar todos los productos' })
-    @ApiQuery({ name: 'search', required: false, description: 'Buscar por nombre, SKU o categoría' })
     @ApiQuery({ name: 'active', required: false, type: Boolean, description: 'Filtrar por activos' })
-    findAll(
-        @Query('search') search?: string,
-        @Query('active') active?: string,
-    ) {
+    findAll(@Query('active') active?: string) {
         const isActive = active === undefined ? true : active === 'true';
-        return this.productsService.findAll(search, isActive);
+        return this.productsService.findAll(isActive);
     }
 
     @Get(':id')

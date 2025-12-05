@@ -5,7 +5,13 @@ import { ModulePage } from './pages/ModulePage';
 import { ClientsPage } from './features/clients/ClientsPage';
 import { SuppliersPage } from './features/suppliers/SuppliersPage';
 import { ProductsPage } from './features/products/ProductsPage';
+import { CompanySettingsPage } from './features/company-settings/CompanySettingsPage';
+import { DepartmentsPage } from './features/departments/DepartmentsPage';
+import { UnitsPage } from './features/units/UnitsPage';
+import { CurrenciesPage } from './features/currencies/CurrenciesPage';
+import { DevToolsPage } from './features/dev-tools/DevToolsPage';
 import {
+  ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
   DollarOutlined,
@@ -13,6 +19,7 @@ import {
   TeamOutlined,
   BankOutlined,
   BarChartOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 
 function App() {
@@ -21,15 +28,27 @@ function App() {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="clients" element={<ClientsPage />} />
-        <Route path="inventory" element={<ProductsPage />} />
+        <Route path="inventory/products" element={<ProductsPage />} />
+        <Route path="inventory/currencies" element={<CurrenciesPage />} />
+        <Route path="inventory/departments" element={<DepartmentsPage />} />
+        <Route path="inventory/units" element={<UnitsPage />} />
+        <Route path="inventory/services" element={<ModulePage title="Servicios (En Construcción)" icon={<ShopOutlined />} />} />
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
+        <Route path="sales/pos" element={<ModulePage title="Punto de Venta (En Construcción)" icon={<ShoppingCartOutlined />} />} />
+        <Route path="sales/returns" element={<ModulePage title="Devoluciones (En Construcción)" icon={<ShoppingCartOutlined />} />} />
+        <Route path="sales/cash-register" element={<ModulePage title="Caja (En Construcción)" icon={<DollarOutlined />} />} />
         <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
+        <Route path="purchases/reception" element={<ModulePage title="Recepción de Compra (En Construcción)" icon={<ShoppingOutlined />} />} />
+        <Route path="purchases/returns" element={<ModulePage title="Devoluciones de Compra (En Construcción)" icon={<ShoppingOutlined />} />} />
         <Route path="accounts-receivable" element={<ModulePage title="Cuentas por Cobrar" icon={<DollarOutlined />} />} />
         <Route path="accounts-payable" element={<ModulePage title="Cuentas por Pagar" icon={<CreditCardOutlined />} />} />
         <Route path="hr" element={<ModulePage title="Nómina" icon={<TeamOutlined />} />} />
         <Route path="banks" element={<ModulePage title="Bancos" icon={<BankOutlined />} />} />
         <Route path="reports" element={<ModulePage title="Reportes" icon={<BarChartOutlined />} />} />
+        <Route path="configuration/company" element={<CompanySettingsPage />} />
+        <Route path="configuration/dev-tools" element={<DevToolsPage />} />
+        <Route path="configuration/general" element={<ModulePage title="Opciones Generales (En Construcción)" icon={<SettingOutlined />} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

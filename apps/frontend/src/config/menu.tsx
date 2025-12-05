@@ -8,6 +8,7 @@ import {
     TeamOutlined,
     BankOutlined,
     BarChartOutlined,
+    SettingOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 
@@ -24,29 +25,73 @@ export const menuItems: MenuItem[] = [
         label: 'Dashboard',
     },
     {
-        key: '/clients',
-        icon: <TeamOutlined />,
-        label: 'Clientes',
-    },
-    {
         key: '/inventory',
         icon: <ShopOutlined />,
         label: 'Inventario',
-    },
-    {
-        key: '/suppliers',
-        icon: <ShoppingOutlined />,
-        label: 'Proveedores',
+        children: [
+            {
+                key: '/inventory/products',
+                label: 'Productos Terminados',
+            },
+            {
+                key: '/inventory/currencies',
+                label: 'Monedas',
+            },
+            {
+                key: '/inventory/departments',
+                label: 'Departamentos',
+            },
+            {
+                key: '/inventory/units',
+                label: 'Unidades',
+            },
+            {
+                key: '/inventory/services',
+                label: 'Servicios',
+            },
+        ],
     },
     {
         key: '/sales',
         icon: <ShoppingCartOutlined />,
         label: 'Ventas',
+        children: [
+            {
+                key: '/clients',
+                label: 'Clientes',
+            },
+            {
+                key: '/sales/pos',
+                label: 'Punto de Venta',
+            },
+            {
+                key: '/sales/returns',
+                label: 'Devoluciones',
+            },
+            {
+                key: '/sales/cash-register',
+                label: 'Caja',
+            },
+        ],
     },
     {
         key: '/purchases',
         icon: <ShoppingOutlined />,
         label: 'Compras',
+        children: [
+            {
+                key: '/suppliers',
+                label: 'Proveedores',
+            },
+            {
+                key: '/purchases/reception',
+                label: 'Recepción de Compra',
+            },
+            {
+                key: '/purchases/returns',
+                label: 'Devoluciones de Compra',
+            },
+        ],
     },
     {
         key: '/accounts-receivable',
@@ -72,5 +117,29 @@ export const menuItems: MenuItem[] = [
         key: '/reports',
         icon: <BarChartOutlined />,
         label: 'Reportes',
+    },
+    {
+        type: 'group',
+        label: '──────────────────',
+        children: [],
+    },
+    {
+        key: '/configuration',
+        icon: <SettingOutlined />,
+        label: 'Configuración',
+        children: [
+            {
+                key: '/configuration/company',
+                label: 'Datos de Empresa',
+            },
+            {
+                key: '/configuration/dev-tools',
+                label: 'Opciones de Desarrollador',
+            },
+            {
+                key: '/configuration/general',
+                label: 'Opciones Generales',
+            },
+        ],
     },
 ];

@@ -56,18 +56,112 @@ model Supplier {
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  sku         String   @unique
-  name        String
-  description String?
-  category    String?
-  salePrice   Decimal  @db.Decimal(10, 2)
-  costPrice   Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  unit        String   @default("UND")
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String      @id @default(uuid())
+  sku             String      @unique
+  name            String
+  description     String?
+  
+  // Categorías (relaciones con Department)
+  categoryId      String
+  category        Department  @relation("ProductCategory", fields: [categoryId], references: [id])
+  subcategoryId   String?
+  subcategory     Department? @relation("ProductSubcategory", fields: [subcategoryId], references: [id])
+  
+  // Moneda
+  currencyId      String
+  currency        Currency    @relation(fields: [currencyId], references: [id])
+  
+  // Precios (en la moneda seleccionada)
+  costPrice       Decimal     @db.Decimal(10, 2)
+  salePrice       Decimal     @db.Decimal(10, 2)
+  offerPrice      Decimal?    @db.Decimal(10, 2)
+  wholesalePrice  Decimal?    @db.Decimal(10, 2)
+  
+  // Inventario
+  stock           Int         @default(0)
+  
+  // Unidad principal (obligatoria)
+  unitId          String
+  unit            Unit        @relation("ProductPrimaryUnit", fields: [unitId], references: [id])
+  
+  // Unidad secundaria (opcional - ej: caja, paquete)
+  secondaryUnitId       String?
+  secondaryUnit         Unit?   @relation("ProductSecondaryUnit", fields: [secondaryUnitId], references: [id])
+  unitsPerSecondaryUnit Int?    // Cuántas unidades principales hay en la secundaria
+  
+  // Precios para unidad secundaria
+  secondaryCostPrice      Decimal? @db.Decimal(10, 2)
+  secondarySalePrice      Decimal? @db.Decimal(10, 2)
+  secondaryOfferPrice     Decimal? @db.Decimal(10, 2)
+  secondaryWholesalePrice Decimal? @db.Decimal(10, 2)
+  
+  active          Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   @@map("products")
+}
+
+model CompanySettings {
+  id        String   @id @default(uuid())
+  name      String
+  rif       String
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("company_settings")
+}
+
+model Department {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  parentId    String?
+  parent      Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Department[] @relation("DepartmentHierarchy")
+  
+  // Productos usando este departamento
+  productsAsCategory    Product[] @relation("ProductCategory")
+  productsAsSubcategory Product[] @relation("ProductSubcategory")
+  
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("departments")
+}
+
+model Unit {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  abbreviation String
+  
+  // Productos usando esta unidad
+  productsAsPrimary   Product[] @relation("ProductPrimaryUnit")
+  productsAsSecondary Product[] @relation("ProductSecondaryUnit")
+  
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("units")
+}
+
+model Currency {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  code         String   @unique
+  symbol       String
+  isPrimary    Boolean  @default(false)
+  exchangeRate Decimal? @db.Decimal(10, 4)
+  
+  // Productos en esta moneda
+  products     Product[]
+  
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("currencies")
 }

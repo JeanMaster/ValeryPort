@@ -1,51 +1,115 @@
-import { IsString, IsOptional, IsNotEmpty, IsNumber, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsInt, IsUUID, ValidateIf } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class CreateProductDto {
-    @ApiProperty({ example: 'PROD-001', description: 'SKU del producto (único)' })
+    @ApiProperty({ example: 'PROD-001', description: 'SKU del producto' })
     @IsNotEmpty({ message: 'El SKU es requerido' })
     @IsString()
     sku: string;
 
-    @ApiProperty({ example: 'Tornillo Phillips #8', description: 'Nombre del producto' })
+    @ApiProperty({ example: 'Martillo 16oz', description: 'Nombre del producto' })
     @IsNotEmpty({ message: 'El nombre es requerido' })
     @IsString()
     name: string;
 
-    @ApiProperty({ example: 'Tornillo metálico para madera', required: false })
+    @ApiProperty({ example: 'Martillo de acero con mango de fibra', required: false })
     @IsOptional()
     @IsString()
     description?: string;
 
-    @ApiProperty({ example: 'Ferretería', required: false })
+    @ApiProperty({ example: 'uuid-del-departamento', description: 'ID de la categoría (departamento principal)' })
+    @IsNotEmpty({ message: 'La categoría es requerida' })
+    @IsUUID()
+    categoryId: string;
+
+    @ApiProperty({ example: 'uuid-del-subdepartamento', required: false, description: 'ID de la subcategoría (subdepartamento)' })
     @IsOptional()
-    @IsString()
-    category?: string;
+    @IsUUID()
+    subcategoryId?: string;
 
-    @ApiProperty({ example: 15.50, description: 'Precio de venta' })
-    @IsNotEmpty({ message: 'El precio de venta es requerido' })
-    @Type(() => Number)
-    @IsNumber({}, { message: 'El precio de venta debe ser un número' })
-    @Min(0, { message: 'El precio de venta no puede ser negativo' })
-    salePrice: number;
+    @ApiProperty({ example: 'uuid-de-la-moneda', description: 'ID de la moneda' })
+    @IsNotEmpty({ message: 'La moneda es requerida' })
+    @IsUUID()
+    currencyId: string;
 
-    @ApiProperty({ example: 10.00, description: 'Precio de costo' })
-    @IsNotEmpty({ message: 'El precio de costo es requerido' })
+    @ApiProperty({ example: 10.50, description: 'Precio de costo' })
     @Type(() => Number)
-    @IsNumber({}, { message: 'El precio de costo debe ser un número' })
-    @Min(0, { message: 'El precio de costo no puede ser negativo' })
+    @IsNumber()
+    @Min(0, { message: 'El precio de costo debe ser mayor o igual a 0' })
     costPrice: number;
 
-    @ApiProperty({ example: 100, description: 'Cantidad en stock', required: false })
+    @ApiProperty({ example: 15.00, description: 'Precio de venta normal' })
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0, { message: 'El precio de venta debe ser mayor o igual a 0' })
+    salePrice: number;
+
+    @ApiProperty({ example: 12.00, required: false, description: 'Precio en oferta' })
     @IsOptional()
     @Type(() => Number)
-    @IsInt({ message: 'El stock debe ser un número entero' })
-    @Min(0, { message: 'El stock no puede ser negativo' })
+    @IsNumber()
+    @Min(0, { message: 'El precio en oferta debe ser mayor o igual a 0' })
+    offerPrice?: number;
+
+    @ApiProperty({ example: 13.50, required: false, description: 'Precio al mayor' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0, { message: 'El precio al mayor debe ser mayor o igual a 0' })
+    wholesalePrice?: number;
+
+    @ApiProperty({ example: 100, description: 'Stock inicial' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0, { message: 'El stock debe ser mayor o igual a 0' })
     stock?: number;
 
-    @ApiProperty({ example: 'UND', description: 'Unidad de medida (UND, KG, LTS, etc.)', required: false })
+    @ApiProperty({ example: 'uuid-de-la-unidad', description: 'ID de la unidad principal' })
+    @IsNotEmpty({ message: 'La unidad principal es requerida' })
+    @IsUUID()
+    unitId: string;
+
+    // Unidad secundaria
+    @ApiProperty({ example: 'uuid-de-la-unidad-secundaria', required: false, description: 'ID de la unidad secundaria' })
     @IsOptional()
-    @IsString()
-    unit?: string;
+    @IsUUID()
+    secondaryUnitId?: string;
+
+    @ApiProperty({ example: 12, required: false, description: 'Cantidad de unidades principales por unidad secundaria' })
+    @ValidateIf(o => o.secondaryUnitId)
+    @Type(() => Number)
+    @IsInt()
+    @Min(1, { message: 'Debe haber al menos 1 unidad principal por unidad secundaria' })
+    unitsPerSecondaryUnit?: number;
+
+    // Precios para unidad secundaria
+    @ApiProperty({ example: 100.00, required: false, description: 'Precio de costo para unidad secundaria' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    secondaryCostPrice?: number;
+
+    @ApiProperty({ example: 150.00, required: false, description: 'Precio de venta para unidad secundaria' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    secondarySalePrice?: number;
+
+    @ApiProperty({ example: 120.00, required: false, description: 'Precio en oferta para unidad secundaria' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    secondaryOfferPrice?: number;
+
+    @ApiProperty({ example: 135.00, required: false, description: 'Precio al mayor para unidad secundaria' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    secondaryWholesalePrice?: number;
 }
