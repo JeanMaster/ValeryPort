@@ -6,10 +6,12 @@ import { ClientsPage } from './features/clients/ClientsPage';
 import { SuppliersPage } from './features/suppliers/SuppliersPage';
 import { ProductsPage } from './features/products/ProductsPage';
 import { CompanySettingsPage } from './features/company-settings/CompanySettingsPage';
+import { GeneralOptionsPage } from './features/company-settings/GeneralOptionsPage';
 import { DepartmentsPage } from './features/departments/DepartmentsPage';
 import { UnitsPage } from './features/units/UnitsPage';
 import { CurrenciesPage } from './features/currencies/CurrenciesPage';
 import { DevToolsPage } from './features/dev-tools/DevToolsPage';
+import { POSPage } from './features/pos/POSPage';
 import {
   ShopOutlined,
   ShoppingCartOutlined,
@@ -19,7 +21,6 @@ import {
   TeamOutlined,
   BankOutlined,
   BarChartOutlined,
-  SettingOutlined,
 } from '@ant-design/icons';
 
 function App() {
@@ -35,7 +36,7 @@ function App() {
         <Route path="inventory/services" element={<ModulePage title="Servicios (En Construcción)" icon={<ShopOutlined />} />} />
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
-        <Route path="sales/pos" element={<ModulePage title="Punto de Venta (En Construcción)" icon={<ShoppingCartOutlined />} />} />
+        <Route path="sales/pos" element={<POSPage />} />
         <Route path="sales/returns" element={<ModulePage title="Devoluciones (En Construcción)" icon={<ShoppingCartOutlined />} />} />
         <Route path="sales/cash-register" element={<ModulePage title="Caja (En Construcción)" icon={<DollarOutlined />} />} />
         <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
@@ -48,9 +49,10 @@ function App() {
         <Route path="reports" element={<ModulePage title="Reportes" icon={<BarChartOutlined />} />} />
         <Route path="configuration/company" element={<CompanySettingsPage />} />
         <Route path="configuration/dev-tools" element={<DevToolsPage />} />
-        <Route path="configuration/general" element={<ModulePage title="Opciones Generales (En Construcción)" icon={<SettingOutlined />} />} />
+        <Route path="configuration/general" element={<GeneralOptionsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+
     </Routes>
   );
 }

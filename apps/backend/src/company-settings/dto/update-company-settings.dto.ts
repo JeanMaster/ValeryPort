@@ -16,4 +16,9 @@ export class UpdateCompanySettingsDto {
     @IsOptional()
     @IsString()
     logoUrl?: string;
+
+    @ApiProperty({ example: 'uuid-123', required: false, description: 'ID de la moneda secundaria preferida' })
+    @IsOptional()
+    @IsString()
+    preferredSecondaryCurrencyId?: string;
 }

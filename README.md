@@ -241,15 +241,21 @@ El ERP se divide en los siguientes módulos principales:
 6. **Contabilidad** - Asientos contables, reportes
 7. **Recursos Humanos** - Empleados, nómina
 
+### Funcionalidades Destacadas (POS)
+- **Interfaz Moderna**: React + Ant Design con navegación optimizada.
+- **Búsqueda Global**: Productos por SKU o nombre.
+- **Moneda Dual**: Visualización de precios en moneda local y divisa secundaria preferida en tiempo real.
+- **Navegación Jerárquica**: Departamentos -> Subdepartamentos -> Productos.
+
 ## 🚦 Estado del Proyecto
 
-**Fase Actual**: Fase 1 - Hello World con BD ✅
+**Fase Actual**: Fase 3 - POS Core & Checkout (En Progreso) 🚧
 
 - [x] Fase 0: Configuración del entorno
 - [x] Fase 1: Hello World con BD
-- [ ] Fase 2: Autenticación JWT
-- [ ] Fase 3: Módulo de Usuarios
-- [ ] Fase 4: Módulo de Inventario
+- [x] Fase 2: Módulos Base (Clientes, Proveedores, Productos)
+- [ ] Fase 3: Punto de Venta (POS) - En Progreso
+- [ ] Fase 4: Autenticación JWT
 - [ ] Fase 5: Módulo de Ventas
 - [ ] Fase 6: Módulo de Compras
 - [ ] Fase 7: Módulo de Contabilidad

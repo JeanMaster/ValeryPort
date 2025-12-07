@@ -1,8 +1,8 @@
 # 🏗️ Plan Maestro de Migración: Valery Corporativo (Legacy to Web)
 
 **Documento de Estrategia y Arquitectura**
-**Estado**: Borrador Inicial
-**Fecha**: 2025-11-29
+**Estado**: En Progreso (Fase 3: POS Core)
+**Fecha**: 2025-12-07
 
 ---
 
@@ -94,6 +94,14 @@ Dado que ya tenemos el entorno configurado (Paso 0 completado), ajustamos el pla
     -   Tabla de clientes con búsqueda y filtros.
     -   Formulario de creación/edición de clientes.
     -   Conexión real a base de datos.
+
+### 🚧 Paso 5: Punto de Venta (POS) (EN PROGRESO)
+-   **Objetivo**: Facturación rápida y eficiente.
+-   **Entregable**:
+    -   Interfaz optimizada para pantallas táctiles y teclado (F-Keys).
+    -   Soporte para múltiples monedas (Bs y Divisa) ✅
+    -   Manejo de carrito y cálculo de totales ✅
+    -   Modal de Cobro (Checkout) con múltiples formas de pago 🚧
 
 ---
 

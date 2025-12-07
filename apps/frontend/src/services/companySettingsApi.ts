@@ -7,6 +7,7 @@ export interface CompanySettings {
     name: string;
     rif: string;
     logoUrl?: string;
+    preferredSecondaryCurrencyId?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -15,6 +16,7 @@ export interface UpdateCompanySettingsDto {
     name: string;
     rif: string;
     logoUrl?: string;
+    preferredSecondaryCurrencyId?: string;
 }
 
 export const companySettingsApi = {

@@ -77,12 +77,22 @@ export class CreateProductDto {
     @IsUUID()
     secondaryUnitId?: string;
 
-    @ApiProperty({ example: 12, required: false, description: 'Cantidad de unidades principales por unidad secundaria' })
+    @ApiProperty({ example: 12, required: false, description: 'Cantidad para conversión entre unidades' })
     @ValidateIf(o => o.secondaryUnitId)
     @Type(() => Number)
     @IsInt()
-    @Min(1, { message: 'Debe haber al menos 1 unidad principal por unidad secundaria' })
+    @Min(1, { message: 'Debe haber al menos 1 en la conversión' })
     unitsPerSecondaryUnit?: number;
+
+    @ApiProperty({
+        example: 'primary_to_secondary',
+        required: false,
+        description: 'Dirección de conversión: primary_to_secondary (12 UND = 1 Caja) o secondary_to_primary (1 Rollo = 50 Metros)',
+        enum: ['primary_to_secondary', 'secondary_to_primary']
+    })
+    @IsOptional()
+    @IsString()
+    conversionDirection?: string;
 
     // Precios para unidad secundaria
     @ApiProperty({ example: 100.00, required: false, description: 'Precio de costo para unidad secundaria' })

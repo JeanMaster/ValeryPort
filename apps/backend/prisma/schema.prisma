@@ -87,7 +87,8 @@ model Product {
   // Unidad secundaria (opcional - ej: caja, paquete)
   secondaryUnitId       String?
   secondaryUnit         Unit?   @relation("ProductSecondaryUnit", fields: [secondaryUnitId], references: [id])
-  unitsPerSecondaryUnit Int?    // Cuántas unidades principales hay en la secundaria
+  unitsPerSecondaryUnit Int?    // Cantidad para conversión
+  conversionDirection   String? // "primary_to_secondary" o "secondary_to_primary"
   
   // Precios para unidad secundaria
   secondaryCostPrice      Decimal? @db.Decimal(10, 2)
@@ -107,6 +108,10 @@ model CompanySettings {
   name      String
   rif       String
   logoUrl   String?
+  
+  preferredSecondaryCurrencyId String?
+  preferredSecondaryCurrency   Currency? @relation(fields: [preferredSecondaryCurrencyId], references: [id])
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -159,6 +164,9 @@ model Currency {
   // Productos en esta moneda
   products     Product[]
   
+  // Configuraciones que usan esta moneda
+  companySettings CompanySettings[]
+
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

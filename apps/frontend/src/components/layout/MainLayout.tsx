@@ -170,8 +170,8 @@ export const MainLayout = () => {
                 </Header>
 
                 <Content style={{
-                    margin: '24px 16px',
-                    padding: 24,
+                    margin: location.pathname.includes('/pos') ? '0' : '24px 16px',
+                    padding: location.pathname.includes('/pos') ? 0 : 24,
                     background: '#fff',
                     minHeight: 280,
                 }}>

@@ -41,6 +41,7 @@ export interface Product {
         abbreviation: string;
     };
     unitsPerSecondaryUnit?: number;
+    conversionDirection?: string;
     secondaryCostPrice?: number;
     secondarySalePrice?: number;
     secondaryOfferPrice?: number;
@@ -65,6 +66,7 @@ export interface CreateProductDto {
     unitId: string;
     secondaryUnitId?: string;
     unitsPerSecondaryUnit?: number;
+    conversionDirection?: string;
     secondaryCostPrice?: number;
     secondarySalePrice?: number;
     secondaryOfferPrice?: number;
@@ -86,6 +88,7 @@ export interface UpdateProductDto {
     unitId?: string;
     secondaryUnitId?: string;
     unitsPerSecondaryUnit?: number;
+    conversionDirection?: string;
     secondaryCostPrice?: number;
     secondarySalePrice?: number;
     secondaryOfferPrice?: number;
@@ -93,8 +96,15 @@ export interface UpdateProductDto {
 }
 
 export const productsApi = {
-    getAll: async (): Promise<Product[]> => {
-        const { data } = await axios.get(`${API_URL}/products`);
+    getAll: async (filters: { active?: boolean; search?: string; categoryId?: string; subcategoryId?: string } = {}): Promise<Product[]> => {
+        const { active, search, categoryId, subcategoryId } = filters;
+        const params = new URLSearchParams();
+        if (active !== undefined) params.append('active', String(active));
+        if (search) params.append('search', search);
+        if (categoryId) params.append('categoryId', categoryId);
+        if (subcategoryId) params.append('subcategoryId', subcategoryId);
+
+        const { data } = await axios.get(`${API_URL}/products`, { params });
         return data;
     },
 

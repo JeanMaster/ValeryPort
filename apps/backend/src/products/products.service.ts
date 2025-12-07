@@ -52,9 +52,28 @@ export class ProductsService {
         }
     }
 
-    async findAll(active: boolean = true) {
+    async findAll(options: { active?: boolean; search?: string; categoryId?: string; subcategoryId?: string } = {}) {
+        const { active = true, search, categoryId, subcategoryId } = options;
+
+        const where: any = { active };
+
+        if (categoryId) {
+            where.categoryId = categoryId;
+        }
+
+        if (subcategoryId) {
+            where.subcategoryId = subcategoryId;
+        }
+
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' } },
+                { sku: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
         const products = await this.prisma.product.findMany({
-            where: { active },
+            where,
             include: {
                 category: { select: { id: true, name: true } },
                 subcategory: { select: { id: true, name: true } },

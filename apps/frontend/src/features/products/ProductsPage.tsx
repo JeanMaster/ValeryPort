@@ -15,7 +15,7 @@ export const ProductsPage = () => {
     // Fetch products
     const { data: products = [], isLoading } = useQuery({
         queryKey: ['products'],
-        queryFn: productsApi.getAll,
+        queryFn: () => productsApi.getAll(),
     });
 
     // Delete mutation

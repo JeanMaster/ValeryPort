@@ -18,6 +18,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
     const queryClient = useQueryClient();
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
     const [hasSecondaryUnit, setHasSecondaryUnit] = useState(false);
+    const [conversionDirection, setConversionDirection] = useState<string>('primary_to_secondary');
 
     // Fetch departments
     const { data: departments = [] } = useQuery({
@@ -99,6 +100,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                 : 0;
 
             setHasSecondaryUnit(!!product.secondaryUnitId);
+            setConversionDirection(product.conversionDirection || 'primary_to_secondary');
 
             form.setFieldsValue({
                 sku: product.sku,
@@ -110,6 +112,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                 unitId: product.unitId,
                 secondaryUnitId: product.secondaryUnitId,
                 unitsPerSecondaryUnit: product.unitsPerSecondaryUnit,
+                conversionDirection: product.conversionDirection || 'primary_to_secondary',
                 costPrice: product.costPrice,
                 stock: product.stock,
                 salePrice: product.salePrice,
@@ -151,6 +154,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                 unitId: values.unitId,
                 secondaryUnitId: values.secondaryUnitId,
                 unitsPerSecondaryUnit: values.unitsPerSecondaryUnit,
+                conversionDirection: values.conversionDirection,
                 secondaryCostPrice: values.secondaryCostPrice,
                 secondarySalePrice: values.secondarySalePrice,
                 secondaryOfferPrice: values.secondaryOfferPrice,
@@ -244,6 +248,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
             // Limpiar campos si se quita la unidad secundaria
             form.setFieldsValue({
                 unitsPerSecondaryUnit: undefined,
+                conversionDirection: 'primary_to_secondary',
                 secondaryCostPrice: undefined,
                 secondarySalePrice: undefined,
                 secondaryOfferPrice: undefined,
@@ -260,6 +265,8 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
     // Calcular precios secundarios automáticamente desde unitarios
     const calculateSecondaryPrices = () => {
         const unitsPerSecondary = form.getFieldValue('unitsPerSecondaryUnit');
+        const direction = form.getFieldValue('conversionDirection');
+
         if (!unitsPerSecondary) return;
 
         const costPrice = form.getFieldValue('costPrice') || 0;
@@ -267,13 +274,21 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
         const offerPrice = form.getFieldValue('offerPrice');
         const wholesalePrice = form.getFieldValue('wholesalePrice');
 
-        // Costo secundario = costo unitario × cantidad
-        const secondaryCost = Number((costPrice * unitsPerSecondary).toFixed(2));
+        // Función helper para calcular según dirección
+        const calculateVal = (val: number) => {
+            if (direction === 'secondary_to_primary') {
+                return Number((val / unitsPerSecondary).toFixed(2));
+            }
+            return Number((val * unitsPerSecondary).toFixed(2));
+        };
+
+        // Costo secundario
+        const secondaryCost = calculateVal(costPrice);
         form.setFieldValue('secondaryCostPrice', secondaryCost);
 
         // Calcular precios y % de ganancia
         if (salePrice) {
-            const secondarySale = Number((salePrice * unitsPerSecondary).toFixed(2));
+            const secondarySale = calculateVal(salePrice);
             const secondarySalePercent = secondaryCost > 0
                 ? calculatePercentFromPrice(secondaryCost, secondarySale)
                 : 0;
@@ -281,7 +296,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
             form.setFieldValue('secondarySaleProfitPercent', Number(secondarySalePercent.toFixed(2)));
         }
         if (offerPrice) {
-            const secondaryOffer = Number((offerPrice * unitsPerSecondary).toFixed(2));
+            const secondaryOffer = calculateVal(offerPrice);
             const secondaryOfferPercent = secondaryCost > 0
                 ? calculatePercentFromPrice(secondaryCost, secondaryOffer)
                 : 0;
@@ -289,7 +304,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
             form.setFieldValue('secondaryOfferProfitPercent', Number(secondaryOfferPercent.toFixed(2)));
         }
         if (wholesalePrice) {
-            const secondaryWholesale = Number((wholesalePrice * unitsPerSecondary).toFixed(2));
+            const secondaryWholesale = calculateVal(wholesalePrice);
             const secondaryWholesalePercent = secondaryCost > 0
                 ? calculatePercentFromPrice(secondaryCost, secondaryWholesale)
                 : 0;
@@ -668,8 +683,12 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                     <>
                         <Divider>Unidad Secundaria</Divider>
                         <Alert
-                            message="Precios para empaque/agrupación"
-                            description="Define cuántas unidades principales contiene la unidad secundaria y sus precios. Los precios se calculan automáticamente multiplicando el precio unitario por la cantidad."
+                            message="Configuración de Conversión"
+                            description={
+                                conversionDirection === 'primary_to_secondary'
+                                    ? `La Unidad Secundaria (ej: Caja) contiene varias Unidades Principales.`
+                                    : `La Unidad Principal (ej: Rollo) contiene varias Unidades Secundarias.`
+                            }
                             type="info"
                             showIcon
                             style={{ marginBottom: 16 }}
@@ -677,12 +696,35 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                         <Row gutter={16}>
                             <Col span={12}>
                                 <Form.Item
-                                    label="Cantidad por Unidad Secundaria"
+                                    label="Tipo de Conversión"
+                                    name="conversionDirection"
+                                    initialValue="primary_to_secondary"
+                                >
+                                    <Select
+                                        onChange={(value) => {
+                                            setConversionDirection(value);
+                                            calculateSecondaryPrices();
+                                        }}
+                                        options={[
+                                            { value: 'primary_to_secondary', label: 'Principal → Secundaria (Multiplicar)' },
+                                            { value: 'secondary_to_primary', label: 'Secundaria → Principal (Dividir)' },
+                                        ]}
+                                    />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    label="Cantidad en la Conversión"
                                     name="unitsPerSecondaryUnit"
+                                    help={
+                                        conversionDirection === 'primary_to_secondary'
+                                            ? 'Ej: 1 Caja = 12 Unidades'
+                                            : 'Ej: 1 Rollo = 50 Metros'
+                                    }
                                     rules={[{ required: hasSecondaryUnit, message: 'Requerido' }]}
                                 >
                                     <InputNumber
-                                        placeholder="Ej: 12 unidades por caja"
+                                        placeholder="Cantidad"
                                         style={{ width: '100%' }}
                                         precision={0}
                                         min={1}

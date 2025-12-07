@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Button, Modal, Alert, Space, Typography, Divider } from 'antd';
-import { DatabaseOutlined, WarningOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Button, Modal, Alert, Space, Typography, Divider, Upload, Input } from 'antd';
+import { DatabaseOutlined, WarningOutlined, ReloadOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
 import { devToolsApi } from '../../services/devToolsApi';
 
@@ -8,6 +8,11 @@ const { Title, Paragraph } = Typography;
 
 export const DevToolsPage = () => {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+    // Estados para restauración
+    const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
+    const [restoreFile, setRestoreFile] = useState<File | null>(null);
+    const [confirmText, setConfirmText] = useState('');
 
     const resetMutation = useMutation({
         mutationFn: devToolsApi.resetDatabase,
@@ -33,12 +38,37 @@ export const DevToolsPage = () => {
         },
     });
 
+    const restoreMutation = useMutation({
+        mutationFn: devToolsApi.restoreBackup,
+        onSuccess: (data) => {
+            Modal.success({
+                title: '✅ Base de Datos Restaurada',
+                content: data.message,
+            });
+            setIsRestoreConfirmOpen(false);
+            setRestoreFile(null);
+            setConfirmText('');
+        },
+        onError: (error: any) => {
+            Modal.error({
+                title: '❌ Error de Restauración',
+                content: error.response?.data?.message || 'Error al restaurar la base de datos',
+            });
+        },
+    });
+
     const handleResetClick = () => {
         setIsConfirmModalOpen(true);
     };
 
     const handleConfirmReset = () => {
         resetMutation.mutate();
+    };
+
+    const handleConfirmRestore = () => {
+        if (restoreFile && confirmText === 'RESTAURAR') {
+            restoreMutation.mutate(restoreFile);
+        }
     };
 
     return (
@@ -137,6 +167,110 @@ export const DevToolsPage = () => {
                 </Space>
             </Card>
 
+            <Card
+                title={
+                    <Space>
+                        <DatabaseOutlined />
+                        <span>Respaldo y Restauración de Base de Datos</span>
+                    </Space>
+                }
+                style={{ marginTop: 24 }}
+            >
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    {/* Sección Backup */}
+                    <div>
+                        <Title level={4}>1. Respaldar</Title>
+                        <Paragraph>
+                            Descarga una copia completa de la base de datos actual en formato SQL.
+                        </Paragraph>
+                        <Button
+                            type="primary"
+                            icon={<DownloadOutlined />}
+                            onClick={() => devToolsApi.downloadBackup()}
+                        >
+                            Descargar Respaldo
+                        </Button>
+                    </div>
+
+                    {/* Sección Restore */}
+                    <div style={{ paddingLeft: 24, borderLeft: '1px solid #f0f0f0' }}>
+                        <Title level={4}>2. Restaurar</Title>
+                        <Paragraph>
+                            Restaura una base de datos desde un archivo SQL previamente descargado.
+                        </Paragraph>
+                        <Alert
+                            message="Peligro"
+                            description="Esto borrará todos los datos actuales."
+                            type="error"
+                            showIcon
+                            style={{ marginBottom: 16 }}
+                        />
+
+                        <Upload
+                            beforeUpload={(file) => {
+                                setRestoreFile(file);
+                                setIsRestoreConfirmOpen(true);
+                                return false; // Prevent automatic upload
+                            }}
+                            showUploadList={false}
+                            accept=".sql"
+                        >
+                            <Button icon={<UploadOutlined />} danger>
+                                Seleccionar Archivo para Restaurar
+                            </Button>
+                        </Upload>
+                    </div>
+                </div>
+            </Card>
+
+            {/* Modal de Confirmación de Restauración */}
+            <Modal
+                title={
+                    <Space>
+                        <WarningOutlined style={{ color: '#ff4d4f' }} />
+                        <span>⚠️ Confirmar Restauración</span>
+                    </Space>
+                }
+                open={isRestoreConfirmOpen}
+                onOk={handleConfirmRestore}
+                onCancel={() => {
+                    setIsRestoreConfirmOpen(false);
+                    setRestoreFile(null);
+                    setConfirmText('');
+                }}
+                okText="RESTAURAR AHORA"
+                cancelText="Cancelar"
+                okButtonProps={{
+                    danger: true,
+                    loading: restoreMutation.isPending,
+                    disabled: confirmText !== 'RESTAURAR'
+                }}
+            >
+                <Space direction="vertical" style={{ width: '100%' }}>
+                    <Alert
+                        message="ACCIÓN DESTRUCTIVA IRREVERSIBLE"
+                        description={
+                            <div>
+                                <p>Vas a reemplazar <strong>toda la base de datos actual</strong> con el contenido de:</p>
+                                <p><strong>{restoreFile?.name}</strong></p>
+                                <p>Todos los datos existentes se PERDERÁN.</p>
+                            </div>
+                        }
+                        type="error"
+                        showIcon
+                    />
+
+                    <Typography.Text>
+                        Escribe <strong>RESTAURAR</strong> para confirmar:
+                    </Typography.Text>
+                    <Input
+                        placeholder="RESTAURAR"
+                        value={confirmText}
+                        onChange={(e) => setConfirmText(e.target.value)}
+                        status={confirmText && confirmText !== 'RESTAURAR' ? 'error' : ''}
+                    />
+                </Space>
+            </Modal>
             <Modal
                 title={
                     <Space>
@@ -164,6 +298,6 @@ export const DevToolsPage = () => {
                     </Paragraph>
                 </Space>
             </Modal>
-        </div>
+        </div >
     );
 };
