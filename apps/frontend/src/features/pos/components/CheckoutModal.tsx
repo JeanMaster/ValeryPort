@@ -59,8 +59,8 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             // Modal-exclusive keys - prevent propagation to background
             const modalKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F9', 'Escape'];
 
-            // Check for Ctrl+Fn combinations
-            const isCtrlFn = e.ctrlKey && ['F6', 'F9', 'F10', 'F11', 'F12'].includes(e.key);
+            // Check for Ctrl+Fn combinations (excluding F6 which is now standalone)
+            const isCtrlFn = e.ctrlKey && ['F9', 'F10', 'F11', 'F12'].includes(e.key);
 
             if (modalKeys.includes(e.key) || isCtrlFn) {
                 e.stopPropagation();
@@ -82,7 +82,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                 } else if (e.key === 'F5' && inputAmount) {
                     setSelectedMethod('TRANSFER');
                     addPayment('TRANSFER', 'F5 Transferencia');
-                } else if (e.ctrlKey && e.key === 'F6' && payments.length > 0) {
+                } else if (e.key === 'F6' && payments.length > 0) {
                     if (selectedPaymentId) {
                         // Remove selected payment
                         removePayment(selectedPaymentId);
@@ -470,7 +470,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                 onClick={() => removePayment(selectedPaymentId)}
                                 style={{ marginBottom: 16 }}
                             >
-                                Ctrl + F6 Eliminar la forma de pago seleccionada
+                                F6 Eliminar la forma de pago seleccionada
                             </Button>
                         )}
 
