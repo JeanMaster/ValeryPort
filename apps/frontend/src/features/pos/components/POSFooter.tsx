@@ -4,7 +4,6 @@ import {
     UserOutlined,
     SaveOutlined,
     ReloadOutlined,
-    PoweroffOutlined
 } from '@ant-design/icons';
 
 const { Text } = Typography;

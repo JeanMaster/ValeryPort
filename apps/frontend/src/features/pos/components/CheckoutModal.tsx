@@ -108,7 +108,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
         // Add listener with capture to intercept before background
         window.addEventListener('keydown', handleKeyDown, true);
         return () => window.removeEventListener('keydown', handleKeyDown, true);
-    }, [open, selectedPaymentId, isFullyPaid, payments, inputAmount, foreignCurrencies]);
+    }, [open, selectedPaymentId, isFullyPaid, payments, inputAmount]);
 
     const addPayment = (method: string, methodLabel: string, currencyId?: string) => {
         if (!inputAmount || inputAmount <= 0) return;

@@ -26,7 +26,6 @@ export const POSLeftPanel = () => {
         calculatePriceInPrimary,
         calculatePriceInCurrency,
         calculateCostInPrimary,
-        setCustomer
     } = usePOSStore();
 
     const [searchResults, setSearchResults] = useState<Product[]>([]);

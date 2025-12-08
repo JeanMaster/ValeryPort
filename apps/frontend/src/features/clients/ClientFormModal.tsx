@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Modal, Form, Input, Select, Checkbox, message, Row, Col, Divider } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsApi } from '../../services/clientsApi';
@@ -190,21 +190,21 @@ export const ClientFormModal = ({ open, client, onClose }: ClientFormModalProps)
                     </Col>
                 </Row>
 
-                <Divider orientation="left" style={{ margin: '15px 0' }}>Redes Sociales (Opcional)</Divider>
+                <Divider style={{ margin: '15px 0' }}>Redes Sociales (Opcional)</Divider>
 
                 <Row gutter={16}>
                     <Col span={8}>
-                        <Form.Item name="social1" placeholder="Instagram">
+                        <Form.Item name="social1">
                             <Input prefix={<InstagramOutlined style={{ color: '#E1306C' }} />} placeholder="Usuario" />
                         </Form.Item>
                     </Col>
                     <Col span={8}>
-                        <Form.Item name="social2" placeholder="Facebook">
+                        <Form.Item name="social2">
                             <Input prefix={<FacebookOutlined style={{ color: '#4267B2' }} />} placeholder="Usuario" />
                         </Form.Item>
                     </Col>
                     <Col span={8}>
-                        <Form.Item name="social3" placeholder="Twitter/X">
+                        <Form.Item name="social3">
                             <Input prefix={<TwitterOutlined />} placeholder="Usuario" />
                         </Form.Item>
                     </Col>

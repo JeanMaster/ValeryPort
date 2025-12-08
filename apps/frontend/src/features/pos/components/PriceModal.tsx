@@ -1,4 +1,4 @@
-import { Modal, Radio, InputNumber, Button, Space, Typography, Form } from 'antd';
+import { Modal, Radio, InputNumber, Button, Form } from 'antd';
 import { useEffect, useState, useRef } from 'react';
 import { usePOSStore, type CartItem } from '../../../store/posStore';
 
@@ -10,7 +10,7 @@ interface PriceModalProps {
 }
 
 export const PriceModal = ({ open, cartItem, onOk, onCancel }: PriceModalProps) => {
-    const { calculatePriceInPrimary, primaryCurrency } = usePOSStore();
+    const { primaryCurrency } = usePOSStore();
     const [selectedTier, setSelectedTier] = useState<'normal' | 'offer' | 'wholesale' | 'custom'>('normal');
     const [customPrice, setCustomPrice] = useState<number | null>(null);
     const [customPriceError, setCustomPriceError] = useState<string | null>(null);

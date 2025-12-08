@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Modal, Input, List, Button, Checkbox, Tag, Space, Typography } from 'antd';
+import { Modal, Input, List, Button, Tag, Space, Typography } from 'antd';
 import { SearchOutlined, UserAddOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import { clientsApi, type Client } from '../../../services/clientsApi';
 import { ClientFormModal } from '../../clients/ClientFormModal';
