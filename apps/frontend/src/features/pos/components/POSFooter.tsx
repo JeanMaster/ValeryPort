@@ -47,11 +47,16 @@ const FunctionKey = ({
     </Button>
 );
 
-export const POSFooter = () => {
+interface POSFooterProps {
+    onClientClick?: () => void;
+    onCheckoutClick?: () => void;
+}
+
+export const POSFooter = ({ onClientClick, onCheckoutClick }: POSFooterProps) => {
     return (
         <div style={{ padding: '10px 20px', background: '#e6e6e6', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             {/* Botones Alineados a la Derecha */}
-            <FunctionKey fKey="F3 Cli." label="Cliente" icon={<UserOutlined />} />
+            <FunctionKey fKey="F3 Cli." label="Cliente" icon={<UserOutlined />} onClick={onClientClick} />
             <FunctionKey fKey="F10 Caja" label="Caja" icon={<SaveOutlined />} />
             <FunctionKey fKey="F11 Cargar" label="Cargar" icon={<ReloadOutlined />} />
 
@@ -68,6 +73,7 @@ export const POSFooter = () => {
                     gap: 10,
                     fontSize: 16
                 }}
+                onClick={onCheckoutClick}
             >
                 <ShoppingCartOutlined style={{ fontSize: 24 }} />
                 <span>F9 Totalizar</span>

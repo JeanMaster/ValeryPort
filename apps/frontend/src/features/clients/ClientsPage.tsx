@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Table, Button, Input, Space, message, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Input, Space, message, Popconfirm, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, WhatsAppOutlined, InstagramOutlined, FacebookOutlined, TwitterOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsApi } from '../../services/clientsApi';
 import type { Client } from '../../services/clientsApi';
@@ -47,31 +47,58 @@ export const ClientsPage = () => {
 
     const columns: ColumnsType<Client> = [
         {
-            title: 'RIF',
-            dataIndex: 'rif',
-            key: 'rif',
+            title: 'ID',
+            dataIndex: 'id',
+            key: 'id',
             width: 150,
         },
         {
-            title: 'Nombre Comercial',
-            dataIndex: 'comercialName',
-            key: 'comercialName',
-        },
-        {
-            title: 'Razón Social',
-            dataIndex: 'legalName',
-            key: 'legalName',
+            title: 'Nombre',
+            dataIndex: 'name',
+            key: 'name',
         },
         {
             title: 'Teléfono',
             dataIndex: 'phone',
             key: 'phone',
             width: 150,
+            render: (phone: string, record: Client) => (
+                <Space>
+                    {phone}
+                    {record.hasWhatsapp && (
+                        <WhatsAppOutlined style={{ color: '#25D366' }} />
+                    )}
+                </Space>
+            ),
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
+        },
+        {
+            title: 'Redes Sociales',
+            key: 'social',
+            width: 120,
+            render: (_, record: Client) => (
+                <Space>
+                    {record.social1 && (
+                        <Tooltip title={`Instagram: ${record.social1}`}>
+                            <InstagramOutlined style={{ color: '#E1306C', cursor: 'pointer' }} />
+                        </Tooltip>
+                    )}
+                    {record.social2 && (
+                        <Tooltip title={`Facebook: ${record.social2}`}>
+                            <FacebookOutlined style={{ color: '#4267B2', cursor: 'pointer' }} />
+                        </Tooltip>
+                    )}
+                    {record.social3 && (
+                        <Tooltip title={`Twitter/X: ${record.social3}`}>
+                            <TwitterOutlined style={{ color: '#1DA1F2', cursor: 'pointer' }} />
+                        </Tooltip>
+                    )}
+                </Space>
+            ),
         },
         {
             title: 'Acciones',
@@ -118,7 +145,7 @@ export const ClientsPage = () => {
             >
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
                     <Input
-                        placeholder="Buscar por nombre, RIF o email"
+                        placeholder="Buscar por nombre, ID o email"
                         prefix={<SearchOutlined />}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

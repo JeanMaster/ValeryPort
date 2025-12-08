@@ -10,6 +10,7 @@ import { CompanySettingsModule } from './company-settings/company-settings.modul
 import { DepartmentsModule } from './departments/departments.module';
 import { UnitsModule } from './units/units.module';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { SalesModule } from './sales/sales.module';
 import { DevToolsController } from './dev-tools/dev-tools.controller';
 import { DevToolsService } from './dev-tools/dev-tools.service';
 
@@ -27,6 +28,7 @@ import { DevToolsService } from './dev-tools/dev-tools.service';
     DepartmentsModule,
     UnitsModule,
     CurrenciesModule,
+    SalesModule,
   ],
   controllers: [AppController, DevToolsController],
   providers: [AppService, DevToolsService],

@@ -13,6 +13,7 @@ export const PriceModal = ({ open, cartItem, onOk, onCancel }: PriceModalProps) 
     const { calculatePriceInPrimary, primaryCurrency } = usePOSStore();
     const [selectedTier, setSelectedTier] = useState<'normal' | 'offer' | 'wholesale' | 'custom'>('normal');
     const [customPrice, setCustomPrice] = useState<number | null>(null);
+    const [customPriceError, setCustomPriceError] = useState<string | null>(null);
     const inputRef = useRef<any>(null);
 
     // Calculate prices in Primary Currency
@@ -47,10 +48,26 @@ export const PriceModal = ({ open, cartItem, onOk, onCancel }: PriceModalProps) 
     const offerPrice = getConvertedPrice(isSecondaryUnit ? product.secondaryOfferPrice : product.offerPrice);
     const wholesalePrice = getConvertedPrice(isSecondaryUnit ? product.secondaryWholesalePrice : product.wholesalePrice);
 
+    const validateCustomPrice = (price: number | null): string | null => {
+        if (price === null || price <= 0) return null;
+
+        // Calculate effective price after existing discount
+        const discountPercent = cartItem.discountPercent || 0;
+        const discountAmount = price * (discountPercent / 100);
+        const effectivePrice = price - discountAmount;
+
+        if (effectivePrice < costInPrimary) {
+            return `Precio final (${effectivePrice.toFixed(2)}) menor al costo (${costInPrimary.toFixed(2)})`;
+        }
+
+        return null;
+    };
+
     useEffect(() => {
         if (open) {
             setSelectedTier('normal');
             setCustomPrice(null);
+            setCustomPriceError(null);
             // Default to matching the current price?
             if (Math.abs(cartItem.price - normalPrice) < 0.01) setSelectedTier('normal');
             else if (offerPrice && Math.abs(cartItem.price - offerPrice) < 0.01) setSelectedTier('offer');
@@ -64,6 +81,15 @@ export const PriceModal = ({ open, cartItem, onOk, onCancel }: PriceModalProps) 
     }, [open, cartItem, normalPrice, offerPrice, wholesalePrice]);
 
     const handleSubmit = () => {
+        // Check for custom price validation errors first
+        if (selectedTier === 'custom' && customPriceError) {
+            Modal.error({
+                title: 'Precio Inválido',
+                content: customPriceError
+            });
+            return;
+        }
+
         let finalPrice = normalPrice;
         if (selectedTier === 'offer') finalPrice = offerPrice;
         if (selectedTier === 'wholesale') finalPrice = wholesalePrice;
@@ -71,19 +97,16 @@ export const PriceModal = ({ open, cartItem, onOk, onCancel }: PriceModalProps) 
             finalPrice = customPrice || 0;
         }
 
-        // Validate Final Effective Price against Cost (considering existing discount)
-        // Note: The store recalculates discount amount based on discountPercent when price updates.
-        // So we must predict the New Discount Amount.
+        // Additional validation for non-custom prices (shouldn't happen but safety check)
         const discountPercent = cartItem.discountPercent || 0;
         const discountAmount = finalPrice * (discountPercent / 100);
         const effectivePrice = finalPrice - discountAmount;
 
         if (effectivePrice < costInPrimary) {
-            // Check if it was because of discount or just low base price
             let errorMsg = `El precio final (${effectivePrice.toFixed(2)}) no puede ser menor al costo (${costInPrimary.toFixed(2)}).`;
 
             if (discountPercent > 0) {
-                errorMsg += ` \nEl producto tiene un descuento activo del ${discountPercent}%. Ajuste el precio base o reduzca el descuento primero.`;
+                errorMsg += ` El producto tiene un descuento activo del ${discountPercent}%.`;
             }
 
             Modal.error({
@@ -151,11 +174,20 @@ export const PriceModal = ({ open, cartItem, onOk, onCancel }: PriceModalProps) 
                         <InputNumber
                             ref={inputRef}
                             value={customPrice}
-                            onChange={val => setCustomPrice(val)}
+                            onChange={val => {
+                                setCustomPrice(val);
+                                setCustomPriceError(validateCustomPrice(val));
+                            }}
                             min={0}
                             style={{ width: 150 }}
                             onPressEnter={handleSubmit}
+                            status={customPriceError ? 'error' : ''}
                         />
+                        {customPriceError && (
+                            <div style={{ fontSize: 11, color: '#ff4d4f', marginTop: 2 }}>
+                                {customPriceError}
+                            </div>
+                        )}
                         <div style={{ fontSize: 11, color: '#888', marginTop: 5 }}>
                             Costo: {currencySymbol} {costInPrimary.toFixed(2)}
                         </div>

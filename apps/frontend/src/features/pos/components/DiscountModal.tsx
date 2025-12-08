@@ -1,16 +1,19 @@
 import { Modal, InputNumber, Button, Space, Alert, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import type { Product } from '../../../services/productsApi';
+import { usePOSStore } from '../../../store/posStore';
 
 interface DiscountModalProps {
     open: boolean;
     product: Product | null;
     currentPrice: number;
+    isSecondaryUnit: boolean;
     onOk: (percent: number) => void;
     onCancel: () => void;
 }
 
-export const DiscountModal = ({ open, product, currentPrice, onOk, onCancel }: DiscountModalProps) => {
+export const DiscountModal = ({ open, product, currentPrice, isSecondaryUnit, onOk, onCancel }: DiscountModalProps) => {
+    const { calculateCostInPrimary } = usePOSStore();
     const [percent, setPercent] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const inputRef = useRef<any>(null);
@@ -37,13 +40,12 @@ export const DiscountModal = ({ open, product, currentPrice, onOk, onCancel }: D
             return "El descuento máximo permitido es 30%";
         }
 
-        // 2. Price cannot go below cost
+        // 2. Price cannot go below cost (converted to primary currency)
         const newPrice = calculateNewPrice(val);
-        // FIXME: Check if using secondary unit cost if necessary. 
-        // For simplicity assuming primary unit cost as base or handling it upstream. 
-        // Ideally we pass the 'baseCost' prop to this modal to be unit-agnostic.
-        if (newPrice < product.costPrice) {
-            return `El precio final (${newPrice.toFixed(2)}) es menor al costo`;
+        const costInPrimary = calculateCostInPrimary(product, isSecondaryUnit);
+
+        if (newPrice < costInPrimary) {
+            return `El precio final (${newPrice.toFixed(2)}) no puede ser menor al costo (${costInPrimary.toFixed(2)})`;
         }
 
         return null;

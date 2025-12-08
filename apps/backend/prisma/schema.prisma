@@ -30,11 +30,14 @@ model Client {
   phone         String?
   hasWhatsapp   Boolean  @default(false)
   email         String?
-  
+
   social1       String?
   social2       String?
   social3       String?
-  
+
+  // Ventas asociadas
+  sales         Sale[]
+
   active        Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -99,7 +102,10 @@ model Product {
   secondarySalePrice      Decimal? @db.Decimal(10, 2)
   secondaryOfferPrice     Decimal? @db.Decimal(10, 2)
   secondaryWholesalePrice Decimal? @db.Decimal(10, 2)
-  
+
+  // Items de venta asociados
+  saleItems      SaleItem[]
+
   active          Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -164,10 +170,10 @@ model Currency {
   symbol       String
   isPrimary    Boolean  @default(false)
   exchangeRate Decimal? @db.Decimal(10, 4)
-  
+
   // Productos en esta moneda
   products     Product[]
-  
+
   // Configuraciones que usan esta moneda
   companySettings CompanySettings[]
 
@@ -176,4 +182,51 @@ model Currency {
   updatedAt    DateTime @updatedAt
 
   @@map("currencies")
+}
+
+model Sale {
+  id            String     @id @default(uuid())
+  date          DateTime   @default(now())
+
+  // Cliente (opcional para ventas walk-in)
+  clientId      String?
+  client        Client?    @relation(fields: [clientId], references: [id])
+
+  // Totales
+  subtotal      Decimal    @db.Decimal(10, 2)
+  discount      Decimal    @db.Decimal(10, 2) @default(0)
+  tax           Decimal    @db.Decimal(10, 2) @default(0)
+  total         Decimal    @db.Decimal(10, 2)
+
+  // Pago
+  paymentMethod String     // CASH, DEBIT, CREDIT, etc.
+  tendered      Decimal?   @db.Decimal(10, 2)
+  change        Decimal?   @db.Decimal(10, 2)
+
+  // Items de la venta
+  items         SaleItem[]
+
+  active        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Decimal @db.Decimal(10, 2)
+  unitPrice Decimal @db.Decimal(10, 2)
+  total     Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sale_items")
 }

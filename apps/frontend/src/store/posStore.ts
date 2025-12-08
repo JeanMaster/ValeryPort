@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { Product } from '../services/productsApi';
 import { companySettingsApi } from '../services/companySettingsApi';
 import { currenciesApi, type Currency } from '../services/currenciesApi';
+import { salesApi, type CreateSaleDto } from '../services/salesApi';
 
 export interface CartItem {
     product: Product;
@@ -30,7 +31,7 @@ interface POSState {
         itemsCount: number;
     };
     exchangeRate: number; // Rate of Preferred Secondary Currency
-    preferredSecondaryCurrency: { symbol: string, code: string } | null;
+    preferredSecondaryCurrency: Currency | null;
     currencies: Currency[]; // All available currencies
     primaryCurrency: Currency | null;
 
@@ -47,10 +48,12 @@ interface POSState {
     setCustomer: (customer: { id: string; name: string } | string) => void;
     calculateTotals: () => void;
     initialize: () => Promise<void>;
+    processSale: (paymentData: any) => Promise<void>;
 
     // Helpers
     calculatePriceInPrimary: (product: Product, isSecondaryUnit: boolean) => number;
     calculateCostInPrimary: (product: Product, isSecondaryUnit: boolean) => number;
+    calculatePriceInCurrency: (priceInPrimary: number, targetCurrencyId: string) => number;
 }
 
 export const usePOSStore = create<POSState>()(
@@ -124,6 +127,30 @@ export const usePOSStore = create<POSState>()(
                     }
                 }
                 return rawCost;
+            },
+
+            calculatePriceInCurrency: (priceInPrimary: number, targetCurrencyId: string) => {
+                const { currencies, primaryCurrency } = get();
+
+                if (!currencies.length || !primaryCurrency) return priceInPrimary;
+
+                // If target is primary currency, return as is
+                if (targetCurrencyId === primaryCurrency.id) {
+                    return priceInPrimary;
+                }
+
+                // Find target currency
+                const targetCurrency = currencies.find(c => c.id === targetCurrencyId);
+                if (targetCurrency && targetCurrency.exchangeRate) {
+                    const rate = Number(targetCurrency.exchangeRate);
+                    if (rate > 0) {
+                        // Convert from primary to target currency
+                        // If rate is 130 Bs/USD, then 156 Bs / 130 = 1.2 USD
+                        return priceInPrimary / rate;
+                    }
+                }
+
+                return priceInPrimary;
             },
 
             addItem: (product, isSecondary) => {
@@ -328,7 +355,7 @@ export const usePOSStore = create<POSState>()(
                         const secondary = allCurrencies.find(c => c.id === settings.preferredSecondaryCurrencyId);
                         if (secondary) {
                             secondaryRate = Number(secondary.exchangeRate || 0);
-                            secondaryDetails = { symbol: secondary.symbol, code: secondary.code };
+                            secondaryDetails = secondary;
                         }
                     }
 
@@ -342,6 +369,38 @@ export const usePOSStore = create<POSState>()(
                     get().calculateTotals();
                 } catch (error) {
                     console.error("Failed to initialize POS store", error);
+                }
+            },
+
+            processSale: async (paymentData: any) => {
+                const { cart, totals, customerId } = get();
+
+                const saleDto: CreateSaleDto = {
+                    clientId: customerId || undefined,
+                    items: cart.map(item => ({
+                        productId: item.product.id,
+                        quantity: item.quantity,
+                        unitPrice: item.price,
+                        total: item.total
+                    })),
+                    subtotal: totals.subtotal,
+                    discount: totals.discount,
+                    tax: totals.tax,
+                    total: totals.total,
+                    paymentMethod: paymentData.method,
+                    tendered: paymentData.tendered,
+                    change: paymentData.change
+                };
+
+                try {
+                    await salesApi.create(saleDto);
+                    // Clear cart on success
+                    get().clearCart();
+                    // Reset customer to CONTADO
+                    set({ activeCustomer: 'CONTADO', customerId: null });
+                } catch (error) {
+                    console.error('Error processing sale:', error);
+                    throw error; // Re-throw to handle in component
                 }
             }
         }),

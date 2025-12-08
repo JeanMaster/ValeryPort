@@ -158,21 +158,21 @@ export const POSRightPanel = () => {
     };
 
     const TagPrice = ({ product }: { product: Product }) => {
-        const { calculatePriceInPrimary, preferredSecondaryCurrency, exchangeRate, primaryCurrency } = usePOSStore();
+        const { calculatePriceInPrimary, calculatePriceInCurrency, preferredSecondaryCurrency, primaryCurrency } = usePOSStore();
 
         // 1. Calculate Price in Primary Currency (Bs)
         const priceInPrimary = calculatePriceInPrimary(product, false);
 
-        // 2. Calculate Price in Preferred Secondary Currency (e.g. USD)
-        // If exchangeRate (Bs per Secondary) is available
-        const priceInSecondary = exchangeRate > 0 ? priceInPrimary / exchangeRate : 0;
+        // 2. Calculate Price in Preferred Secondary Currency
+        const priceInSecondary = preferredSecondaryCurrency
+            ? calculatePriceInCurrency(priceInPrimary, preferredSecondaryCurrency.id)
+            : 0;
 
         // 3. Original Price Info
-        // Assuming details are populate in product.currency
         const originalSymbol = product.currency?.symbol || '$';
         const originalPrice = product.salePrice;
         const isOriginalSameAsPrimary = product.currencyId === primaryCurrency?.id;
-        const isOriginalSameAsSecondary = preferredSecondaryCurrency?.code === product.currency?.name; // currency.name usually holds code like USD, VES
+        const isOriginalSameAsSecondary = preferredSecondaryCurrency?.code === product.currency?.name;
 
         return (
             <div style={{ marginTop: 8, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -201,12 +201,12 @@ export const POSRightPanel = () => {
                     )}
 
                     {/* Divider if both exist */}
-                    {(!isOriginalSameAsPrimary && preferredSecondaryCurrency && exchangeRate > 0 && !isOriginalSameAsSecondary) && (
+                    {(!isOriginalSameAsPrimary && preferredSecondaryCurrency && priceInSecondary > 0 && !isOriginalSameAsSecondary) && (
                         <span style={{ color: '#ccc' }}>|</span>
                     )}
 
                     {/* Secondary Currency */}
-                    {preferredSecondaryCurrency && exchangeRate > 0 && !isOriginalSameAsSecondary && (
+                    {preferredSecondaryCurrency && priceInSecondary > 0 && !isOriginalSameAsSecondary && (
                         <span style={{ color: '#1890ff' }}>
                             {preferredSecondaryCurrency.symbol} <strong>{priceInSecondary.toFixed(2)}</strong>
                         </span>

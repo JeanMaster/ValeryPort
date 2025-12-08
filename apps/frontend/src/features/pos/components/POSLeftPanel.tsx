@@ -8,7 +8,6 @@ import debounce from 'lodash/debounce';
 import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
 import { PriceModal } from './PriceModal';
-import { ClientSelectionModal } from './ClientSelectionModal';
 import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, UserOutlined } from '@ant-design/icons';
 
 export const POSLeftPanel = () => {
@@ -24,8 +23,8 @@ export const POSLeftPanel = () => {
         applyDiscount,
         totals,
         preferredSecondaryCurrency,
-        exchangeRate,
         calculatePriceInPrimary,
+        calculatePriceInCurrency,
         calculateCostInPrimary,
         setCustomer
     } = usePOSStore();
@@ -36,7 +35,6 @@ export const POSLeftPanel = () => {
     const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
     const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
-    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
     const handleSearch = useCallback(
         debounce((value: string) => {
@@ -64,12 +62,6 @@ export const POSLeftPanel = () => {
                 // Better to allow F3 always.
             }
 
-            // F3: Clients (Always allowed)
-            if (e.key === 'F3') {
-                e.preventDefault();
-                setIsClientModalOpen(true);
-                return;
-            }
 
             if (!selectedItemId) return; // Block item actions if no item selected
 
@@ -135,11 +127,13 @@ export const POSLeftPanel = () => {
             width: 90,
             align: 'right' as const,
             render: (value: number) => {
-                const secondaryValue = exchangeRate > 0 ? value / exchangeRate : 0;
+                const secondaryValue = preferredSecondaryCurrency
+                    ? calculatePriceInCurrency(value, preferredSecondaryCurrency.id)
+                    : 0;
                 return (
                     <div>
                         <div style={{ fontSize: 14 }}>{value.toFixed(2)}</div>
-                        {preferredSecondaryCurrency && exchangeRate > 0 && (
+                        {preferredSecondaryCurrency && secondaryValue > 0 && (
                             <div style={{ fontSize: 10, color: '#888' }}>
                                 {preferredSecondaryCurrency.symbol} {secondaryValue.toFixed(2)}
                             </div>
@@ -154,12 +148,11 @@ export const POSLeftPanel = () => {
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {/* Info Cliente & Factura bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, background: '#eee', padding: '5px 10px' }}>
-                <span onClick={() => setIsClientModalOpen(true)} style={{ cursor: 'pointer' }}>
+                <span>
                     Cliente: <strong style={{ color: '#ff4d4f' }}>{activeCustomer}</strong> <UserOutlined />
                 </span>
                 <span>CONTADO CONTRIBUYENTE</span>
                 <span>Factura: <strong style={{ color: '#ff4d4f' }}>00-00000001</strong></span>
-                <Button size="small" style={{ fontSize: 10 }} onClick={() => setIsClientModalOpen(true)}>F3 Clientes</Button>
             </div>
 
             {/* Buscador */}
@@ -178,7 +171,9 @@ export const POSLeftPanel = () => {
                 options={(searchResults || []).map((d: Product) => {
                     // Calculate Prices for Display
                     const priceInPrimary = calculatePriceInPrimary(d, false);
-                    const priceInSecondary = exchangeRate > 0 ? priceInPrimary / exchangeRate : 0;
+                    const priceInSecondary = preferredSecondaryCurrency
+                        ? calculatePriceInCurrency(priceInPrimary, preferredSecondaryCurrency.id)
+                        : 0;
 
                     const originalSymbol = d.currency?.symbol || '$';
                     const originalPrice = d.salePrice;
@@ -187,7 +182,7 @@ export const POSLeftPanel = () => {
 
                     let priceString = `${originalSymbol}${Number(originalPrice).toFixed(2)}`;
 
-                    if (preferredSecondaryCurrency && exchangeRate > 0 && d.currency?.name !== preferredSecondaryCurrency.code) {
+                    if (preferredSecondaryCurrency && priceInSecondary > 0 && d.currency?.name !== preferredSecondaryCurrency.code) {
                         priceString += ` | ${secondarySymbol}${priceInSecondary.toFixed(2)}`;
                     }
 
@@ -297,6 +292,7 @@ export const POSLeftPanel = () => {
                         open={isDiscountModalOpen}
                         product={selectedCartItem.product}
                         currentPrice={selectedCartItem.price}
+                        isSecondaryUnit={selectedCartItem.isSecondaryUnit}
                         onOk={(percent) => {
                             // Validation 1: Max 30%
                             if (percent > 30) {
@@ -340,14 +336,6 @@ export const POSLeftPanel = () => {
                 </>
             )}
 
-            <ClientSelectionModal
-                open={isClientModalOpen}
-                onSelect={(client) => {
-                    setCustomer(client); // Uses string or object based on store logic. Now handles object {id, name}
-                    setIsClientModalOpen(false);
-                }}
-                onCancel={() => setIsClientModalOpen(false)}
-            />
         </div>
     );
 };
