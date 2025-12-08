@@ -51,30 +51,64 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
         }
     }, [open]);
 
-    // Handle keyboard shortcuts
+    // Handle keyboard shortcuts - exclusive to modal when open
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!open) return;
 
-            // Ctrl+F6 to delete selected payment
-            if (e.ctrlKey && e.key === 'F6' && selectedPaymentId) {
-                removePayment(selectedPaymentId);
-            }
+            // Modal-exclusive keys - prevent propagation to background
+            const modalKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F9', 'Escape'];
 
-            // F9 to process sale (if fully paid)
-            if (e.key === 'F9' && isFullyPaid) {
-                handleProcessSale();
-            }
+            // Check for Ctrl+Fn combinations
+            const isCtrlFn = e.ctrlKey && ['F6', 'F9', 'F10', 'F11', 'F12'].includes(e.key);
 
-            // Esc to cancel
-            if (e.key === 'Escape') {
-                onCancel();
+            if (modalKeys.includes(e.key) || isCtrlFn) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                // Handle modal-specific actions
+                if (e.key === 'F1' && inputAmount) {
+                    setSelectedMethod('CASH');
+                    addPayment('CASH', 'F1 Efectivo');
+                } else if (e.key === 'F2' && inputAmount) {
+                    setSelectedMethod('DEBIT');
+                    addPayment('DEBIT', 'F2 T. Débito');
+                } else if (e.key === 'F3' && inputAmount) {
+                    setSelectedMethod('CREDIT');
+                    addPayment('CREDIT', 'F3 T. Crédito');
+                } else if (e.key === 'F4' && inputAmount) {
+                    setSelectedMethod('MOBILE');
+                    addPayment('MOBILE', 'F4 Pago Móvil');
+                } else if (e.key === 'F5' && inputAmount) {
+                    setSelectedMethod('TRANSFER');
+                    addPayment('TRANSFER', 'F5 Transferencia');
+                } else if (e.ctrlKey && e.key === 'F6' && selectedPaymentId) {
+                    removePayment(selectedPaymentId);
+                } else if (e.ctrlKey && e.key === 'F9' && inputAmount && foreignCurrencies.length > 0) {
+                    const usd = foreignCurrencies.find(c => c.code === 'USD');
+                    if (usd) {
+                        setSelectedMethod(`CURRENCY_${usd.id}`);
+                        addPayment(`CURRENCY_USD`, 'CT+F9 USD', usd.id);
+                    }
+                } else if (e.ctrlKey && e.key === 'F10' && inputAmount && foreignCurrencies.length > 1) {
+                    const eur = foreignCurrencies.find(c => c.code === 'EUR');
+                    if (eur) {
+                        setSelectedMethod(`CURRENCY_${eur.id}`);
+                        addPayment(`CURRENCY_EUR`, 'CT+F10 EUR', eur.id);
+                    }
+                } else if (e.key === 'F9' && isFullyPaid) {
+                    handleProcessSale();
+                } else if (e.key === 'Escape') {
+                    onCancel();
+                }
             }
+            // Other keys (like F7, F8 for discounts/prices) are allowed to propagate to background
         };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [open, selectedPaymentId, isFullyPaid, payments]);
+        // Add listener with capture to intercept before background
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
+    }, [open, selectedPaymentId, isFullyPaid, payments, inputAmount, foreignCurrencies]);
 
     const addPayment = (method: string, methodLabel: string, currencyId?: string) => {
         if (!inputAmount || inputAmount <= 0) return;
@@ -274,15 +308,12 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
 
                         {/* Amount input */}
                         <div style={{ marginBottom: 16 }}>
-                            <Text strong>Monto a Pagar</Text>
+                            <Text strong>Cantidad:</Text>
                             <InputNumber
                                 style={{ width: '100%', marginTop: 8 }}
                                 size="large"
                                 value={inputAmount}
                                 onChange={setInputAmount}
-                                prefix={selectedMethod?.startsWith('CURRENCY_')
-                                    ? currencies.find(c => c.id === selectedMethod.replace('CURRENCY_', ''))?.symbol
-                                    : primaryCurrency?.symbol}
                                 placeholder="0.00"
                                 disabled={isFullyPaid}
                                 min={0}
@@ -300,7 +331,6 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                     <Button
                                         key={method.key}
                                         size="large"
-                                        icon={method.icon}
                                         onClick={() => {
                                             setSelectedMethod(method.key);
                                             addPayment(method.key, method.label);
@@ -311,10 +341,14 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                             display: 'flex',
                                             flexDirection: 'column',
                                             alignItems: 'center',
-                                            justifyContent: 'center'
+                                            justifyContent: 'center',
+                                            gap: 4
                                         }}
                                     >
-                                        <div>{method.label}</div>
+                                        <Space size={4}>
+                                            {method.icon}
+                                            <span>{method.label}</span>
+                                        </Space>
                                         <Text type="secondary" style={{ fontSize: '0.75em' }}>
                                             {primaryCurrency?.symbol} {(inputAmount || 0).toFixed(2)}
                                         </Text>
@@ -332,7 +366,6 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                         <Button
                                             key={currency.id}
                                             size="large"
-                                            icon={<DollarOutlined />}
                                             onClick={() => {
                                                 setSelectedMethod(`CURRENCY_${currency.id}`);
                                                 addPayment(`CURRENCY_${currency.code}`, `CT+F${index + 9} ${currency.code}`, currency.id);
@@ -343,10 +376,14 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 alignItems: 'center',
-                                                justifyContent: 'center'
+                                                justifyContent: 'center',
+                                                gap: 4
                                             }}
                                         >
-                                            <div>CT+F{index + 9} {currency.code}</div>
+                                            <Space size={4}>
+                                                <DollarOutlined />
+                                                <span>CT+F{index + 9} {currency.code}</span>
+                                            </Space>
                                             <Text type="secondary" style={{ fontSize: '0.75em' }}>
                                                 {currency.symbol} {(inputAmount || 0).toFixed(2)}
                                             </Text>
