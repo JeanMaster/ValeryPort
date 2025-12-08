@@ -57,7 +57,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             if (!open) return;
 
             // Modal-exclusive keys - prevent propagation to background
-            const modalKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F9', 'Escape'];
+            const modalKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F9', 'Escape'];
 
             // Check for Ctrl+Fn combinations (excluding F6 which is now standalone)
             const isCtrlFn = e.ctrlKey && ['F9', 'F10', 'F11', 'F12'].includes(e.key);
