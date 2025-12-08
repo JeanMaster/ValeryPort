@@ -1,4 +1,4 @@
-import { Modal, Radio, InputNumber, Button, Form } from 'antd';
+import { Modal, Radio, InputNumber, Button } from 'antd';
 import { useEffect, useState, useRef } from 'react';
 import { usePOSStore, type CartItem } from '../../../store/posStore';
 
