@@ -85,16 +85,32 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                 } else if (e.ctrlKey && e.key === 'F6' && selectedPaymentId) {
                     removePayment(selectedPaymentId);
                 } else if (e.ctrlKey && e.key === 'F9' && inputAmount && foreignCurrencies.length > 0) {
-                    const usd = foreignCurrencies.find(c => c.code === 'USD');
-                    if (usd) {
-                        setSelectedMethod(`CURRENCY_${usd.id}`);
-                        addPayment(`CURRENCY_USD`, 'CT+F9 USD', usd.id);
+                    // Ctrl+F9 = first foreign currency (index 0)
+                    const currency = foreignCurrencies[0];
+                    if (currency) {
+                        setSelectedMethod(`CURRENCY_${currency.id}`);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F9 ${currency.code}`, currency.id);
                     }
                 } else if (e.ctrlKey && e.key === 'F10' && inputAmount && foreignCurrencies.length > 1) {
-                    const eur = foreignCurrencies.find(c => c.code === 'EUR');
-                    if (eur) {
-                        setSelectedMethod(`CURRENCY_${eur.id}`);
-                        addPayment(`CURRENCY_EUR`, 'CT+F10 EUR', eur.id);
+                    // Ctrl+F10 = second foreign currency (index 1)
+                    const currency = foreignCurrencies[1];
+                    if (currency) {
+                        setSelectedMethod(`CURRENCY_${currency.id}`);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F10 ${currency.code}`, currency.id);
+                    }
+                } else if (e.ctrlKey && e.key === 'F11' && inputAmount && foreignCurrencies.length > 2) {
+                    // Ctrl+F11 = third foreign currency (index 2)
+                    const currency = foreignCurrencies[2];
+                    if (currency) {
+                        setSelectedMethod(`CURRENCY_${currency.id}`);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F11 ${currency.code}`, currency.id);
+                    }
+                } else if (e.ctrlKey && e.key === 'F12' && inputAmount && foreignCurrencies.length > 3) {
+                    // Ctrl+F12 = fourth foreign currency (index 3)
+                    const currency = foreignCurrencies[3];
+                    if (currency) {
+                        setSelectedMethod(`CURRENCY_${currency.id}`);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F12 ${currency.code}`, currency.id);
                     }
                 } else if (e.key === 'F9' && isFullyPaid) {
                     handleProcessSale();
