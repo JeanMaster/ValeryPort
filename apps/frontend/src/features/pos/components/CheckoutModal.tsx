@@ -339,7 +339,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                             }}
                                             disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
                                             style={{
-                                                height: 60,
+                                                height: 80,
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 alignItems: 'center',
@@ -386,7 +386,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                                 }}
                                                 disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
                                                 style={{
-                                                    height: 60,
+                                                    height: 80,
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     alignItems: 'center',
