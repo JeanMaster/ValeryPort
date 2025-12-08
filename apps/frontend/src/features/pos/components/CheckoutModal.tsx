@@ -327,48 +327,15 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                         <div style={{ marginBottom: 16 }}>
                             <Text type="secondary" style={{ fontSize: '0.9em' }}>Pagos en {primaryCurrency?.name || 'Bolívares'}</Text>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-                                {bsPaymentMethods.map(method => (
-                                    <Button
-                                        key={method.key}
-                                        size="large"
-                                        onClick={() => {
-                                            setSelectedMethod(method.key);
-                                            addPayment(method.key, method.label);
-                                        }}
-                                        disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
-                                        style={{
-                                            height: 60,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: 4
-                                        }}
-                                    >
-                                        <Space size={4}>
-                                            {method.icon}
-                                            <span>{method.label}</span>
-                                        </Space>
-                                        <Text type="secondary" style={{ fontSize: '0.75em' }}>
-                                            {primaryCurrency?.symbol} {(inputAmount || 0).toFixed(2)}
-                                        </Text>
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Foreign Currency Payments */}
-                        {foreignCurrencies.length > 0 && (
-                            <div>
-                                <Text type="secondary" style={{ fontSize: '0.9em' }}>Pagos en Divisas</Text>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-                                    {foreignCurrencies.map((currency, index) => (
+                                {bsPaymentMethods.map(method => {
+                                    const suggestedAmount = remaining;
+                                    return (
                                         <Button
-                                            key={currency.id}
+                                            key={method.key}
                                             size="large"
                                             onClick={() => {
-                                                setSelectedMethod(`CURRENCY_${currency.id}`);
-                                                addPayment(`CURRENCY_${currency.code}`, `CT+F${index + 9} ${currency.code}`, currency.id);
+                                                setSelectedMethod(method.key);
+                                                addPayment(method.key, method.label);
                                             }}
                                             disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
                                             style={{
@@ -381,14 +348,69 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                             }}
                                         >
                                             <Space size={4}>
-                                                <DollarOutlined />
-                                                <span>CT+F{index + 9} {currency.code}</span>
+                                                {method.icon}
+                                                <span>{method.label}</span>
                                             </Space>
-                                            <Text type="secondary" style={{ fontSize: '0.75em' }}>
-                                                {currency.symbol} {(inputAmount || 0).toFixed(2)}
-                                            </Text>
+                                            <div style={{ textAlign: 'center' }}>
+                                                <Text type="secondary" style={{ fontSize: '0.75em' }}>
+                                                    {primaryCurrency?.symbol} {(inputAmount || 0).toFixed(2)}
+                                                </Text>
+                                                {!isFullyPaid && (
+                                                    <div style={{ fontSize: '0.65em', color: '#52c41a', marginTop: 2 }}>
+                                                        Sugerido: {primaryCurrency?.symbol} {suggestedAmount.toFixed(2)}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </Button>
-                                    ))}
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Foreign Currency Payments */}
+                        {foreignCurrencies.length > 0 && (
+                            <div>
+                                <Text type="secondary" style={{ fontSize: '0.9em' }}>Pagos en Divisas</Text>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                                    {foreignCurrencies.map((currency, index) => {
+                                        const suggestedAmount = remaining > 0 && currency.exchangeRate
+                                            ? remaining / currency.exchangeRate
+                                            : 0;
+                                        return (
+                                            <Button
+                                                key={currency.id}
+                                                size="large"
+                                                onClick={() => {
+                                                    setSelectedMethod(`CURRENCY_${currency.id}`);
+                                                    addPayment(`CURRENCY_${currency.code}`, `CT+F${index + 9} ${currency.code}`, currency.id);
+                                                }}
+                                                disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
+                                                style={{
+                                                    height: 60,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: 4
+                                                }}
+                                            >
+                                                <Space size={4}>
+                                                    <DollarOutlined />
+                                                    <span>CT+F{index + 9} {currency.code}</span>
+                                                </Space>
+                                                <div style={{ textAlign: 'center' }}>
+                                                    <Text type="secondary" style={{ fontSize: '0.75em' }}>
+                                                        {currency.symbol} {(inputAmount || 0).toFixed(2)}
+                                                    </Text>
+                                                    {!isFullyPaid && suggestedAmount > 0 && (
+                                                        <div style={{ fontSize: '0.65em', color: '#52c41a', marginTop: 2 }}>
+                                                            Sugerido: {currency.symbol} {suggestedAmount.toFixed(2)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </Button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
