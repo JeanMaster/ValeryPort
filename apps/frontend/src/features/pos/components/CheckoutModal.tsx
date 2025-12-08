@@ -82,8 +82,17 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                 } else if (e.key === 'F5' && inputAmount) {
                     setSelectedMethod('TRANSFER');
                     addPayment('TRANSFER', 'F5 Transferencia');
-                } else if (e.ctrlKey && e.key === 'F6' && selectedPaymentId) {
-                    removePayment(selectedPaymentId);
+                } else if (e.ctrlKey && e.key === 'F6' && payments.length > 0) {
+                    if (selectedPaymentId) {
+                        // Remove selected payment
+                        removePayment(selectedPaymentId);
+                    } else {
+                        // Remove last payment added (most recent)
+                        const lastPayment = payments.reduce((latest, current) =>
+                            parseInt(current.id) > parseInt(latest.id) ? current : latest
+                        );
+                        removePayment(lastPayment.id);
+                    }
                 } else if (e.ctrlKey && e.key === 'F9' && inputAmount && foreignCurrencies.length > 0) {
                     // Ctrl+F9 = first foreign currency (index 0)
                     const currency = foreignCurrencies[0];
