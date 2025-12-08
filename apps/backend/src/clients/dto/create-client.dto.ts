@@ -1,35 +1,40 @@
-import { IsString, IsEmail, IsOptional, IsNotEmpty, Length } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsBoolean, MinLength } from 'class-validator';
 
 export class CreateClientDto {
-    @ApiProperty({ example: 'J-12345678-9', description: 'RIF del cliente (único)' })
-    @IsNotEmpty({ message: 'El RIF es requerido' })
     @IsString()
-    @Length(10, 12, { message: 'El RIF debe tener entre 10 y 12 caracteres' })
-    rif: string;
+    @IsNotEmpty()
+    @MinLength(3) // "V-1" at least
+    id: string; // Manually provided ID
 
-    @ApiProperty({ example: 'Ferretería El Tornillo', description: 'Nombre comercial' })
-    @IsNotEmpty({ message: 'El nombre comercial es requerido' })
     @IsString()
-    comercialName: string;
+    @IsNotEmpty()
+    name: string; // Replaces comercialName/legalName
 
-    @ApiProperty({ example: 'Ferretería El Tornillo C.A.', required: false })
+    @IsString()
     @IsOptional()
-    @IsString()
-    legalName?: string;
-
-    @ApiProperty({ example: 'Av. Principal, Caracas', required: false })
-    @IsOptional()
-    @IsString()
     address?: string;
 
-    @ApiProperty({ example: '+58 412-1234567', required: false })
-    @IsOptional()
     @IsString()
+    @IsOptional()
     phone?: string;
 
-    @ApiProperty({ example: 'contacto@ferreteria.com', required: false })
+    @IsBoolean()
     @IsOptional()
-    @IsEmail({}, { message: 'Email inválido' })
+    hasWhatsapp?: boolean;
+
+    @IsEmail()
+    @IsOptional()
     email?: string;
+
+    @IsString()
+    @IsOptional()
+    social1?: string;
+
+    @IsString()
+    @IsOptional()
+    social2?: string;
+
+    @IsString()
+    @IsOptional()
+    social3?: string;
 }

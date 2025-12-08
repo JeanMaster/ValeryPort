@@ -17,7 +17,7 @@ export class ClientsService {
             });
         } catch (error) {
             if (error.code === 'P2002') {
-                throw new ConflictException('El RIF ya está registrado');
+                throw new ConflictException('El Cliente con este ID ya está registrado');
             }
             throw error;
         }
@@ -31,8 +31,8 @@ export class ClientsService {
 
         if (search) {
             where.OR = [
-                { comercialName: { contains: search, mode: 'insensitive' } },
-                { rif: { contains: search, mode: 'insensitive' } },
+                { name: { contains: search, mode: 'insensitive' } },
+                { id: { contains: search, mode: 'insensitive' } },
                 { email: { contains: search, mode: 'insensitive' } },
             ];
         }
@@ -71,7 +71,7 @@ export class ClientsService {
             });
         } catch (error) {
             if (error.code === 'P2002') {
-                throw new ConflictException('El RIF ya está registrado por otro cliente');
+                throw new ConflictException('El ID ya está registrado por otro cliente');
             }
             throw error;
         }

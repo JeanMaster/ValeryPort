@@ -24,13 +24,17 @@ model User {
 }
 
 model Client {
-  id            String   @id @default(uuid())
-  rif           String   @unique
-  comercialName String
-  legalName     String?
+  id            String   @id // Will be manually set as "V-12345678"
+  name          String
   address       String?
   phone         String?
+  hasWhatsapp   Boolean  @default(false)
   email         String?
+  
+  social1       String?
+  social2       String?
+  social3       String?
+  
   active        Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

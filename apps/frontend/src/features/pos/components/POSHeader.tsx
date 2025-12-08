@@ -1,11 +1,21 @@
-import { Layout, Typography, Row, Col, Space } from 'antd';
+import { Layout, Typography, Row, Col, Space, Popover } from 'antd';
+import { useState, useEffect } from 'react';
 import { usePOSStore } from '../../../store/posStore';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
 
 export const POSHeader = () => {
-    const { totals, activeCustomer, preferredSecondaryCurrency } = usePOSStore();
+    const { totals, activeCustomer, preferredSecondaryCurrency, currencies, primaryCurrency } = usePOSStore();
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000); // Update every second to accurate minute changes
+
+        return () => clearInterval(timer);
+    }, []);
 
     return (
         <Header style={{
@@ -25,11 +35,11 @@ export const POSHeader = () => {
                     <Space size="large" wrap>
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Fecha</Text>
-                            <Text strong style={{ fontSize: 16 }}>{new Date().toLocaleDateString()}</Text>
+                            <Text strong style={{ fontSize: 16 }}>{currentTime.toLocaleDateString()}</Text>
                         </Space>
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Hora</Text>
-                            <Text strong style={{ fontSize: 16 }}>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                            <Text strong style={{ fontSize: 16 }}>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                         </Space>
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Cajero</Text>
@@ -51,21 +61,49 @@ export const POSHeader = () => {
                         </div>
 
                         {/* Total Principal Destacado */}
-                        <div style={{
-                            background: '#e6f7ff',
-                            padding: '5px 15px',
-                            borderRadius: 8,
-                            border: '1px solid #91caff',
-                            textAlign: 'right'
-                        }}>
-                            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Total a Pagar</Text>
-                            <Title level={2} style={{ margin: 0, color: '#096dd9' }}>
-                                {totals.total.toFixed(2)} <span style={{ fontSize: 14 }}>Bs</span>
-                            </Title>
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                {preferredSecondaryCurrency?.symbol || '$'} {totals.totalUsd.toFixed(2)}
-                            </Text>
-                        </div>
+                        {/* Total Principal Destacado (con Popover Multi-Moneda) */}
+                        <Popover
+                            placement="bottomRight"
+                            title="Otras Monedas"
+                            content={
+                                <div style={{ minWidth: 200 }}>
+                                    {/* List currencies that are NOT Primary AND NOT Preferred Secondary */}
+                                    {currencies
+                                        .filter(c => c.id !== primaryCurrency?.id && c.code !== preferredSecondaryCurrency?.code)
+                                        .map(currency => {
+                                            const rate = Number(currency.exchangeRate || 0);
+                                            const amount = rate > 0 ? totals.total / rate : 0;
+                                            return (
+                                                <div key={currency.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
+                                                    <span>{currency.name} ({currency.symbol})</span>
+                                                    <strong style={{ color: '#1890ff' }}>{amount.toFixed(2)}</strong>
+                                                </div>
+                                            );
+                                        })
+                                    }
+                                    {currencies.filter(c => c.id !== primaryCurrency?.id && c.code !== preferredSecondaryCurrency?.code).length === 0 && (
+                                        <div style={{ color: '#999', fontStyle: 'italic' }}>No hay otras monedas configurada</div>
+                                    )}
+                                </div>
+                            }
+                        >
+                            <div style={{
+                                background: '#e6f7ff',
+                                padding: '5px 15px',
+                                borderRadius: 8,
+                                border: '1px solid #91caff',
+                                textAlign: 'right',
+                                cursor: 'help'
+                            }}>
+                                <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Total a Pagar</Text>
+                                <Title level={2} style={{ margin: 0, color: '#096dd9' }}>
+                                    {totals.total.toFixed(2)} <span style={{ fontSize: 14 }}>Bs</span>
+                                </Title>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                    {preferredSecondaryCurrency?.symbol || '$'} {totals.totalUsd.toFixed(2)}
+                                </Text>
+                            </div>
+                        </Popover>
                     </Space>
                 </Col>
             </Row>

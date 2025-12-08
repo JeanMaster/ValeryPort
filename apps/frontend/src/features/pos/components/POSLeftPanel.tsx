@@ -7,7 +7,9 @@ import type { Product } from '../../../services/productsApi';
 import debounce from 'lodash/debounce';
 import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
-import { DeleteOutlined, PercentageOutlined, NumberOutlined } from '@ant-design/icons';
+import { PriceModal } from './PriceModal';
+import { ClientSelectionModal } from './ClientSelectionModal';
+import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, UserOutlined } from '@ant-design/icons';
 
 export const POSLeftPanel = () => {
     const {
@@ -17,11 +19,15 @@ export const POSLeftPanel = () => {
         selectedItemId,
         selectItem,
         updateQuantity,
+        updateItemPrice,
         removeItem,
         applyDiscount,
         totals,
         preferredSecondaryCurrency,
-        exchangeRate
+        exchangeRate,
+        calculatePriceInPrimary,
+        calculateCostInPrimary,
+        setCustomer
     } = usePOSStore();
 
     const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -29,6 +35,8 @@ export const POSLeftPanel = () => {
     // Modal States
     const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+    const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
     const handleSearch = useCallback(
         debounce((value: string) => {
@@ -50,12 +58,29 @@ export const POSLeftPanel = () => {
     // Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (!selectedItemId) return;
+            if (!selectedItemId) {
+                // Even if no item selected, F3 (Client) should work? 
+                // The previous logic had `if (!selectedItemId) return;` at top, blocking F3 if cart empty.
+                // Better to allow F3 always.
+            }
+
+            // F3: Clients (Always allowed)
+            if (e.key === 'F3') {
+                e.preventDefault();
+                setIsClientModalOpen(true);
+                return;
+            }
+
+            if (!selectedItemId) return; // Block item actions if no item selected
 
             switch (e.key) {
                 case 'F4':
                     e.preventDefault();
                     setIsQuantityModalOpen(true);
+                    break;
+                case 'F5':
+                    e.preventDefault();
+                    setIsPriceModalOpen(true);
                     break;
                 case 'F6':
                     e.preventDefault();
@@ -129,10 +154,12 @@ export const POSLeftPanel = () => {
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {/* Info Cliente & Factura bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, background: '#eee', padding: '5px 10px' }}>
-                <span>Cliente: <strong style={{ color: '#ff4d4f' }}>{activeCustomer}</strong></span>
+                <span onClick={() => setIsClientModalOpen(true)} style={{ cursor: 'pointer' }}>
+                    Cliente: <strong style={{ color: '#ff4d4f' }}>{activeCustomer}</strong> <UserOutlined />
+                </span>
                 <span>CONTADO CONTRIBUYENTE</span>
                 <span>Factura: <strong style={{ color: '#ff4d4f' }}>00-00000001</strong></span>
-                <Button size="small" style={{ fontSize: 10 }}>Divisas..</Button>
+                <Button size="small" style={{ fontSize: 10 }} onClick={() => setIsClientModalOpen(true)}>F3 Clientes</Button>
             </div>
 
             {/* Buscador */}
@@ -148,11 +175,28 @@ export const POSLeftPanel = () => {
                 notFoundContent={null}
                 style={{ width: '100%' }}
                 size="large"
-                options={(searchResults || []).map((d: Product) => ({
-                    value: d.id,
-                    label: `${d.sku} - ${d.name} ($${d.salePrice?.toFixed(2)})`,
-                    product: d
-                }))}
+                options={(searchResults || []).map((d: Product) => {
+                    // Calculate Prices for Display
+                    const priceInPrimary = calculatePriceInPrimary(d, false);
+                    const priceInSecondary = exchangeRate > 0 ? priceInPrimary / exchangeRate : 0;
+
+                    const originalSymbol = d.currency?.symbol || '$';
+                    const originalPrice = d.salePrice;
+
+                    const secondarySymbol = preferredSecondaryCurrency?.symbol || '$';
+
+                    let priceString = `${originalSymbol}${Number(originalPrice).toFixed(2)}`;
+
+                    if (preferredSecondaryCurrency && exchangeRate > 0 && d.currency?.name !== preferredSecondaryCurrency.code) {
+                        priceString += ` | ${secondarySymbol}${priceInSecondary.toFixed(2)}`;
+                    }
+
+                    return {
+                        value: d.id,
+                        label: `${d.sku} - ${d.name} (${priceString})`,
+                        product: d
+                    };
+                })}
             />
 
             {/* Grid del Carrito */}
@@ -181,6 +225,14 @@ export const POSLeftPanel = () => {
                     onClick={() => setIsQuantityModalOpen(true)}
                 >
                     F4 Cant.
+                </Button>
+                <Button
+                    size="small"
+                    icon={<DollarOutlined />}
+                    disabled={!selectedItemId}
+                    onClick={() => setIsPriceModalOpen(true)}
+                >
+                    F5 Precio
                 </Button>
                 <Button
                     size="small"
@@ -237,7 +289,6 @@ export const POSLeftPanel = () => {
                         onOk={(qty) => {
                             updateQuantity(selectedCartItem.product.id, qty);
                             setIsQuantityModalOpen(false);
-                            // Keep focus on table or re-focus input?
                         }}
                         onCancel={() => setIsQuantityModalOpen(false)}
                     />
@@ -245,16 +296,58 @@ export const POSLeftPanel = () => {
                     <DiscountModal
                         open={isDiscountModalOpen}
                         product={selectedCartItem.product}
-                        currentPrice={selectedCartItem.price} // Use base price for calculation check
+                        currentPrice={selectedCartItem.price}
                         onOk={(percent) => {
+                            // Validation 1: Max 30%
+                            if (percent > 30) {
+                                Modal.error({
+                                    title: 'Descuento Excesivo',
+                                    content: 'El descuento máximo permitido es del 30%.'
+                                });
+                                return;
+                            }
+
+                            // Validation 2: Price below Cost
+                            const currentPrice = selectedCartItem.price;
+                            const discountAmount = currentPrice * (percent / 100);
+                            const finalPrice = currentPrice - discountAmount;
+
+                            const costInPrimary = calculateCostInPrimary(selectedCartItem.product, selectedCartItem.isSecondaryUnit);
+
+                            if (finalPrice < costInPrimary) {
+                                Modal.error({
+                                    title: 'Precio por debajo del costo',
+                                    content: `El descuento del ${percent}% resulta en un precio (${finalPrice.toFixed(2)}) menor al costo del producto (${costInPrimary.toFixed(2)}). Operación no permitida.`
+                                });
+                                return;
+                            }
+
                             applyDiscount(selectedCartItem.product.id, percent);
                             setIsDiscountModalOpen(false);
                         }}
                         onCancel={() => setIsDiscountModalOpen(false)}
                     />
+
+                    <PriceModal
+                        open={isPriceModalOpen}
+                        cartItem={selectedCartItem}
+                        onOk={(newPrice) => {
+                            updateItemPrice(selectedCartItem.product.id, newPrice);
+                            setIsPriceModalOpen(false);
+                        }}
+                        onCancel={() => setIsPriceModalOpen(false)}
+                    />
                 </>
             )}
+
+            <ClientSelectionModal
+                open={isClientModalOpen}
+                onSelect={(client) => {
+                    setCustomer(client); // Uses string or object based on store logic. Now handles object {id, name}
+                    setIsClientModalOpen(false);
+                }}
+                onCancel={() => setIsClientModalOpen(false)}
+            />
         </div>
     );
 };
-

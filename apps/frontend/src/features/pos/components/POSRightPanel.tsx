@@ -8,7 +8,7 @@ import type { Product } from '../../../services/productsApi';
 import { usePOSStore } from '../../../store/posStore';
 
 export const POSRightPanel = () => {
-    const { addItem, preferredSecondaryCurrency, exchangeRate } = usePOSStore();
+    const { addItem } = usePOSStore();
 
     // Navigation State
     const [viewMode, setViewMode] = useState<'ROOT' | 'DEPT' | 'SUBDEPT'>('ROOT');
@@ -131,7 +131,7 @@ export const POSRightPanel = () => {
                         style={{ textAlign: 'center', height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
                     >
                         <div style={{ fontSize: 12, fontWeight: 'bold', overflow: 'hidden', maxHeight: 40 }}>{prod.name}</div>
-                        <TagPrice price={prod.salePrice} />
+                        <TagPrice product={prod} />
                     </Card>
                 </Col>
             ));
@@ -146,28 +146,72 @@ export const POSRightPanel = () => {
                     <Card
                         hoverable
                         onClick={() => handleProductClick(prod)}
-                        style={{ textAlign: 'center', height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                        bodyStyle={{ padding: '12px 8px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ textAlign: 'center', height: 110 }}
                     >
                         <div style={{ fontSize: 12, fontWeight: 'bold', overflow: 'hidden', maxHeight: 40 }}>{prod.name}</div>
-                        <TagPrice price={prod.salePrice} />
+                        <TagPrice product={prod} />
                     </Card>
                 </Col>
             ));
         }
     };
 
-    const TagPrice = ({ price }: { price: number }) => {
-        const secondaryPrice = exchangeRate > 0 ? price / exchangeRate : 0;
+    const TagPrice = ({ product }: { product: Product }) => {
+        const { calculatePriceInPrimary, preferredSecondaryCurrency, exchangeRate, primaryCurrency } = usePOSStore();
+
+        // 1. Calculate Price in Primary Currency (Bs)
+        const priceInPrimary = calculatePriceInPrimary(product, false);
+
+        // 2. Calculate Price in Preferred Secondary Currency (e.g. USD)
+        // If exchangeRate (Bs per Secondary) is available
+        const priceInSecondary = exchangeRate > 0 ? priceInPrimary / exchangeRate : 0;
+
+        // 3. Original Price Info
+        // Assuming details are populate in product.currency
+        const originalSymbol = product.currency?.symbol || '$';
+        const originalPrice = product.salePrice;
+        const isOriginalSameAsPrimary = product.currencyId === primaryCurrency?.id;
+        const isOriginalSameAsSecondary = preferredSecondaryCurrency?.code === product.currency?.name; // currency.name usually holds code like USD, VES
+
         return (
-            <div style={{ marginTop: 5, textAlign: 'center' }}>
-                <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', color: '#52c41a', padding: '2px 8px', borderRadius: 4, fontSize: 12 }}>
-                    Bs {price.toFixed(2)}
+            <div style={{ marginTop: 8, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                {/* Primary Currency (Prominent) */}
+                <div style={{
+                    background: '#f6ffed',
+                    border: '1px solid #b7eb8f',
+                    color: '#52c41a',
+                    padding: '4px 12px',
+                    borderRadius: 6,
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    width: '100%',
+                    textAlign: 'center'
+                }}>
+                    {primaryCurrency?.symbol || 'Bs'} {priceInPrimary.toFixed(2)}
                 </div>
-                {preferredSecondaryCurrency && exchangeRate > 0 && (
-                    <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-                        {preferredSecondaryCurrency.symbol} {secondaryPrice.toFixed(2)}
-                    </div>
-                )}
+
+                {/* Secondary & Ref Prices Row */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 11, color: '#666', width: '100%' }}>
+                    {/* Original Currency (Ref) */}
+                    {!isOriginalSameAsPrimary && (
+                        <span>
+                            Ref: <strong style={{ color: '#595959' }}>{originalSymbol} {Number(originalPrice).toFixed(2)}</strong>
+                        </span>
+                    )}
+
+                    {/* Divider if both exist */}
+                    {(!isOriginalSameAsPrimary && preferredSecondaryCurrency && exchangeRate > 0 && !isOriginalSameAsSecondary) && (
+                        <span style={{ color: '#ccc' }}>|</span>
+                    )}
+
+                    {/* Secondary Currency */}
+                    {preferredSecondaryCurrency && exchangeRate > 0 && !isOriginalSameAsSecondary && (
+                        <span style={{ color: '#1890ff' }}>
+                            {preferredSecondaryCurrency.symbol} <strong>{priceInSecondary.toFixed(2)}</strong>
+                        </span>
+                    )}
+                </div>
             </div>
         );
     };

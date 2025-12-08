@@ -73,7 +73,17 @@ export const POSFooter = () => {
                 <span>F9 Totalizar</span>
             </Button>
 
-            <FunctionKey fKey="ESC Cerrar" label="Salir" icon={<PoweroffOutlined />} color="#f5f5f5" />
+            <FunctionKey
+                fKey="ESC"
+                label="Reset"
+                icon={<ReloadOutlined />}
+                color="#fff1f0"
+                onClick={() => {
+                    import('../../../store/posStore').then(({ usePOSStore }) => {
+                        usePOSStore.getState().resetPOS();
+                    });
+                }}
+            />
         </div>
     );
 };
