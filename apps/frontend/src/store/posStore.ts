@@ -375,6 +375,22 @@ export const usePOSStore = create<POSState>()(
             processSale: async (paymentData: any) => {
                 const { cart, totals, customerId } = get();
 
+                // Handle multiple payments - combine them into a single payment method string
+                let paymentMethod = 'MIXED';
+                let tendered = paymentData.totalPaid || 0;
+                let change = paymentData.change || 0;
+
+                // If only one payment, use that method
+                if (paymentData.payments && paymentData.payments.length === 1) {
+                    paymentMethod = paymentData.payments[0].method;
+                    tendered = paymentData.payments[0].amount;
+                } else if (paymentData.payments && paymentData.payments.length > 1) {
+                    // Multiple payments - create a description
+                    paymentMethod = paymentData.payments
+                        .map((p: any) => `${p.method}:${p.amount.toFixed(2)}`)
+                        .join(', ');
+                }
+
                 const saleDto: CreateSaleDto = {
                     clientId: customerId || undefined,
                     items: cart.map(item => ({
@@ -387,9 +403,9 @@ export const usePOSStore = create<POSState>()(
                     discount: totals.discount,
                     tax: totals.tax,
                     total: totals.total,
-                    paymentMethod: paymentData.method,
-                    tendered: paymentData.tendered,
-                    change: paymentData.change
+                    paymentMethod: paymentMethod,
+                    tendered: tendered,
+                    change: change
                 };
 
                 try {
