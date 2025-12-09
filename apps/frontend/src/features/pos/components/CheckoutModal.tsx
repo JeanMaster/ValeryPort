@@ -313,7 +313,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                 margin: '8px 0',
                                 color: isFullyPaid ? '#52c41a' : '#fa8c16'
                             }}>
-                                {primaryCurrency?.symbol} {remaining.toFixed(2)}
+                                {formatVenezuelanPrice(remaining, primaryCurrency?.symbol)}
                             </Title>
                             {preferredSecondaryCurrency && (
                                 <Text type="secondary">
@@ -383,7 +383,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                                 </Text>
                                                 {!isFullyPaid && (
                                                     <div style={{ fontSize: '0.65em', color: '#52c41a', marginTop: 2 }}>
-                                                        Sugerido: {primaryCurrency?.symbol} {suggestedAmount.toFixed(2)}
+                                                        Sugerido: {formatVenezuelanPrice(suggestedAmount, primaryCurrency?.symbol)}
                                                     </div>
                                                 )}
                                             </div>
@@ -430,7 +430,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                                     </Text>
                                                     {!isFullyPaid && suggestedAmount > 0 && (
                                                         <div style={{ fontSize: '0.65em', color: '#52c41a', marginTop: 2 }}>
-                                                            Sugerido: {currency.symbol} {suggestedAmount.toFixed(2)}
+                                                            Sugerido: {formatVenezuelanPrice(suggestedAmount, currency.symbol)}
                                                         </div>
                                                     )}
                                                 </div>
