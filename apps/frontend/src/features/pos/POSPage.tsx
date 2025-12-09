@@ -13,12 +13,12 @@ const { Content, Sider, Footer } = Layout;
 export const POSPage = () => {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-    const { processSale, setCustomer, toggleSelectedItemUnit } = usePOSStore();
+    const { processSale, setCustomer } = usePOSStore();
 
     const handleCheckoutProcess = async (paymentData: any) => {
         try {
-            await processSale(paymentData);
-            message.success('Venta procesada exitosamente');
+            const invoiceNumber = await processSale(paymentData);
+            message.success(`Venta procesada exitosamente. Factura: ${invoiceNumber}`);
             setIsCheckoutOpen(false);
         } catch (error) {
             message.error('Error al procesar la venta');
@@ -30,9 +30,6 @@ export const POSPage = () => {
         if (e.key === 'F3') {
             e.preventDefault();
             setIsClientModalOpen(true);
-        } else if (e.key === 'F8') {
-            e.preventDefault();
-            toggleSelectedItemUnit();
         } else if (e.key === 'F9') {
             e.preventDefault();
             setIsCheckoutOpen(true);
@@ -85,7 +82,6 @@ export const POSPage = () => {
                         <POSFooter
                             onClientClick={() => setIsClientModalOpen(true)}
                             onCheckoutClick={() => setIsCheckoutOpen(true)}
-                            onUnitToggleClick={toggleSelectedItemUnit}
                         />
                     </Footer>
                 </Layout>

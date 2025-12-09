@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { InvoiceService } from '../invoice/invoice.service';
 
 @Injectable()
 export class SalesService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private invoiceService: InvoiceService
+    ) { }
 
     /**
      * Crear una nueva venta
@@ -29,10 +33,14 @@ export class SalesService {
 
         // Crear la venta con items en una transacción
         return await this.prisma.$transaction(async (prisma) => {
-            // Crear la venta
+            // Generar número de factura DENTRO de la transacción para evitar race conditions
+            const invoiceNumber = await this.invoiceService.generateInvoiceNumber();
+
+            // Crear la venta con número de factura
             const sale = await prisma.sale.create({
                 data: {
                     ...saleData,
+                    invoiceNumber, // Asignar número de factura
                     items: {
                         create: items,
                     },
@@ -68,6 +76,70 @@ export class SalesService {
      */
     async findAll() {
         return this.prisma.sale.findMany({
+            include: {
+                items: {
+                    include: {
+                        product: true,
+                    },
+                },
+                client: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
+    /**
+     * Listar ventas con filtros
+     */
+    async findWithFilters(filters: any) {
+        const where: any = {};
+
+        // Filtro por rango de fechas
+        if (filters.startDate || filters.endDate) {
+            where.date = {};
+            if (filters.startDate) {
+                where.date.gte = new Date(filters.startDate);
+            }
+            if (filters.endDate) {
+                // Agregar un día para incluir toda la fecha final
+                const endDate = new Date(filters.endDate);
+                endDate.setDate(endDate.getDate() + 1);
+                where.date.lt = endDate;
+            }
+        }
+
+        // Filtro por cliente
+        if (filters.clientId) {
+            where.clientId = filters.clientId;
+        }
+
+        // Filtro por forma de pago
+        if (filters.paymentMethod) {
+            where.paymentMethod = filters.paymentMethod;
+        }
+
+        // Filtro por monto mínimo y máximo
+        if (filters.minAmount || filters.maxAmount) {
+            where.total = {};
+            if (filters.minAmount) {
+                where.total.gte = filters.minAmount;
+            }
+            if (filters.maxAmount) {
+                where.total.lte = filters.maxAmount;
+            }
+        }
+
+        // Filtro por producto específico (buscar en los items)
+        if (filters.productId) {
+            where.items = {
+                some: {
+                    productId: filters.productId,
+                },
+            };
+        }
+
+        return this.prisma.sale.findMany({
+            where,
             include: {
                 items: {
                     include: {

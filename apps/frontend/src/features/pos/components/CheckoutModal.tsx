@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, Row, Col, Typography, Table, InputNumber, Space, Card } from 'antd';
 import {
     DollarOutlined,
@@ -32,6 +32,9 @@ interface CheckoutModalProps {
 export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps): React.ReactElement => {
     const { totals, preferredSecondaryCurrency, currencies, primaryCurrency } = usePOSStore();
 
+    // Ref for auto-focus on amount input
+    const amountInputRef = useRef<any>(null);
+
     const [payments, setPayments] = useState<PaymentEntry[]>([]);
     const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
     const [inputAmount, setInputAmount] = useState<number | null>(null);
@@ -49,6 +52,20 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             setSelectedPaymentId(null);
             setInputAmount(null);
             setSelectedMethod(null);
+        }
+    }, [open]);
+
+    // Auto-focus on amount input when modal opens
+    useEffect(() => {
+        if (open && amountInputRef.current) {
+            // Small delay to ensure modal is fully rendered
+            const timer = setTimeout(() => {
+                if (amountInputRef.current && amountInputRef.current.focus) {
+                    amountInputRef.current.focus();
+                }
+            }, 100);
+
+            return () => clearTimeout(timer);
         }
     }, [open]);
 
@@ -336,6 +353,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                         <div style={{ marginBottom: 16 }}>
                             <Text strong>Cantidad:</Text>
                             <InputNumber
+                                ref={amountInputRef}
                                 style={{ width: '100%', marginTop: 8 }}
                                 size="large"
                                 value={inputAmount}

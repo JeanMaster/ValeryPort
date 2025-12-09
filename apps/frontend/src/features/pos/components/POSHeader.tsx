@@ -7,7 +7,7 @@ const { Header } = Layout;
 const { Title, Text } = Typography;
 
 export const POSHeader = () => {
-    const { totals, activeCustomer, preferredSecondaryCurrency, currencies, primaryCurrency } = usePOSStore();
+    const { totals, activeCustomer, preferredSecondaryCurrency, currencies, primaryCurrency, nextInvoiceNumber } = usePOSStore();
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
@@ -45,6 +45,10 @@ export const POSHeader = () => {
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Cajero</Text>
                             <Text strong style={{ fontSize: 16 }}>01 - {activeCustomer}</Text>
+                        </Space>
+                        <Space direction="vertical" size={0}>
+                            <Text type="secondary" style={{ fontSize: 12 }}>Factura</Text>
+                            <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{nextInvoiceNumber}</Text>
                         </Space>
                     </Space>
                 </Col>

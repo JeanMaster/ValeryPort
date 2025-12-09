@@ -22,6 +22,7 @@ interface POSState {
     activeCustomer: string;
     customerId: string | null;
     selectedItemId: string | null;
+    nextInvoiceNumber: string; // Next invoice number to be assigned
     totals: {
         subtotal: number;
         discount: number; // Total descuentos
@@ -50,7 +51,9 @@ interface POSState {
     setCustomer: (customer: { id: string; name: string } | string) => void;
     calculateTotals: () => void;
     initialize: () => Promise<void>;
-    processSale: (paymentData: any) => Promise<void>;
+    processSale: (paymentData: any) => Promise<string>;
+    fetchNextInvoiceNumber: () => Promise<void>;
+    refreshInvoiceNumber: () => Promise<void>;
 
     // Helpers
     calculatePriceInPrimary: (product: Product, isSecondaryUnit: boolean) => number;
@@ -65,6 +68,7 @@ export const usePOSStore = create<POSState>()(
             activeCustomer: 'CONTADO',
             customerId: null,
             selectedItemId: null,
+            nextInvoiceNumber: 'FAC-00000001', // Default next invoice number
             totals: {
                 subtotal: 0,
                 discount: 0,
@@ -401,17 +405,35 @@ export const usePOSStore = create<POSState>()(
                         }
                     }
 
+                    // 4. Fetch Next Invoice Number
+                    const nextInvoiceNumber = await salesApi.getNextInvoiceNumber();
+
                     set({
                         currencies: allCurrencies,
                         primaryCurrency: primary,
                         preferredSecondaryCurrency: secondaryDetails,
-                        exchangeRate: secondaryRate
+                        exchangeRate: secondaryRate,
+                        nextInvoiceNumber: nextInvoiceNumber
                     });
 
                     get().calculateTotals();
                 } catch (error) {
                     console.error("Failed to initialize POS store", error);
                 }
+            },
+
+            fetchNextInvoiceNumber: async () => {
+                try {
+                    const nextNumber = await salesApi.getNextInvoiceNumber();
+                    set({ nextInvoiceNumber: nextNumber });
+                } catch (error) {
+                    console.error('Failed to fetch next invoice number:', error);
+                    // Keep current value on error
+                }
+            },
+
+            refreshInvoiceNumber: async () => {
+                await get().fetchNextInvoiceNumber();
             },
 
             processSale: async (paymentData: any) => {
@@ -451,11 +473,15 @@ export const usePOSStore = create<POSState>()(
                 };
 
                 try {
-                    await salesApi.create(saleDto);
+                    const createdSale = await salesApi.create(saleDto);
                     // Clear cart on success
                     get().clearCart();
                     // Reset customer to CONTADO
                     set({ activeCustomer: 'CONTADO', customerId: null });
+                    // Refresh invoice number for next sale
+                    await get().refreshInvoiceNumber();
+                    // Return the invoice number
+                    return createdSale.invoiceNumber;
                 } catch (error) {
                     console.error('Error processing sale:', error);
                     throw error; // Re-throw to handle in component

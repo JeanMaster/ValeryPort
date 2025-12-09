@@ -98,7 +98,15 @@ export const ProductsPage = () => {
             key: 'costPrice',
             width: '10%',
             render: (_: any, record: Product) => (
-                <span>{record.currency.symbol} {record.costPrice.toFixed(2)}</span>
+                <span style={{
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                    display: 'inline-block'
+                }}>
+                    {record.currency.symbol} {record.costPrice.toFixed(2)}
+                </span>
             ),
         },
         {
@@ -117,7 +125,7 @@ export const ProductsPage = () => {
                         )}
                         {record.wholesalePrice && (
                             <div>
-                                <strong>Al Mayor:</strong> {formatVenezuelanPrice(record.wholesalePrice, record.currency.symbol)}
+                                <strong>Al Mayor:</strong> {formatVenezuelanPrice(record.wholesalePrice, record.currency.symbol, 2, true)}
                             </div>
                         )}
                     </div>
@@ -125,8 +133,17 @@ export const ProductsPage = () => {
 
                 return (
                     <Tooltip title={tooltipContent} placement="top">
-                        <span style={{ cursor: hasExtraPrices ? 'help' : 'default' }}>
-                            {formatVenezuelanPrice(record.salePrice, record.currency.symbol)}
+                        <span
+                            style={{
+                                cursor: hasExtraPrices ? 'help' : 'default',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: '100%',
+                                display: 'inline-block'
+                            }}
+                        >
+                            {formatVenezuelanPrice(record.salePrice, record.currency.symbol, 2, true)}
                         </span>
                     </Tooltip>
                 );

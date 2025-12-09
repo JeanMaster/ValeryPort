@@ -12,6 +12,7 @@ import { UnitsPage } from './features/units/UnitsPage';
 import { CurrenciesPage } from './features/currencies/CurrenciesPage';
 import { DevToolsPage } from './features/dev-tools/DevToolsPage';
 import { POSPage } from './features/pos/POSPage';
+import { ReportsPage } from './features/reports/ReportsPage';
 import {
   ShopOutlined,
   ShoppingCartOutlined,
@@ -20,7 +21,6 @@ import {
   CreditCardOutlined,
   TeamOutlined,
   BankOutlined,
-  BarChartOutlined,
 } from '@ant-design/icons';
 
 function App() {
@@ -46,7 +46,7 @@ function App() {
         <Route path="accounts-payable" element={<ModulePage title="Cuentas por Pagar" icon={<CreditCardOutlined />} />} />
         <Route path="hr" element={<ModulePage title="Nómina" icon={<TeamOutlined />} />} />
         <Route path="banks" element={<ModulePage title="Bancos" icon={<BankOutlined />} />} />
-        <Route path="reports" element={<ModulePage title="Reportes" icon={<BarChartOutlined />} />} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="configuration/company" element={<CompanySettingsPage />} />
         <Route path="configuration/dev-tools" element={<DevToolsPage />} />
         <Route path="configuration/general" element={<GeneralOptionsPage />} />

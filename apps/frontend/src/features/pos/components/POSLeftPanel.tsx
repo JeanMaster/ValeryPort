@@ -9,7 +9,7 @@ import debounce from 'lodash/debounce';
 import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
 import { PriceModal } from './PriceModal';
-import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, UserOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, UserOutlined, SyncOutlined } from '@ant-design/icons';
 
 export const POSLeftPanel = () => {
     const {
@@ -22,6 +22,7 @@ export const POSLeftPanel = () => {
         updateItemPrice,
         removeItem,
         applyDiscount,
+        toggleSelectedItemUnit,
         totals,
         preferredSecondaryCurrency,
         calculatePriceInPrimary,
@@ -86,12 +87,16 @@ export const POSLeftPanel = () => {
                     e.preventDefault();
                     setIsDiscountModalOpen(true);
                     break;
+                case 'F8':
+                    e.preventDefault();
+                    toggleSelectedItemUnit();
+                    break;
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedItemId, removeItem]);
+    }, [selectedItemId, removeItem, toggleSelectedItemUnit]);
 
     const selectedCartItem = cart.find(item => item.product.id === selectedItemId);
 
@@ -114,7 +119,7 @@ export const POSLeftPanel = () => {
                     {record.isSecondaryUnit && <div style={{ fontSize: 10, color: '#888' }}>({product.secondaryUnit?.name || 'Sec.'})</div>}
                     {record.discount > 0 && (
                         <div style={{ fontSize: 11, color: 'green' }}>
-                            Desc: {record.discountPercent}% (-{formatVenezuelanPriceOnly(record.discount)})
+                            Desc: {record.discountPercent}% (-{formatVenezuelanPriceOnly(record.discount, 2, true)})
                         </div>
                     )}
                 </div>
@@ -131,11 +136,30 @@ export const POSLeftPanel = () => {
                     ? calculatePriceInCurrency(value, preferredSecondaryCurrency.id)
                     : 0;
                 return (
-                    <div>
-                        <div style={{ fontSize: 14 }}>{formatVenezuelanPriceOnly(value)}</div>
+                    <div style={{ overflow: 'hidden' }}>
+                        <div
+                            style={{
+                                fontSize: 14,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}
+                            title={formatVenezuelanPriceOnly(value, 2, false)}
+                        >
+                            {formatVenezuelanPriceOnly(value, 2, true)}
+                        </div>
                         {preferredSecondaryCurrency && secondaryValue > 0 && (
-                            <div style={{ fontSize: 10, color: '#888' }}>
-                                {formatVenezuelanPrice(secondaryValue, preferredSecondaryCurrency.symbol)}
+                            <div
+                                style={{
+                                    fontSize: 10,
+                                    color: '#888',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}
+                                title={formatVenezuelanPrice(secondaryValue, preferredSecondaryCurrency.symbol, 2, false)}
+                            >
+                                {formatVenezuelanPrice(secondaryValue, preferredSecondaryCurrency.symbol, 2, true)}
                             </div>
                         )}
                     </div>
@@ -146,14 +170,6 @@ export const POSLeftPanel = () => {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* Info Cliente & Factura bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, background: '#eee', padding: '5px 10px' }}>
-                <span>
-                    Cliente: <strong style={{ color: '#ff4d4f' }}>{activeCustomer}</strong> <UserOutlined />
-                </span>
-                <span>CONTADO CONTRIBUYENTE</span>
-                <span>Factura: <strong style={{ color: '#ff4d4f' }}>00-00000001</strong></span>
-            </div>
 
             {/* Buscador */}
             <Select
@@ -180,10 +196,10 @@ export const POSLeftPanel = () => {
 
                     const secondarySymbol = preferredSecondaryCurrency?.symbol || '$';
 
-                    let priceString = `${originalSymbol}${formatVenezuelanPriceOnly(Number(originalPrice))}`;
+                    let priceString = `${originalSymbol}${formatVenezuelanPriceOnly(Number(originalPrice), 2, true)}`;
 
                     if (preferredSecondaryCurrency && priceInSecondary > 0 && d.currency?.name !== preferredSecondaryCurrency.code) {
-                        priceString += ` | ${formatVenezuelanPrice(priceInSecondary, secondarySymbol)}`;
+                        priceString += ` | ${formatVenezuelanPrice(priceInSecondary, secondarySymbol, 2, true)}`;
                     }
 
                     return {
@@ -246,26 +262,49 @@ export const POSLeftPanel = () => {
                 >
                     F7 Dcto
                 </Button>
+                <Button
+                    size="small"
+                    icon={<SyncOutlined />}
+                    disabled={!selectedItemId}
+                    onClick={toggleSelectedItemUnit}
+                >
+                    F8 Alt
+                </Button>
             </div>
 
             {/* Mini Totales Inferiores */}
             <Card size="small" style={{ background: '#333', color: 'white', border: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ color: 'white' }}>Sub Total</span>
-                    <strong style={{ fontSize: 16, color: 'white' }}>{formatVenezuelanPriceOnly(totals.subtotal || 0)}</strong>
+                    <strong
+                        style={{ fontSize: 16, color: 'white' }}
+                        title={formatVenezuelanPriceOnly(totals.subtotal || 0, 2, false)}
+                    >
+                        {formatVenezuelanPriceOnly(totals.subtotal || 0, 2, true)}
+                    </strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ color: 'white' }}>Descuento</span>
-                    <strong style={{ fontSize: 16, color: 'orange' }}>{(totals.discount || 0).toFixed(2)}</strong>
+                    <strong style={{ fontSize: 16, color: 'orange' }}>
+                        {(totals.discount || 0).toFixed(2)}
+                    </strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #555', marginTop: 5, paddingTop: 5 }}>
                     <span style={{ color: 'white' }}>Total</span>
-                    <strong style={{ fontSize: 20, color: 'yellow' }}>{formatVenezuelanPriceOnly(totals.total || 0)}</strong>
+                    <strong
+                        style={{ fontSize: 20, color: 'yellow' }}
+                        title={formatVenezuelanPriceOnly(totals.total || 0, 2, false)}
+                    >
+                        {formatVenezuelanPriceOnly(totals.total || 0, 2, true)}
+                    </strong>
                 </div>
                 {preferredSecondaryCurrency && (
                     <div style={{ textAlign: 'right', marginTop: -2 }}>
-                        <span style={{ fontSize: 12, color: '#aaa' }}>
-                            {formatVenezuelanPrice(totals.totalUsd || 0, preferredSecondaryCurrency.symbol)}
+                        <span
+                            style={{ fontSize: 12, color: '#aaa' }}
+                            title={formatVenezuelanPrice(totals.totalUsd || 0, preferredSecondaryCurrency.symbol, 2, false)}
+                        >
+                            {formatVenezuelanPrice(totals.totalUsd || 0, preferredSecondaryCurrency.symbol, 2, true)}
                         </span>
                     </div>
                 )}

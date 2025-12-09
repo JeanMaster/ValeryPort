@@ -18,6 +18,7 @@ export interface SaleItem {
 export interface Sale {
     id: string;
     date: string;
+    invoiceNumber: string;
     clientId?: string;
     client?: {
         id: string;
@@ -53,14 +54,44 @@ export interface CreateSaleDto {
     change?: number;
 }
 
+export interface SalesFilters {
+    startDate?: string;
+    endDate?: string;
+    clientId?: string;
+    productId?: string;
+    paymentMethod?: string;
+    minAmount?: number;
+    maxAmount?: number;
+}
+
 export const salesApi = {
     getAll: async (): Promise<Sale[]> => {
         const { data } = await axios.get(`${API_URL}/sales`);
         return data;
     },
 
+    getWithFilters: async (filters: SalesFilters): Promise<Sale[]> => {
+        const params = new URLSearchParams();
+
+        if (filters.startDate) params.append('startDate', filters.startDate);
+        if (filters.endDate) params.append('endDate', filters.endDate);
+        if (filters.clientId) params.append('clientId', filters.clientId);
+        if (filters.productId) params.append('productId', filters.productId);
+        if (filters.paymentMethod) params.append('paymentMethod', filters.paymentMethod);
+        if (filters.minAmount) params.append('minAmount', filters.minAmount.toString());
+        if (filters.maxAmount) params.append('maxAmount', filters.maxAmount.toString());
+
+        const { data } = await axios.get(`${API_URL}/sales?${params.toString()}`);
+        return data;
+    },
+
     getOne: async (id: string): Promise<Sale> => {
         const { data } = await axios.get(`${API_URL}/sales/${id}`);
+        return data;
+    },
+
+    getNextInvoiceNumber: async (): Promise<string> => {
+        const { data } = await axios.get(`${API_URL}/sales/next-invoice-number`);
         return data;
     },
 

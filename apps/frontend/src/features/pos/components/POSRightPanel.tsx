@@ -178,26 +178,42 @@ export const POSRightPanel = () => {
         return (
             <div style={{ marginTop: 8, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 {/* Primary Currency (Prominent) */}
-                <div style={{
-                    background: '#f6ffed',
-                    border: '1px solid #b7eb8f',
-                    color: '#52c41a',
-                    padding: '4px 12px',
-                    borderRadius: 6,
-                    fontSize: 14,
-                    fontWeight: 'bold',
-                    width: '100%',
-                    textAlign: 'center'
-                }}>
-                    {formatVenezuelanPrice(priceInPrimary, primaryCurrency?.symbol)}
+                <div
+                    style={{
+                        background: '#f6ffed',
+                        border: '1px solid #b7eb8f',
+                        color: '#52c41a',
+                        padding: '4px 8px',
+                        borderRadius: 6,
+                        fontSize: 14,
+                        fontWeight: 'bold',
+                        width: '100%',
+                        textAlign: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                    }}
+                    title={formatVenezuelanPrice(priceInPrimary, primaryCurrency?.symbol, 2, false)}
+                >
+                    {formatVenezuelanPrice(priceInPrimary, primaryCurrency?.symbol, 2, true)}
                 </div>
 
                 {/* Secondary & Ref Prices Row */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 11, color: '#666', width: '100%' }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 8,
+                    fontSize: 10,
+                    color: '#666',
+                    width: '100%',
+                    overflow: 'hidden'
+                }}>
                     {/* Original Currency (Ref) */}
                     {!isOriginalSameAsPrimary && (
-                        <span>
-                            Ref: <strong style={{ color: '#595959' }}>{formatVenezuelanPrice(Number(originalPrice), originalSymbol)}</strong>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            Ref: <strong style={{ color: '#595959' }}>
+                                {formatVenezuelanPrice(Number(originalPrice), originalSymbol, 2, true)}
+                            </strong>
                         </span>
                     )}
 
@@ -208,7 +224,7 @@ export const POSRightPanel = () => {
 
                     {/* Secondary Currency */}
                     {preferredSecondaryCurrency && priceInSecondary > 0 && !isOriginalSameAsSecondary && (
-                        <span style={{ color: '#1890ff' }}>
+                        <span style={{ color: '#1890ff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {preferredSecondaryCurrency.symbol} <strong>{priceInSecondary.toFixed(2)}</strong>
                         </span>
                     )}
