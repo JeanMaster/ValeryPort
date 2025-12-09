@@ -9,6 +9,7 @@ import {
     CheckCircleOutlined
 } from '@ant-design/icons';
 import { usePOSStore } from '../../../store/posStore';
+import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
 
 const { Title, Text } = Typography;
 
@@ -226,10 +227,10 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             key: 'amount',
             render: (amount: number, record: PaymentEntry) => (
                 <div>
-                    <div>{primaryCurrency?.symbol} {amount.toFixed(2)}</div>
+                    <div>{formatVenezuelanPrice(amount, primaryCurrency?.symbol)}</div>
                     {record.originalCurrency && record.originalAmount && (
                         <Text type="secondary" style={{ fontSize: '0.85em' }}>
-                            ({record.originalCurrency} {record.originalAmount.toFixed(2)})
+                            ({record.originalCurrency} {formatVenezuelanPriceOnly(record.originalAmount)})
                         </Text>
                     )}
                 </div>
@@ -240,7 +241,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             dataIndex: 'amount',
             key: 'converted',
             render: (amount: number) => (
-                <Text>{primaryCurrency?.symbol} {amount.toFixed(2)}</Text>
+                <Text>{formatVenezuelanPrice(amount, primaryCurrency?.symbol)}</Text>
             ),
         },
     ];
@@ -293,11 +294,11 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                         <Card size="small" style={{ background: '#e6f7ff', border: '1px solid #91d5ff' }}>
                             <Text type="secondary">Total a Pagar</Text>
                             <Title level={2} style={{ margin: '8px 0', color: '#1890ff' }}>
-                                {primaryCurrency?.symbol} {totals.total.toFixed(2)}
+                                {formatVenezuelanPrice(totals.total, primaryCurrency?.symbol)}
                             </Title>
                             {preferredSecondaryCurrency && (
                                 <Text type="secondary">
-                                    {preferredSecondaryCurrency.symbol} {totals.totalUsd.toFixed(2)}
+                                    {formatVenezuelanPrice(totals.totalUsd, preferredSecondaryCurrency.symbol)}
                                 </Text>
                             )}
                         </Card>
@@ -316,7 +317,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                             </Title>
                             {preferredSecondaryCurrency && (
                                 <Text type="secondary">
-                                    {preferredSecondaryCurrency.symbol} {(remaining / (preferredSecondaryCurrency.exchangeRate || 1)).toFixed(2)}
+                                    {formatVenezuelanPrice(remaining / (preferredSecondaryCurrency.exchangeRate || 1), preferredSecondaryCurrency.symbol)}
                                 </Text>
                             )}
                         </Card>
@@ -378,7 +379,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                             </Space>
                                             <div style={{ textAlign: 'center' }}>
                                                 <Text type="secondary" style={{ fontSize: '0.75em' }}>
-                                                    {primaryCurrency?.symbol} {(inputAmount || 0).toFixed(2)}
+                                                    {formatVenezuelanPrice(inputAmount || 0, primaryCurrency?.symbol)}
                                                 </Text>
                                                 {!isFullyPaid && (
                                                     <div style={{ fontSize: '0.65em', color: '#52c41a', marginTop: 2 }}>
@@ -425,7 +426,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                                 </Space>
                                                 <div style={{ textAlign: 'center' }}>
                                                     <Text type="secondary" style={{ fontSize: '0.75em' }}>
-                                                        {currency.symbol} {(inputAmount || 0).toFixed(2)}
+                                                        {formatVenezuelanPrice(inputAmount || 0, currency.symbol)}
                                                     </Text>
                                                     {!isFullyPaid && suggestedAmount > 0 && (
                                                         <div style={{ fontSize: '0.65em', color: '#52c41a', marginTop: 2 }}>
@@ -481,7 +482,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                     <Text strong>Total Pagado:</Text>
                                 </Col>
                                 <Col span={12} style={{ textAlign: 'right' }}>
-                                    <Text strong>{primaryCurrency?.symbol} {totalPaid.toFixed(2)}</Text>
+                                    <Text strong>{formatVenezuelanPrice(totalPaid, primaryCurrency?.symbol)}</Text>
                                 </Col>
                             </Row>
                             <Row style={{ marginTop: 8 }}>
@@ -490,7 +491,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                 </Col>
                                 <Col span={12} style={{ textAlign: 'right' }}>
                                     <Text strong style={{ color: totalPaid > totals.total ? 'green' : 'inherit' }}>
-                                        {primaryCurrency?.symbol} {Math.max(0, totalPaid - totals.total).toFixed(2)}
+                                        {formatVenezuelanPrice(Math.max(0, totalPaid - totals.total), primaryCurrency?.symbol)}
                                     </Text>
                                 </Col>
                             </Row>
