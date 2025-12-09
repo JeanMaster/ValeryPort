@@ -42,6 +42,8 @@ interface POSState {
     updateItemPrice: (productId: string, newPrice: number) => void;
     selectItem: (itemId: string | null) => void;
     applyDiscount: (productId: string, percent: number) => void;
+    toggleUnit: (productId: string) => void;
+    toggleSelectedItemUnit: () => void;
     clearCart: () => void;
     resetPOS: () => void;
     setExchangeRate: (rate: number) => void;
@@ -246,6 +248,46 @@ export const usePOSStore = create<POSState>()(
 
                 set({ cart: newCart });
                 get().calculateTotals();
+            },
+            toggleUnit: (productId) => {
+                const { cart, calculatePriceInPrimary } = get();
+
+                const item = cart.find((item) => item.product.id === productId);
+                if (!item) return;
+
+                // Check if product has secondary unit
+                if (!item.product.secondaryUnitId) {
+                    return; // No secondary unit available, do nothing
+                }
+
+                const newIsSecondaryUnit = !item.isSecondaryUnit;
+                const newPriceInPrimary = calculatePriceInPrimary(item.product, newIsSecondaryUnit);
+
+                const newCart = cart.map((cartItem) => {
+                    if (cartItem.product.id === productId) {
+                        const subtotalLine = newPriceInPrimary * cartItem.quantity;
+                        const discountAmount = subtotalLine * (cartItem.discountPercent / 100);
+
+                        return {
+                            ...cartItem,
+                            price: newPriceInPrimary,
+                            isSecondaryUnit: newIsSecondaryUnit,
+                            discount: discountAmount,
+                            total: subtotalLine - discountAmount
+                        };
+                    }
+                    return cartItem;
+                });
+
+                set({ cart: newCart });
+                get().calculateTotals();
+            },
+
+            toggleSelectedItemUnit: () => {
+                const { selectedItemId } = get();
+                if (selectedItemId) {
+                    get().toggleUnit(selectedItemId);
+                }
             },
 
             clearCart: () => {

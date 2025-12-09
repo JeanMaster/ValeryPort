@@ -4,6 +4,7 @@ import {
     UserOutlined,
     SaveOutlined,
     ReloadOutlined,
+    SyncOutlined,
 } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -49,13 +50,15 @@ const FunctionKey = ({
 interface POSFooterProps {
     onClientClick?: () => void;
     onCheckoutClick?: () => void;
+    onUnitToggleClick?: () => void;
 }
 
-export const POSFooter = ({ onClientClick, onCheckoutClick }: POSFooterProps) => {
+export const POSFooter = ({ onClientClick, onCheckoutClick, onUnitToggleClick }: POSFooterProps) => {
     return (
         <div style={{ padding: '10px 20px', background: '#e6e6e6', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             {/* Botones Alineados a la Derecha */}
             <FunctionKey fKey="F3 Cli." label="Cliente" icon={<UserOutlined />} onClick={onClientClick} />
+            <FunctionKey fKey="F8 Alt" label="Unidad" icon={<SyncOutlined />} onClick={onUnitToggleClick} />
             <FunctionKey fKey="F10 Caja" label="Caja" icon={<SaveOutlined />} />
             <FunctionKey fKey="F11 Cargar" label="Cargar" icon={<ReloadOutlined />} />
 

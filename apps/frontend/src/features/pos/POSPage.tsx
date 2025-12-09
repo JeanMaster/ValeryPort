@@ -13,7 +13,7 @@ const { Content, Sider, Footer } = Layout;
 export const POSPage = () => {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-    const { processSale, setCustomer } = usePOSStore();
+    const { processSale, setCustomer, toggleSelectedItemUnit } = usePOSStore();
 
     const handleCheckoutProcess = async (paymentData: any) => {
         try {
@@ -30,6 +30,9 @@ export const POSPage = () => {
         if (e.key === 'F3') {
             e.preventDefault();
             setIsClientModalOpen(true);
+        } else if (e.key === 'F8') {
+            e.preventDefault();
+            toggleSelectedItemUnit();
         } else if (e.key === 'F9') {
             e.preventDefault();
             setIsCheckoutOpen(true);
@@ -82,6 +85,7 @@ export const POSPage = () => {
                         <POSFooter
                             onClientClick={() => setIsClientModalOpen(true)}
                             onCheckoutClick={() => setIsCheckoutOpen(true)}
+                            onUnitToggleClick={toggleSelectedItemUnit}
                         />
                     </Footer>
                 </Layout>
