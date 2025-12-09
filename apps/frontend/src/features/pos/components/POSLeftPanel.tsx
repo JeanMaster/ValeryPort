@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Table, Button, Card, Select, Modal } from 'antd';
 import { usePOSStore } from '../../../store/posStore';
+import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
 import type { CartItem } from '../../../store/posStore';
 import { productsApi } from '../../../services/productsApi';
 import type { Product } from '../../../services/productsApi';
@@ -113,7 +114,7 @@ export const POSLeftPanel = () => {
                     {record.isSecondaryUnit && <div style={{ fontSize: 10, color: '#888' }}>({product.secondaryUnit?.name || 'Sec.'})</div>}
                     {record.discount > 0 && (
                         <div style={{ fontSize: 11, color: 'green' }}>
-                            Desc: {record.discountPercent}% (-{record.discount.toFixed(2)})
+                            Desc: {record.discountPercent}% (-{formatVenezuelanPriceOnly(record.discount)})
                         </div>
                     )}
                 </div>
@@ -131,10 +132,10 @@ export const POSLeftPanel = () => {
                     : 0;
                 return (
                     <div>
-                        <div style={{ fontSize: 14 }}>{value.toFixed(2)}</div>
+                        <div style={{ fontSize: 14 }}>{formatVenezuelanPriceOnly(value)}</div>
                         {preferredSecondaryCurrency && secondaryValue > 0 && (
                             <div style={{ fontSize: 10, color: '#888' }}>
-                                {preferredSecondaryCurrency.symbol} {secondaryValue.toFixed(2)}
+                                {formatVenezuelanPrice(secondaryValue, preferredSecondaryCurrency.symbol)}
                             </div>
                         )}
                     </div>
@@ -179,10 +180,10 @@ export const POSLeftPanel = () => {
 
                     const secondarySymbol = preferredSecondaryCurrency?.symbol || '$';
 
-                    let priceString = `${originalSymbol}${Number(originalPrice).toFixed(2)}`;
+                    let priceString = `${originalSymbol}${formatVenezuelanPriceOnly(Number(originalPrice))}`;
 
                     if (preferredSecondaryCurrency && priceInSecondary > 0 && d.currency?.name !== preferredSecondaryCurrency.code) {
-                        priceString += ` | ${secondarySymbol}${priceInSecondary.toFixed(2)}`;
+                        priceString += ` | ${formatVenezuelanPrice(priceInSecondary, secondarySymbol)}`;
                     }
 
                     return {
@@ -251,7 +252,7 @@ export const POSLeftPanel = () => {
             <Card size="small" style={{ background: '#333', color: 'white', border: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ color: 'white' }}>Sub Total</span>
-                    <strong style={{ fontSize: 16, color: 'white' }}>{(totals.subtotal || 0).toFixed(2)}</strong>
+                    <strong style={{ fontSize: 16, color: 'white' }}>{formatVenezuelanPriceOnly(totals.subtotal || 0)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ color: 'white' }}>Descuento</span>
@@ -259,12 +260,12 @@ export const POSLeftPanel = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #555', marginTop: 5, paddingTop: 5 }}>
                     <span style={{ color: 'white' }}>Total</span>
-                    <strong style={{ fontSize: 20, color: 'yellow' }}>{(totals.total || 0).toFixed(2)}</strong>
+                    <strong style={{ fontSize: 20, color: 'yellow' }}>{formatVenezuelanPriceOnly(totals.total || 0)}</strong>
                 </div>
                 {preferredSecondaryCurrency && (
                     <div style={{ textAlign: 'right', marginTop: -2 }}>
                         <span style={{ fontSize: 12, color: '#aaa' }}>
-                            {preferredSecondaryCurrency.symbol} {(totals.totalUsd || 0).toFixed(2)}
+                            {formatVenezuelanPrice(totals.totalUsd || 0, preferredSecondaryCurrency.symbol)}
                         </span>
                     </div>
                 )}

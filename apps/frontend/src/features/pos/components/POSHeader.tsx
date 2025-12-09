@@ -1,6 +1,7 @@
 import { Layout, Typography, Row, Col, Space, Popover } from 'antd';
 import { useState, useEffect } from 'react';
 import { usePOSStore } from '../../../store/posStore';
+import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -53,11 +54,11 @@ export const POSHeader = () => {
                     <Space size="large" align="end">
                         <div style={{ textAlign: 'right' }}>
                             <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Subtotal</Text>
-                            <Text style={{ fontSize: 16 }}>{totals.subtotal.toFixed(2)}</Text>
+                            <Text style={{ fontSize: 16 }}>{formatVenezuelanPriceOnly(totals.subtotal)}</Text>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                             <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>I.V.A.</Text>
-                            <Text style={{ fontSize: 16 }}>{totals.tax.toFixed(2)}</Text>
+                            <Text style={{ fontSize: 16 }}>{formatVenezuelanPriceOnly(totals.tax)}</Text>
                         </div>
 
                         {/* Total Principal Destacado */}
@@ -76,7 +77,7 @@ export const POSHeader = () => {
                                             return (
                                                 <div key={currency.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
                                                     <span>{currency.name} ({currency.symbol})</span>
-                                                    <strong style={{ color: '#1890ff' }}>{amount.toFixed(2)}</strong>
+                                                    <strong style={{ color: '#1890ff' }}>{formatVenezuelanPriceOnly(amount)}</strong>
                                                 </div>
                                             );
                                         })
@@ -97,10 +98,10 @@ export const POSHeader = () => {
                             }}>
                                 <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Total a Pagar</Text>
                                 <Title level={2} style={{ margin: 0, color: '#096dd9' }}>
-                                    {totals.total.toFixed(2)} <span style={{ fontSize: 14 }}>Bs</span>
+                                    {formatVenezuelanPrice(totals.total, 'Bs')}
                                 </Title>
                                 <Text type="secondary" style={{ fontSize: 12 }}>
-                                    {preferredSecondaryCurrency?.symbol || '$'} {totals.totalUsd.toFixed(2)}
+                                    {formatVenezuelanPrice(totals.totalUsd, preferredSecondaryCurrency?.symbol || '$')}
                                 </Text>
                             </div>
                         </Popover>

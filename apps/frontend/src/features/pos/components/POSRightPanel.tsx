@@ -6,6 +6,7 @@ import type { Department } from '../../../services/departmentsApi';
 import { productsApi } from '../../../services/productsApi';
 import type { Product } from '../../../services/productsApi';
 import { usePOSStore } from '../../../store/posStore';
+import { formatVenezuelanPrice } from '../../../utils/formatters';
 
 export const POSRightPanel = () => {
     const { addItem } = usePOSStore();
@@ -188,7 +189,7 @@ export const POSRightPanel = () => {
                     width: '100%',
                     textAlign: 'center'
                 }}>
-                    {primaryCurrency?.symbol || 'Bs'} {priceInPrimary.toFixed(2)}
+                    {formatVenezuelanPrice(priceInPrimary, primaryCurrency?.symbol)}
                 </div>
 
                 {/* Secondary & Ref Prices Row */}
@@ -196,7 +197,7 @@ export const POSRightPanel = () => {
                     {/* Original Currency (Ref) */}
                     {!isOriginalSameAsPrimary && (
                         <span>
-                            Ref: <strong style={{ color: '#595959' }}>{originalSymbol} {Number(originalPrice).toFixed(2)}</strong>
+                            Ref: <strong style={{ color: '#595959' }}>{formatVenezuelanPrice(Number(originalPrice), originalSymbol)}</strong>
                         </span>
                     )}
 

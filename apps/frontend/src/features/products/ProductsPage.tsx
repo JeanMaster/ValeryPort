@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatVenezuelanPrice } from '../../utils/formatters';
 import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -116,7 +117,7 @@ export const ProductsPage = () => {
                         )}
                         {record.wholesalePrice && (
                             <div>
-                                <strong>Al Mayor:</strong> {record.currency.symbol} {record.wholesalePrice.toFixed(2)}
+                                <strong>Al Mayor:</strong> {formatVenezuelanPrice(record.wholesalePrice, record.currency.symbol)}
                             </div>
                         )}
                     </div>
@@ -125,7 +126,7 @@ export const ProductsPage = () => {
                 return (
                     <Tooltip title={tooltipContent} placement="top">
                         <span style={{ cursor: hasExtraPrices ? 'help' : 'default' }}>
-                            {record.currency.symbol} {record.salePrice.toFixed(2)}
+                            {formatVenezuelanPrice(record.salePrice, record.currency.symbol)}
                         </span>
                     </Tooltip>
                 );
