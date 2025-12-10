@@ -5,6 +5,7 @@ import { companySettingsApi } from '../services/companySettingsApi';
 import { currenciesApi, type Currency } from '../services/currenciesApi';
 import { salesApi, type CreateSaleDto } from '../services/salesApi';
 
+
 export interface CartItem {
     product: Product;
     quantity: number;
@@ -23,6 +24,7 @@ interface POSState {
     customerId: string | null;
     selectedItemId: string | null;
     nextInvoiceNumber: string; // Next invoice number to be assigned
+    reservedInvoiceNumber: string | null; // Reserved invoice number for current sale
     totals: {
         subtotal: number;
         discount: number; // Total descuentos
@@ -51,9 +53,10 @@ interface POSState {
     setCustomer: (customer: { id: string; name: string } | string) => void;
     calculateTotals: () => void;
     initialize: () => Promise<void>;
-    processSale: (paymentData: any) => Promise<string>;
+    processSale: (paymentData: any, reservedInvoiceNumber?: string | null) => Promise<string>;
     fetchNextInvoiceNumber: () => Promise<void>;
     refreshInvoiceNumber: () => Promise<void>;
+    reserveInvoiceNumber: () => Promise<string>;
 
     // Helpers
     calculatePriceInPrimary: (product: Product, isSecondaryUnit: boolean) => number;
@@ -69,6 +72,7 @@ export const usePOSStore = create<POSState>()(
             customerId: null,
             selectedItemId: null,
             nextInvoiceNumber: 'FAC-00000001', // Default next invoice number
+            reservedInvoiceNumber: null, // No invoice number reserved initially
             totals: {
                 subtotal: 0,
                 discount: 0,
@@ -405,16 +409,15 @@ export const usePOSStore = create<POSState>()(
                         }
                     }
 
-                    // 4. Fetch Next Invoice Number
-                    const nextInvoiceNumber = await salesApi.getNextInvoiceNumber();
-
                     set({
                         currencies: allCurrencies,
                         primaryCurrency: primary,
                         preferredSecondaryCurrency: secondaryDetails,
-                        exchangeRate: secondaryRate,
-                        nextInvoiceNumber: nextInvoiceNumber
+                        exchangeRate: secondaryRate
                     });
+
+                    // Fetch next invoice number from sales data
+                    await get().fetchNextInvoiceNumber();
 
                     get().calculateTotals();
                 } catch (error) {
@@ -424,10 +427,42 @@ export const usePOSStore = create<POSState>()(
 
             fetchNextInvoiceNumber: async () => {
                 try {
-                    const nextNumber = await salesApi.getNextInvoiceNumber();
-                    set({ nextInvoiceNumber: nextNumber });
+                    console.log('🔍 Fetching next invoice number...');
+                    // Get all sales to find the last invoice number
+                    const sales = await salesApi.getAll();
+                    console.log('📊 Total sales found:', sales.length);
+
+                    if (sales.length === 0) {
+                        // No sales yet, start with FAC-00000001
+                        console.log('✅ No sales found, setting to FAC-00000001');
+                        set({ nextInvoiceNumber: 'FAC-00000001' });
+                        return;
+                    }
+
+                    // Sort by invoice number to get the latest (assuming format FAC-XXXXXXXX)
+                    const sortedSales = [...sales].sort((a, b) => {
+                        return b.invoiceNumber.localeCompare(a.invoiceNumber);
+                    });
+
+                    const lastInvoice = sortedSales[0].invoiceNumber;
+                    console.log('📄 Last invoice found:', lastInvoice);
+
+                    // Extract number from invoice (e.g., "FAC-00000004" -> 4)
+                    const match = lastInvoice.match(/([A-Z]+)-(\d+)$/);
+                    if (match) {
+                        const prefix = match[1];
+                        const lastNumber = parseInt(match[2], 10);
+                        const nextNumber = lastNumber + 1;
+                        const nextInvoice = `${prefix}-${nextNumber.toString().padStart(8, '0')}`;
+                        console.log('✅ Next invoice calculated:', nextInvoice);
+                        set({ nextInvoiceNumber: nextInvoice });
+                    } else {
+                        // Fallback if format is unexpected
+                        console.warn('⚠️ Could not parse invoice format, using fallback');
+                        set({ nextInvoiceNumber: 'FAC-00000001' });
+                    }
                 } catch (error) {
-                    console.error('Failed to fetch next invoice number:', error);
+                    console.error('❌ Failed to fetch next invoice number:', error);
                     // Keep current value on error
                 }
             },
@@ -436,7 +471,18 @@ export const usePOSStore = create<POSState>()(
                 await get().fetchNextInvoiceNumber();
             },
 
-            processSale: async (paymentData: any) => {
+            reserveInvoiceNumber: async () => {
+                try {
+                    const invoiceNumber = await salesApi.reserveInvoiceNumber();
+                    set({ reservedInvoiceNumber: invoiceNumber });
+                    return invoiceNumber;
+                } catch (error) {
+                    console.error('Failed to reserve invoice number:', error);
+                    throw error;
+                }
+            },
+
+            processSale: async (paymentData: any, reservedInvoiceNumber?: string | null) => {
                 const { cart, totals, customerId } = get();
 
                 // Handle multiple payments - combine them into a single payment method string
@@ -469,7 +515,8 @@ export const usePOSStore = create<POSState>()(
                     total: totals.total,
                     paymentMethod: paymentMethod,
                     tendered: tendered,
-                    change: change
+                    change: change,
+                    ...(reservedInvoiceNumber && { invoiceNumber: reservedInvoiceNumber })
                 };
 
                 try {
@@ -477,13 +524,16 @@ export const usePOSStore = create<POSState>()(
                     // Clear cart on success
                     get().clearCart();
                     // Reset customer to CONTADO
-                    set({ activeCustomer: 'CONTADO', customerId: null });
+                    // Clear reserved invoice number
+                    set({ activeCustomer: 'CONTADO', customerId: null, reservedInvoiceNumber: null });
                     // Refresh invoice number for next sale
                     await get().refreshInvoiceNumber();
                     // Return the invoice number
                     return createdSale.invoiceNumber;
                 } catch (error) {
                     console.error('Error processing sale:', error);
+                    // Clear reserved invoice number on error so it can be reserved again
+                    set({ reservedInvoiceNumber: null });
                     throw error; // Re-throw to handle in component
                 }
             }

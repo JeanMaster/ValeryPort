@@ -43,8 +43,8 @@ export const POSHeader = () => {
                             <Text strong style={{ fontSize: 16 }}>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                         </Space>
                         <Space direction="vertical" size={0}>
-                            <Text type="secondary" style={{ fontSize: 12 }}>Cajero</Text>
-                            <Text strong style={{ fontSize: 16 }}>01 - {activeCustomer}</Text>
+                            <Text type="secondary" style={{ fontSize: 12 }}>Cliente</Text>
+                            <Text strong style={{ fontSize: 16 }}>{activeCustomer}</Text>
                         </Space>
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Factura</Text>

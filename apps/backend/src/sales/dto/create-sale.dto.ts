@@ -46,7 +46,6 @@ export class CreateSaleDto {
     total: number;
 
     @IsString()
-    @IsIn(['CASH', 'DEBIT', 'CREDIT', 'BIOPAGO', 'ZELLE'])
     paymentMethod: string;
 
     @IsNumber({ maxDecimalPlaces: 2 })
@@ -56,4 +55,8 @@ export class CreateSaleDto {
     @IsNumber({ maxDecimalPlaces: 2 })
     @IsOptional()
     change?: number;
+
+    @IsString()
+    @IsOptional()
+    invoiceNumber?: string;
 }

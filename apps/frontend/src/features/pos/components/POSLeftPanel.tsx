@@ -9,12 +9,11 @@ import debounce from 'lodash/debounce';
 import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
 import { PriceModal } from './PriceModal';
-import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, UserOutlined, SyncOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, SyncOutlined } from '@ant-design/icons';
 
 export const POSLeftPanel = () => {
     const {
         cart,
-        activeCustomer,
         addItem,
         selectedItemId,
         selectItem,

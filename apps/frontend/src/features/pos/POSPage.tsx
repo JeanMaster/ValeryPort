@@ -13,16 +13,29 @@ const { Content, Sider, Footer } = Layout;
 export const POSPage = () => {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-    const { processSale, setCustomer } = usePOSStore();
+    const { processSale, setCustomer, refreshInvoiceNumber, reserveInvoiceNumber, reservedInvoiceNumber } = usePOSStore();
 
     const handleCheckoutProcess = async (paymentData: any) => {
         try {
-            const invoiceNumber = await processSale(paymentData);
+            const invoiceNumber = await processSale(paymentData, reservedInvoiceNumber);
             message.success(`Venta procesada exitosamente. Factura: ${invoiceNumber}`);
             setIsCheckoutOpen(false);
+            // Refresh the next invoice number for the next sale
+            await refreshInvoiceNumber();
         } catch (error) {
             message.error('Error al procesar la venta');
             console.error('Sale processing error:', error);
+        }
+    };
+
+    const handleOpenCheckout = async () => {
+        try {
+            // Reserve invoice number when opening checkout
+            await reserveInvoiceNumber();
+            setIsCheckoutOpen(true);
+        } catch (error) {
+            message.error('Error al reservar número de factura');
+            console.error('Invoice reservation error:', error);
         }
     };
 
@@ -32,7 +45,7 @@ export const POSPage = () => {
             setIsClientModalOpen(true);
         } else if (e.key === 'F9') {
             e.preventDefault();
-            setIsCheckoutOpen(true);
+            handleOpenCheckout();
         }
     };
 

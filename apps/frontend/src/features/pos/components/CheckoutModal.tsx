@@ -30,7 +30,15 @@ interface CheckoutModalProps {
 }
 
 export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps): React.ReactElement => {
-    const { totals, preferredSecondaryCurrency, currencies, primaryCurrency } = usePOSStore();
+    const {
+        totals,
+        preferredSecondaryCurrency,
+        currencies,
+        primaryCurrency,
+        activeCustomer,
+        nextInvoiceNumber,
+        reservedInvoiceNumber
+    } = usePOSStore();
 
     // Ref for auto-focus on amount input
     const amountInputRef = useRef<any>(null);
@@ -116,28 +124,28 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                     const currency = foreignCurrencies[0];
                     if (currency) {
                         setSelectedMethod(`CURRENCY_${currency.id}`);
-                        addPayment(`CURRENCY_${currency.code}`, `CT+F9 ${currency.code}`, currency.id);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F9 ${currency.name}`, currency.id);
                     }
                 } else if (e.ctrlKey && e.key === 'F10' && inputAmount && foreignCurrencies.length > 1) {
                     // Ctrl+F10 = second foreign currency (index 1)
                     const currency = foreignCurrencies[1];
                     if (currency) {
                         setSelectedMethod(`CURRENCY_${currency.id}`);
-                        addPayment(`CURRENCY_${currency.code}`, `CT+F10 ${currency.code}`, currency.id);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F10 ${currency.name}`, currency.id);
                     }
                 } else if (e.ctrlKey && e.key === 'F11' && inputAmount && foreignCurrencies.length > 2) {
                     // Ctrl+F11 = third foreign currency (index 2)
                     const currency = foreignCurrencies[2];
                     if (currency) {
                         setSelectedMethod(`CURRENCY_${currency.id}`);
-                        addPayment(`CURRENCY_${currency.code}`, `CT+F11 ${currency.code}`, currency.id);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F11 ${currency.name}`, currency.id);
                     }
                 } else if (e.ctrlKey && e.key === 'F12' && inputAmount && foreignCurrencies.length > 3) {
                     // Ctrl+F12 = fourth foreign currency (index 3)
                     const currency = foreignCurrencies[3];
                     if (currency) {
                         setSelectedMethod(`CURRENCY_${currency.id}`);
-                        addPayment(`CURRENCY_${currency.code}`, `CT+F12 ${currency.code}`, currency.id);
+                        addPayment(`CURRENCY_${currency.code}`, `CT+F12 ${currency.name}`, currency.id);
                     }
                 } else if (e.key === 'F9' && isFullyPaid) {
                     handleProcessSale();
@@ -224,8 +232,8 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
         { key: 'CASH', label: 'F1 Efectivo', icon: <DollarOutlined />, shortcut: 'F1' },
         { key: 'DEBIT', label: 'F2 T. Débito', icon: <CreditCardOutlined />, shortcut: 'F2' },
         { key: 'CREDIT', label: 'F3 T. Crédito', icon: <CreditCardOutlined />, shortcut: 'F3' },
-        { key: 'TRANSFER', label: 'F5 Transferencia', icon: <BankOutlined />, shortcut: 'F5' },
         { key: 'MOBILE', label: 'F4 Pago Móvil', icon: <MobileOutlined />, shortcut: 'F4' },
+        { key: 'TRANSFER', label: 'F5 Transferencia', icon: <BankOutlined />, shortcut: 'F5' },
     ];
 
     // Get available foreign currencies (excluding primary)
@@ -285,7 +293,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                         <div>
                             <Text type="secondary">Cliente:</Text>
                             <Title level={5} style={{ margin: '4px 0' }}>
-                                {usePOSStore.getState().activeCustomer}
+                                {activeCustomer}
                             </Title>
                         </div>
                     </Col>
@@ -293,7 +301,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                         <div>
                             <Text type="secondary">Factura:</Text>
                             <Title level={5} style={{ margin: '4px 0' }}>
-                                00-00000001
+                                {reservedInvoiceNumber || nextInvoiceNumber}
                             </Title>
                         </div>
                     </Col>
@@ -426,7 +434,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                                 size="large"
                                                 onClick={() => {
                                                     setSelectedMethod(`CURRENCY_${currency.id}`);
-                                                    addPayment(`CURRENCY_${currency.code}`, `CT+F${index + 9} ${currency.code}`, currency.id);
+                                                    addPayment(`CURRENCY_${currency.code}`, `CT+F${index + 9} ${currency.name}`, currency.id);
                                                 }}
                                                 disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
                                                 style={{
@@ -440,7 +448,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                                             >
                                                 <Space size={4}>
                                                     <DollarOutlined />
-                                                    <span>CT+F{index + 9} {currency.code}</span>
+                                                    <span>CT+F{index + 9} {currency.name}</span>
                                                 </Space>
                                                 <div style={{ textAlign: 'center' }}>
                                                     <Text type="secondary" style={{ fontSize: '0.75em' }}>

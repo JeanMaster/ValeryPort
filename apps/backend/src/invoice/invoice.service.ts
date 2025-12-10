@@ -79,4 +79,37 @@ export class InvoiceService {
             }
         });
     }
+
+    /**
+     * Reserve an invoice number (for immediate use in sale creation)
+     */
+    async reserveInvoiceNumber(): Promise<string> {
+        return await this.prisma.$transaction(async (prisma) => {
+            // Find or create the invoice counter
+            let counter = await prisma.invoiceCounter.findFirst();
+
+            if (!counter) {
+                // Create initial counter
+                counter = await prisma.invoiceCounter.create({
+                    data: {
+                        prefix: 'FAC',
+                        currentNumber: 1
+                    }
+                });
+            }
+
+            // Generate invoice number with leading zeros (8 digits)
+            const invoiceNumber = `${counter.prefix}-${counter.currentNumber.toString().padStart(8, '0')}`;
+
+            // Increment counter for next invoice (atomic operation within transaction)
+            await prisma.invoiceCounter.update({
+                where: { id: counter.id },
+                data: {
+                    currentNumber: counter.currentNumber + 1
+                }
+            });
+
+            return invoiceNumber;
+        });
+    }
 }

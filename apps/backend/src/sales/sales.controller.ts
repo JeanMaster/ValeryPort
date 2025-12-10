@@ -76,4 +76,11 @@ export class SalesController {
     getNextInvoiceNumber() {
         return this.invoiceService.getNextInvoiceNumber();
     }
+
+    @Get('reserve-invoice-number')
+    @ApiOperation({ summary: 'Reservar un número de factura para uso inmediato' })
+    @ApiResponse({ status: 200, description: 'Número de factura reservado' })
+    reserveInvoiceNumber() {
+        return this.invoiceService.reserveInvoiceNumber();
+    }
 }

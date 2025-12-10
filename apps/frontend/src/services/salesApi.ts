@@ -52,6 +52,7 @@ export interface CreateSaleDto {
     paymentMethod: string;
     tendered?: number;
     change?: number;
+    invoiceNumber?: string;
 }
 
 export interface SalesFilters {
@@ -92,6 +93,11 @@ export const salesApi = {
 
     getNextInvoiceNumber: async (): Promise<string> => {
         const { data } = await axios.get(`${API_URL}/sales/next-invoice-number`);
+        return data;
+    },
+
+    reserveInvoiceNumber: async (): Promise<string> => {
+        const { data } = await axios.get(`${API_URL}/sales/reserve-invoice-number`);
         return data;
     },
 

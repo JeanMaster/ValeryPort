@@ -11,7 +11,6 @@ import {
     Statistic,
     Space,
     Typography,
-    Tag,
     Spin,
     Alert
 } from 'antd';
@@ -28,6 +27,7 @@ import { productsApi } from '../../../services/productsApi';
 import { clientsApi } from '../../../services/clientsApi';
 import { formatVenezuelanPrice } from '../../../utils/formatters';
 import dayjs from 'dayjs';
+import { SaleDetailModal } from './SaleDetailModal';
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -35,6 +35,8 @@ const { Title, Text } = Typography;
 export const SalesReports = () => {
     const [filters, setFilters] = useState<SalesFilters>({});
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+    const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     // Fetch sales data with filters
     const { data: sales = [], isLoading, refetch } = useQuery({
@@ -90,13 +92,32 @@ export const SalesReports = () => {
         setDateRange(null);
     };
 
-    // Table columns
+    // Simplified table columns - only showing: Factura, Fecha, Productos, Total
     const columns = [
+        {
+            title: 'Factura',
+            dataIndex: 'invoiceNumber',
+            key: 'invoiceNumber',
+            width: 100,
+            render: (invoiceNumber: string, record: Sale) => (
+                <Button
+                    type="link"
+                    onClick={() => {
+                        setSelectedSale(record);
+                        setIsDetailModalOpen(true);
+                    }}
+                    style={{ padding: 0, height: 'auto' }}
+                >
+                    <Text strong style={{ color: '#1890ff' }}>{invoiceNumber}</Text>
+                </Button>
+            ),
+            sorter: (a: Sale, b: Sale) => a.invoiceNumber.localeCompare(b.invoiceNumber)
+        },
         {
             title: 'Fecha',
             dataIndex: 'date',
             key: 'date',
-            width: 120,
+            width: 140,
             render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm'),
             sorter: (a: Sale, b: Sale) => dayjs(a.date).unix() - dayjs(b.date).unix()
         },
@@ -104,98 +125,40 @@ export const SalesReports = () => {
             title: 'Cliente',
             dataIndex: 'client',
             key: 'client',
-            width: 200,
-            render: (client: any) => client?.name || 'Cliente General',
-            filters: clients.map(client => ({ text: client.name, value: client.id })),
-            onFilter: (value: any, record: Sale) => record.clientId === value
+            width: 150,
+            render: (client: any) => client?.name || 'Cliente General'
         },
         {
             title: 'Productos',
             key: 'products',
-            width: 200,
+            width: 250,
             render: (_: any, record: Sale) => (
-                <div>
-                    {record.items.slice(0, 2).map(item => (
-                        <div key={item.id} style={{ fontSize: '12px' }}>
-                            {item.product.name} x{item.quantity}
+                <div style={{ maxWidth: '100%' }}>
+                    {record.items.slice(0, 3).map(item => (
+                        <div key={item.id} style={{ fontSize: '12px', lineHeight: '1.4', whiteSpace: 'normal' }}>
+                            • {item.product.name} x{item.quantity}
                         </div>
                     ))}
-                    {record.items.length > 2 && (
+                    {record.items.length > 3 && (
                         <Text type="secondary" style={{ fontSize: '11px' }}>
-                            +{record.items.length - 2} más...
+                            +{record.items.length - 3} más...
                         </Text>
                     )}
                 </div>
             )
         },
         {
-            title: 'Subtotal',
-            dataIndex: 'subtotal',
-            key: 'subtotal',
-            width: 120,
-            align: 'right' as const,
-            render: (value: number | null | undefined) => formatVenezuelanPrice(value || 0),
-            sorter: (a: Sale, b: Sale) => (a.subtotal || 0) - (b.subtotal || 0)
-        },
-        {
-            title: 'Descuento',
-            dataIndex: 'discount',
-            key: 'discount',
-            width: 100,
-            align: 'right' as const,
-            render: (value: number | null | undefined) => (
-                <span style={{ color: (value || 0) > 0 ? '#ff4d4f' : 'inherit' }}>
-                    {(value || 0) > 0 ? `-${formatVenezuelanPrice(value || 0)}` : '-'}
-                </span>
-            ),
-            sorter: (a: Sale, b: Sale) => (a.discount || 0) - (b.discount || 0)
-        },
-        {
             title: 'Total',
             dataIndex: 'total',
             key: 'total',
-            width: 120,
+            width: 100,
             align: 'right' as const,
             render: (value: number | null | undefined) => (
-                <Text strong style={{ color: '#1890ff' }}>
+                <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>
                     {formatVenezuelanPrice(value || 0)}
                 </Text>
             ),
             sorter: (a: Sale, b: Sale) => (a.total || 0) - (b.total || 0)
-        },
-        {
-            title: 'Forma de Pago',
-            dataIndex: 'paymentMethod',
-            key: 'paymentMethod',
-            width: 120,
-            render: (method: string) => {
-                const colors: { [key: string]: string } = {
-                    'CASH': 'green',
-                    'DEBIT': 'blue',
-                    'CREDIT': 'orange',
-                    'TRANSFER': 'purple',
-                    'MOBILE': 'cyan'
-                };
-                return <Tag color={colors[method] || 'default'}>{method}</Tag>;
-            },
-            filters: [
-                { text: 'Efectivo', value: 'CASH' },
-                { text: 'T. Débito', value: 'DEBIT' },
-                { text: 'T. Crédito', value: 'CREDIT' },
-                { text: 'Transferencia', value: 'TRANSFER' },
-                { text: 'Pago Móvil', value: 'MOBILE' }
-            ],
-            onFilter: (value: any, record: Sale) => record.paymentMethod === value
-        },
-        {
-            title: 'Items',
-            key: 'items',
-            width: 80,
-            align: 'center' as const,
-            render: (_: any, record: Sale) => (
-                <Tag color="blue">{record.items.length}</Tag>
-            ),
-            sorter: (a: Sale, b: Sale) => a.items.length - b.items.length
         }
     ];
 
@@ -395,11 +358,18 @@ export const SalesReports = () => {
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} de ${total} ventas`
                         }}
-                        scroll={{ x: 1200 }}
+                        scroll={{ x: 'max-content' }}
                         size="small"
+                        style={{ overflowX: 'auto' }}
                     />
                 )}
             </Card>
+            {/* Sale Detail Modal */}
+            <SaleDetailModal
+                open={isDetailModalOpen}
+                sale={selectedSale}
+                onCancel={() => setIsDetailModalOpen(false)}
+            />
         </div>
     );
 };

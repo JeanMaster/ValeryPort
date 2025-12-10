@@ -14,7 +14,7 @@ export class SalesService {
      * Crear una nueva venta
      */
     async create(createSaleDto: CreateSaleDto) {
-        const { items, ...saleData } = createSaleDto;
+        const { items, invoiceNumber: reservedInvoiceNumber, ...saleData } = createSaleDto;
 
         // Validar que los productos existen y tienen stock suficiente
         for (const item of items) {
@@ -26,15 +26,22 @@ export class SalesService {
                 throw new BadRequestException(`Producto con ID ${item.productId} no encontrado`);
             }
 
-            if (product.stock < item.quantity) {
+            // Solo validar stock si el producto tiene control de inventario (stock > 0)
+            // Si stock = 0 o stock < 0, significa que no hay control de inventario
+            // Si stock > 0, entonces sí hay control de inventario
+            if (product.stock > 0 && product.stock < item.quantity) {
                 throw new BadRequestException(`Stock insuficiente para ${product.name}. Disponible: ${product.stock}`);
             }
         }
 
         // Crear la venta con items en una transacción
         return await this.prisma.$transaction(async (prisma) => {
-            // Generar número de factura DENTRO de la transacción para evitar race conditions
-            const invoiceNumber = await this.invoiceService.generateInvoiceNumber();
+            // Use reserved invoice number if provided, otherwise generate a new one
+            let invoiceNumber = reservedInvoiceNumber;
+            if (!invoiceNumber) {
+                // Generar número de factura DENTRO de la transacción para evitar race conditions
+                invoiceNumber = await this.invoiceService.generateInvoiceNumber();
+            }
 
             // Crear la venta con número de factura
             const sale = await prisma.sale.create({
@@ -55,16 +62,22 @@ export class SalesService {
                 },
             });
 
-            // Actualizar stock de productos
+            // Actualizar stock de productos solo si tienen stock controlado (stock > 0)
             for (const item of items) {
-                await prisma.product.update({
+                const product = await prisma.product.findUnique({
                     where: { id: item.productId },
-                    data: {
-                        stock: {
-                            decrement: item.quantity,
-                        },
-                    },
                 });
+
+                if (product && product.stock > 0) {
+                    await prisma.product.update({
+                        where: { id: item.productId },
+                        data: {
+                            stock: {
+                                decrement: item.quantity,
+                            },
+                        },
+                    });
+                }
             }
 
             return sale;
