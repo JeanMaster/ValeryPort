@@ -25,6 +25,7 @@ import { useQuery } from '@tanstack/react-query';
 import { salesApi, type Sale, type SalesFilters } from '../../../services/salesApi';
 import { productsApi } from '../../../services/productsApi';
 import { clientsApi } from '../../../services/clientsApi';
+import { currenciesApi } from '../../../services/currenciesApi';
 import { formatVenezuelanPrice } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 import { SaleDetailModal } from './SaleDetailModal';
@@ -56,10 +57,15 @@ export const SalesReports = () => {
         queryFn: () => clientsApi.getAll(),
     });
 
+    const { data: currencies = [] } = useQuery({
+        queryKey: ['currencies'],
+        queryFn: () => currenciesApi.getAll(),
+    });
+
     // Calculate summary statistics
     const totalSales = sales.length;
-    const totalRevenue = sales.reduce((sum, sale) => sum + (sale.total || 0), 0);
-    const totalDiscount = sales.reduce((sum, sale) => sum + (sale.discount || 0), 0);
+    const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.total || 0), 0);
+    const totalDiscount = sales.reduce((sum, sale) => sum + Number(sale.discount || 0), 0);
     const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
     // Handle filter changes
@@ -275,11 +281,22 @@ export const SalesReports = () => {
                                 onChange={(value) => handleFilterChange('paymentMethod', value)}
                                 value={filters.paymentMethod}
                             >
-                                <Select.Option value="CASH">Efectivo</Select.Option>
-                                <Select.Option value="DEBIT">T. Débito</Select.Option>
-                                <Select.Option value="CREDIT">T. Crédito</Select.Option>
-                                <Select.Option value="TRANSFER">Transferencia</Select.Option>
-                                <Select.Option value="MOBILE">Pago Móvil</Select.Option>
+                                <Select.OptGroup label="Métodos de Pago">
+                                    <Select.Option value="CASH">Efectivo</Select.Option>
+                                    <Select.Option value="DEBIT">T. Débito</Select.Option>
+                                    <Select.Option value="CREDIT">T. Crédito</Select.Option>
+                                    <Select.Option value="TRANSFER">Transferencia</Select.Option>
+                                    <Select.Option value="MOBILE">Pago Móvil</Select.Option>
+                                </Select.OptGroup>
+                                {currencies.filter(c => !c.isPrimary).length > 0 && (
+                                    <Select.OptGroup label="Divisas">
+                                        {currencies.filter(c => !c.isPrimary).map(currency => (
+                                            <Select.Option key={currency.code} value={`CURRENCY_${currency.code}`}>
+                                                {currency.code} - {currency.name}
+                                            </Select.Option>
+                                        ))}
+                                    </Select.OptGroup>
+                                )}
                             </Select>
                         </div>
                     </Col>

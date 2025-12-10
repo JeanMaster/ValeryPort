@@ -12,6 +12,8 @@ import { UnitsPage } from './features/units/UnitsPage';
 import { CurrenciesPage } from './features/currencies/CurrenciesPage';
 import { DevToolsPage } from './features/dev-tools/DevToolsPage';
 import { POSPage } from './features/pos/POSPage';
+import { ReturnsPage } from './features/returns/ReturnsPage';
+import { CashRegisterPage } from './features/cash-register/CashRegisterPage';
 import { ReportsPage } from './features/reports/ReportsPage';
 import {
   ShopOutlined,
@@ -37,8 +39,8 @@ function App() {
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
         <Route path="sales/pos" element={<POSPage />} />
-        <Route path="sales/returns" element={<ModulePage title="Devoluciones (En Construcción)" icon={<ShoppingCartOutlined />} />} />
-        <Route path="sales/cash-register" element={<ModulePage title="Caja (En Construcción)" icon={<DollarOutlined />} />} />
+        <Route path="sales/returns" element={<ReturnsPage />} />
+        <Route path="sales/cash-register" element={<CashRegisterPage />} />
         <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
         <Route path="purchases/reception" element={<ModulePage title="Recepción de Compra (En Construcción)" icon={<ShoppingOutlined />} />} />
         <Route path="purchases/returns" element={<ModulePage title="Devoluciones de Compra (En Construcción)" icon={<ShoppingOutlined />} />} />

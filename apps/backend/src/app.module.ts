@@ -12,6 +12,8 @@ import { UnitsModule } from './units/units.module';
 import { CurrenciesModule } from './currencies/currencies.module';
 import { SalesModule } from './sales/sales.module';
 import { InvoiceModule } from './invoice/invoice.module';
+import { ReturnsModule } from './returns/returns.module';
+import { CashRegisterModule } from './cash-register/cash-register.module';
 import { DevToolsController } from './dev-tools/dev-tools.controller';
 import { DevToolsService } from './dev-tools/dev-tools.service';
 
@@ -31,6 +33,8 @@ import { DevToolsService } from './dev-tools/dev-tools.service';
     CurrenciesModule,
     SalesModule,
     InvoiceModule,
+    ReturnsModule,
+    CashRegisterModule,
   ],
   controllers: [AppController, DevToolsController],
   providers: [AppService, DevToolsService],

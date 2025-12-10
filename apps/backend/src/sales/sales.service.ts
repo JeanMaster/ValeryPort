@@ -126,9 +126,12 @@ export class SalesService {
             where.clientId = filters.clientId;
         }
 
-        // Filtro por forma de pago
+        // Filtro por forma de pago (usar contains para match parcial)
         if (filters.paymentMethod) {
-            where.paymentMethod = filters.paymentMethod;
+            where.paymentMethod = {
+                contains: filters.paymentMethod,
+                mode: 'insensitive'
+            };
         }
 
         // Filtro por monto mínimo y máximo

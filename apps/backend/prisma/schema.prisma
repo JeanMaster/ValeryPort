@@ -106,6 +106,13 @@ model Product {
   // Items de venta asociados
   saleItems      SaleItem[]
 
+  // Política de devoluciones
+  isReturnable         Boolean  @default(true)
+  returnDeadlineDays   Int?     // null = usar default global (30)
+
+  // Relaciones con devoluciones
+  returnItems          ReturnItem[]
+
   active          Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -207,6 +214,17 @@ model Sale {
   // Items de la venta
   items         SaleItem[]
 
+  // Relaciones con devoluciones
+  returns           Return[] @relation("OriginalSale")
+  replacementReturns Return[] @relation("ReturnNewSale")
+
+  // Estado
+  hasReturns        Boolean  @default(false)
+  isCancelled       Boolean  @default(false)
+
+  // Relaciones con caja
+  cashMovements     CashMovement[]
+
   active        Boolean    @default(true)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -240,4 +258,130 @@ model InvoiceCounter {
   updatedAt DateTime @updatedAt
 
   @@map("invoice_counters")
+}
+
+model Return {
+  id                String   @id @default(uuid())
+  
+  // Referencias
+  originalSaleId    String
+  originalSale      Sale     @relation("OriginalSale", fields: [originalSaleId], references: [id])
+  creditNoteNumber  String   @unique
+  
+  // Tipo y motivo
+  returnType        String   // "REFUND", "EXCHANGE_SAME", "EXCHANGE_DIFFERENT"
+  reason            String   // "DEFECTIVE", "UNSATISFIED", "ERROR", "EXPIRED", "OTHER"
+  productCondition  String   // "EXCELLENT", "GOOD", "DEFECTIVE", "DAMAGED"
+  
+  // Items devueltos
+  items             ReturnItem[]
+  
+  // Financiero
+  refundAmount      Decimal  @db.Decimal(10, 2)
+  refundMethod      String?  // "CASH", "TRANSFER", "CREDIT_NOTE"
+  
+  // Nueva venta (si es cambio)
+  newSaleId         String?
+  newSale           Sale?    @relation("ReturnNewSale", fields: [newSaleId], references: [id])
+  
+  // Workflow
+  status            String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED", "COMPLETED"
+  requestedBy       String?
+  approvedBy        String?
+  approvedAt        DateTime?
+  
+  // Notas
+  notes             String?
+  
+  // Auditoría
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("returns")
+}
+
+model ReturnItem {
+  id               String  @id @default(uuid())
+  returnId         String
+  return           Return  @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  
+  productId        String
+  product          Product @relation(fields: [productId], references: [id])
+  
+  quantity         Int
+  unitPrice        Decimal @db.Decimal(10, 2)
+  total            Decimal @db.Decimal(10, 2)
+  
+  restockQuantity  Int     @default(0) // Cantidad que se regresa al stock
+  
+  @@map("return_items")
+}
+
+model CashRegister {
+  id          String        @id @default(uuid())
+  name        String        // "Caja Principal", "Caja 2"
+  location    String?       // "Tienda", "Almacén"
+  isActive    Boolean       @default(true)
+  sessions    CashSession[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@map("cash_registers")
+}
+
+model CashSession {
+  id                String         @id @default(uuid())
+  registerId        String
+  register          CashRegister   @relation(fields: [registerId], references: [id])
+  
+  // Session info
+  openedBy          String         // Usuario que abre
+  closedBy          String?        // Usuario que cierra
+  openedAt          DateTime       @default(now())
+  closedAt          DateTime?
+  status            String         @default("OPEN") // OPEN, CLOSED
+  
+  // Opening balance
+  openingBalance    Decimal        @db.Decimal(10, 2)
+  openingNotes      String?
+  
+  // Closing info
+  expectedBalance   Decimal?       @db.Decimal(10, 2)
+  actualBalance     Decimal?       @db.Decimal(10, 2)
+  variance          Decimal?       @db.Decimal(10, 2) // actualBalance - expectedBalance
+  closingNotes      String?
+  
+  // Movements during session
+  movements         CashMovement[]
+  
+  active            Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@map("cash_sessions")
+}
+
+model CashMovement {
+  id              String       @id @default(uuid())
+  sessionId       String
+  session         CashSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Movement details
+  type            String       // "SALE", "EXPENSE", "DEPOSIT", "WITHDRAWAL", "OPENING", "CLOSING"
+  amount          Decimal      @db.Decimal(10, 2)
+  currencyCode    String       @default("VES") // VES, USD, EUR, etc.
+  
+  // References
+  saleId          String?      // Si es de una venta
+  sale            Sale?        @relation(fields: [saleId], references: [id])
+  
+  // Description
+  description     String
+  notes           String?
+  performedBy     String       // Usuario que realiza
+  
+  createdAt       DateTime     @default(now())
+  
+  @@map("cash_movements")
 }

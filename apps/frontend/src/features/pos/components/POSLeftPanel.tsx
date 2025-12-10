@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Table, Button, Card, Select, Modal } from 'antd';
+import { Table, Button, Card, Select, Modal, Tag } from 'antd';
 import { usePOSStore } from '../../../store/posStore';
 import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
 import type { CartItem } from '../../../store/posStore';
@@ -9,7 +9,7 @@ import debounce from 'lodash/debounce';
 import { QuantityModal } from './QuantityModal';
 import { DiscountModal } from './DiscountModal';
 import { PriceModal } from './PriceModal';
-import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, SyncOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, ExclamationCircleOutlined, WarningOutlined, SyncOutlined } from '@ant-design/icons';
 
 export const POSLeftPanel = () => {
     const {
@@ -49,9 +49,35 @@ export const POSLeftPanel = () => {
 
     const handleSelectProduct = (_productId: string, option: any) => {
         if (option.product) {
-            addItem(option.product, false); // Default to primary unit
+            const product = option.product;
+
+            // Check if product has no stock
+            if (product.stock === 0) {
+                Modal.warning({
+                    title: 'Producto sin stock',
+                    icon: <WarningOutlined style={{ color: '#ff4d4f' }} />,
+                    content: `${product.name} no tiene inventario disponible.`,
+                });
+                return;
+            }
+
+            // Check if adding would exceed available stock
+            const existingItem = cart.find(item => item.product.id === product.id);
+            const currentQuantity = existingItem ? existingItem.quantity : 0;
+
+            if (currentQuantity >= product.stock) {
+                Modal.warning({
+                    title: 'Stock insuficiente',
+                    icon: <WarningOutlined style={{ color: '#faad14' }} />,
+                    content: `Ya tienes ${currentQuantity} unidades en el carrito. Stock disponible: ${product.stock}`,
+                });
+                return;
+            }
+
+            addItem(product, false); // Default to primary unit
         }
     };
+
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -123,6 +149,33 @@ export const POSLeftPanel = () => {
                     )}
                 </div>
             )
+        },
+        {
+            title: 'Stock',
+            key: 'stock',
+            width: 70,
+            align: 'center' as const,
+            render: (_: any, record: CartItem) => {
+                const stock = record.product.stock;
+                const hasStockIssue = record.quantity > stock;
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <Tag color={
+                            stock === 0 ? 'red' :
+                                stock <= 10 ? 'orange' :
+                                    'green'
+                        } style={{ margin: 0, fontSize: 11 }}>
+                            {stock}
+                        </Tag>
+                        {hasStockIssue && (
+                            <ExclamationCircleOutlined
+                                style={{ color: 'red', fontSize: 14 }}
+                                title="Cantidad excede stock disponible"
+                            />
+                        )}
+                    </div>
+                );
+            }
         },
         {
             title: 'Total',
@@ -201,9 +254,13 @@ export const POSLeftPanel = () => {
                         priceString += ` | ${formatVenezuelanPrice(priceInSecondary, secondarySymbol, 2, true)}`;
                     }
 
+                    // Stock indicator
+                    const stockIndicator = d.stock === 0 ? '🔴' : d.stock <= 10 ? '🟡' : '🟢';
+                    const stockText = `Stock: ${d.stock}`;
+
                     return {
                         value: d.id,
-                        label: `${d.sku} - ${d.name} (${priceString})`,
+                        label: `${d.sku} - ${d.name} (${priceString}) [${stockText} ${stockIndicator}]`,
                         product: d
                     };
                 })}
