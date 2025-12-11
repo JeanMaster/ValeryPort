@@ -472,15 +472,14 @@ export const CashRegisterPage = () => {
                             </span>
                         ),
                         children: (
-                            <Card>
-                                <div style={{ marginBottom: 16 }}>
+                            <Card
+                                extra={
                                     <Button
                                         icon={<ReloadOutlined />}
                                         onClick={() => refetchHistory()}
-                                    >
-                                        Actualizar
-                                    </Button>
-                                </div>
+                                    />
+                                }
+                            >
                                 <Table
                                     dataSource={closedSessions}
                                     columns={historyColumns}

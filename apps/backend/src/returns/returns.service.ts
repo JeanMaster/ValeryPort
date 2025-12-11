@@ -270,33 +270,13 @@ export class ReturnsService {
         }
 
         await this.prisma.$transaction(async (prisma) => {
-            // Ajustar stock según tipo y condición
-            for (const item of returnRecord.items) {
-                // Solo restock si está en buenas condiciones
-                if (item.restockQuantity > 0 &&
-                    [ProductCondition.EXCELLENT, ProductCondition.GOOD].includes(returnRecord.productCondition as ProductCondition)) {
-                    await prisma.product.update({
-                        where: { id: item.productId },
-                        data: {
-                            stock: {
-                                increment: item.restockQuantity
-                            }
-                        }
-                    });
-                }
+            // NOTA: Se eliminó la actualización automática de inventario a petición del usuario.
+            // Los ajustes de stock deben realizarse manualmente en el módulo "Ajustes de Inventario".
 
-                // Si es EXCHANGE_SAME, descontar el reemplazo
-                if (returnRecord.returnType === ReturnType.EXCHANGE_SAME) {
-                    await prisma.product.update({
-                        where: { id: item.productId },
-                        data: {
-                            stock: {
-                                decrement: item.quantity
-                            }
-                        }
-                    });
-                }
-            }
+            /* Lógica anterior eliminada:
+             * - Incremento por restock
+             * - Decremento por cambio de producto
+             */
 
             // Actualizar estado de la devolución
             await prisma.return.update({

@@ -50,7 +50,8 @@ export class CashRegisterService {
                 registerId: openSessionDto.registerId,
                 openingBalance: openSessionDto.openingBalance,
                 openedBy: openSessionDto.openedBy || 'Sistema',
-                openingNotes: openSessionDto.openingNotes
+                openingNotes: openSessionDto.openingNotes,
+                openedAt: new Date() // Explicitly set to server (UTC) time
             },
             include: {
                 register: true

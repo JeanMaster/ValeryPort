@@ -26,34 +26,38 @@ export interface CreateSupplierDto {
     phone?: string;
     email?: string;
     category?: string;
+    active?: boolean;
 }
 
 export interface UpdateSupplierDto extends Partial<CreateSupplierDto> { }
 
 export const suppliersApi = {
-    getAll: async (search?: string): Promise<Supplier[]> => {
-        const params = search ? { search } : {};
-        const { data } = await axios.get(`${API_URL}/suppliers`, { params });
-        return data;
+    getAll: async (search?: string, active: boolean = true): Promise<Supplier[]> => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        params.append('active', String(active));
+
+        const response = await axios.get(`${API_URL}/suppliers`, { params });
+        return response.data;
     },
 
-    getOne: async (id: string): Promise<Supplier> => {
-        const { data } = await axios.get(`${API_URL}/suppliers/${id}`);
-        return data;
+    getById: async (id: string): Promise<Supplier> => {
+        const response = await axios.get(`${API_URL}/suppliers/${id}`);
+        return response.data;
     },
 
-    create: async (dto: CreateSupplierDto): Promise<Supplier> => {
-        const { data } = await axios.post(`${API_URL}/suppliers`, dto);
-        return data;
+    create: async (data: CreateSupplierDto): Promise<Supplier> => {
+        const response = await axios.post(`${API_URL}/suppliers`, data);
+        return response.data;
     },
 
-    update: async (id: string, dto: UpdateSupplierDto): Promise<Supplier> => {
-        const { data } = await axios.patch(`${API_URL}/suppliers/${id}`, dto);
-        return data;
+    update: async (id: string, data: UpdateSupplierDto): Promise<Supplier> => {
+        const response = await axios.patch(`${API_URL}/suppliers/${id}`, data);
+        return response.data;
     },
 
-    delete: async (id: string): Promise<Supplier> => {
-        const { data } = await axios.delete(`${API_URL}/suppliers/${id}`);
-        return data;
+    remove: async (id: string): Promise<Supplier> => {
+        const response = await axios.delete(`${API_URL}/suppliers/${id}`);
+        return response.data;
     },
 };

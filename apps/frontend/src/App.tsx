@@ -3,7 +3,8 @@ import { MainLayout } from './components/layout/MainLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { ModulePage } from './pages/ModulePage';
 import { ClientsPage } from './features/clients/ClientsPage';
-import { SuppliersPage } from './features/suppliers/SuppliersPage';
+import { SuppliersPage } from './features/purchases/SuppliersPage';
+import { PurchasesPage } from './features/purchases/PurchasesPage';
 import { ProductsPage } from './features/products/ProductsPage';
 import { CompanySettingsPage } from './features/company-settings/CompanySettingsPage';
 import { GeneralOptionsPage } from './features/company-settings/GeneralOptionsPage';
@@ -14,6 +15,7 @@ import { DevToolsPage } from './features/dev-tools/DevToolsPage';
 import { POSPage } from './features/pos/POSPage';
 import { ReturnsPage } from './features/returns/ReturnsPage';
 import { CashRegisterPage } from './features/cash-register/CashRegisterPage';
+import { InventoryAdjustmentsPage } from './features/inventory-adjustments/InventoryAdjustmentsPage';
 import { ReportsPage } from './features/reports/ReportsPage';
 import {
   ShopOutlined,
@@ -35,6 +37,8 @@ function App() {
         <Route path="inventory/currencies" element={<CurrenciesPage />} />
         <Route path="inventory/departments" element={<DepartmentsPage />} />
         <Route path="inventory/units" element={<UnitsPage />} />
+        <Route path="/inventory/adjustments" element={<InventoryAdjustmentsPage />} />
+
         <Route path="inventory/services" element={<ModulePage title="Servicios (En Construcción)" icon={<ShopOutlined />} />} />
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
@@ -42,8 +46,8 @@ function App() {
         <Route path="sales/returns" element={<ReturnsPage />} />
         <Route path="sales/cash-register" element={<CashRegisterPage />} />
         <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
-        <Route path="purchases/reception" element={<ModulePage title="Recepción de Compra (En Construcción)" icon={<ShoppingOutlined />} />} />
-        <Route path="purchases/returns" element={<ModulePage title="Devoluciones de Compra (En Construcción)" icon={<ShoppingOutlined />} />} />
+        <Route path="purchases/reception" element={<PurchasesPage />} />
+        <Route path="purchases/history" element={<PurchasesPage />} />
         <Route path="accounts-receivable" element={<ModulePage title="Cuentas por Cobrar" icon={<DollarOutlined />} />} />
         <Route path="accounts-payable" element={<ModulePage title="Cuentas por Pagar" icon={<CreditCardOutlined />} />} />
         <Route path="hr" element={<ModulePage title="Nómina" icon={<TeamOutlined />} />} />

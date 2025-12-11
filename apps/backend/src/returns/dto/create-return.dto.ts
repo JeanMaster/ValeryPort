@@ -20,10 +20,6 @@ export class CreateReturnItemDto {
     @IsNumber()
     total: number;
 
-    @ApiProperty({ description: 'Cantidad que se regresa al stock', default: 0 })
-    @IsNumber()
-    @Min(0)
-    restockQuantity: number;
 }
 
 export enum ReturnType {

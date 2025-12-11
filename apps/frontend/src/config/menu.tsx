@@ -46,6 +46,10 @@ export const menuItems: MenuItem[] = [
                 label: 'Unidades',
             },
             {
+                key: '/inventory/adjustments',
+                label: 'Ajustes de Inventario',
+            },
+            {
                 key: '/inventory/services',
                 label: 'Servicios',
             },
@@ -88,8 +92,8 @@ export const menuItems: MenuItem[] = [
                 label: 'Recepción de Compra',
             },
             {
-                key: '/purchases/returns',
-                label: 'Devoluciones de Compra',
+                key: '/purchases/history',
+                label: 'Historial de Compras',
             },
         ],
     },

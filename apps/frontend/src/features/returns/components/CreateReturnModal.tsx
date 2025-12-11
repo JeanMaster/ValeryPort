@@ -117,8 +117,7 @@ export const CreateReturnModal = ({ open, onCancel, onSuccess }: CreateReturnMod
                 productSku: item.product.sku,
                 quantity: Number(item.quantity),
                 unitPrice: Number(item.unitPrice),
-                total: Number(item.total),
-                restockQuantity: Number(item.quantity) // Por defecto, toda la cantidad
+                total: Number(item.total)
             };
             setSelectedItems([...selectedItems, newItem]);
         } else {
@@ -134,13 +133,6 @@ export const CreateReturnModal = ({ open, onCancel, onSuccess }: CreateReturnMod
         ));
     };
 
-    const updateRestockQuantity = (productId: string, restockQuantity: number) => {
-        setSelectedItems(selectedItems.map(item =>
-            item.productId === productId
-                ? { ...item, restockQuantity }
-                : item
-        ));
-    };
 
     // Step 3: Choose return type
     const handleNext = () => {
@@ -244,20 +236,6 @@ export const CreateReturnModal = ({ open, onCancel, onSuccess }: CreateReturnMod
                 />
             )
         },
-        {
-            title: 'Restock',
-            key: 'restock',
-            width: 100,
-            render: (_: any, record: SelectedItem) => (
-                <InputNumber
-                    min={0}
-                    max={record.quantity}
-                    value={record.restockQuantity}
-                    onChange={(value) => updateRestockQuantity(record.productId, value || 0)}
-                    size="small"
-                />
-            )
-        }
     ];
 
     const steps = [

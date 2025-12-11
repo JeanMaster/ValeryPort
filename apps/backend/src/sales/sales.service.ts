@@ -2,12 +2,15 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { InvoiceService } from '../invoice/invoice.service';
+import { CashRegisterService } from '../cash-register/cash-register.service';
+import { MovementType } from '../cash-register/dto/create-movement.dto';
 
 @Injectable()
 export class SalesService {
     constructor(
         private prisma: PrismaService,
-        private invoiceService: InvoiceService
+        private invoiceService: InvoiceService,
+        private cashRegisterService: CashRegisterService
     ) { }
 
     /**
@@ -27,27 +30,28 @@ export class SalesService {
             }
 
             // Solo validar stock si el producto tiene control de inventario (stock > 0)
-            // Si stock = 0 o stock < 0, significa que no hay control de inventario
-            // Si stock > 0, entonces sí hay control de inventario
             if (product.stock > 0 && product.stock < item.quantity) {
                 throw new BadRequestException(`Stock insuficiente para ${product.name}. Disponible: ${product.stock}`);
             }
         }
 
+        // Obtener sesión de caja activa (si existe)
+        const activeSession = await this.cashRegisterService.getActiveSession();
+
         // Crear la venta con items en una transacción
-        return await this.prisma.$transaction(async (prisma) => {
+        const sale = await this.prisma.$transaction(async (prisma) => {
             // Use reserved invoice number if provided, otherwise generate a new one
             let invoiceNumber = reservedInvoiceNumber;
             if (!invoiceNumber) {
-                // Generar número de factura DENTRO de la transacción para evitar race conditions
                 invoiceNumber = await this.invoiceService.generateInvoiceNumber();
             }
 
             // Crear la venta con número de factura
-            const sale = await prisma.sale.create({
+            const newSale = await prisma.sale.create({
                 data: {
                     ...saleData,
-                    invoiceNumber, // Asignar número de factura
+                    invoiceNumber,
+                    cashSessionId: activeSession?.id,
                     items: {
                         create: items,
                     },
@@ -80,8 +84,66 @@ export class SalesService {
                 }
             }
 
-            return sale;
+            return newSale;
         });
+
+        // Registrar movimientos en caja (Fuera de la transacción de venta para no bloquear, si falla se puede manejar o ignorar)
+        if (activeSession) {
+            try {
+                await this.registerCashMovements(activeSession.id, sale, saleData.paymentMethod);
+            } catch (error) {
+                console.error('Error recording cash movements for sale:', error);
+                // No lanzamos error para no revertir la venta, pero logueamos el fallo
+            }
+        }
+
+        return sale;
+    }
+
+    /**
+     * Registrar movimientos de caja basados en el método de pago
+     */
+    private async registerCashMovements(sessionId: string, sale: any, paymentMethodStr: string) {
+        const methods = paymentMethodStr.split(', ');
+
+        for (const methodPart of methods) {
+            let method = methodPart;
+            let amount = Number(sale.total); // Por defecto todo el monto si es simple
+
+            // Si es compuesto "METHOD:AMOUNT"
+            if (methodPart.includes(':')) {
+                const parts = methodPart.split(':');
+                method = parts[0];
+                amount = parseFloat(parts[1]);
+            }
+
+            // Identificar si es Efectivo (VES) o Divisa (USD, etc)
+            if (method === 'CASH') {
+                // Pago en efectivo Bs
+                await this.cashRegisterService.createMovement({
+                    sessionId,
+                    type: MovementType.SALE,
+                    amount: amount,
+                    currencyCode: 'VES',
+                    description: `Venta #${sale.invoiceNumber}`,
+                    saleId: sale.id
+                });
+            } else if (method.startsWith('CURRENCY_')) {
+                // Pago en Divisa Efectivo (CURRENCY_USD, CURRENCY_EUR, etc)
+                // El formato esperado es CURRENCY_CODE
+                const currencyCode = method.replace('CURRENCY_', '');
+
+                await this.cashRegisterService.createMovement({
+                    sessionId,
+                    type: MovementType.SALE,
+                    amount: amount,
+                    currencyCode: currencyCode,
+                    description: `Venta #${sale.invoiceNumber} (${currencyCode})`,
+                    saleId: sale.id
+                });
+            }
+            // Otros métodos (DEBIT, CREDIT, TRANSFER) no generan movimiento de caja
+        }
     }
 
     /**
@@ -114,7 +176,6 @@ export class SalesService {
                 where.date.gte = new Date(filters.startDate);
             }
             if (filters.endDate) {
-                // Agregar un día para incluir toda la fecha final
                 const endDate = new Date(filters.endDate);
                 endDate.setDate(endDate.getDate() + 1);
                 where.date.lt = endDate;
@@ -126,7 +187,7 @@ export class SalesService {
             where.clientId = filters.clientId;
         }
 
-        // Filtro por forma de pago (usar contains para match parcial)
+        // Filtro por forma de pago
         if (filters.paymentMethod) {
             where.paymentMethod = {
                 contains: filters.paymentMethod,
@@ -134,7 +195,7 @@ export class SalesService {
             };
         }
 
-        // Filtro por monto mínimo y máximo
+        // Filtro por monto
         if (filters.minAmount || filters.maxAmount) {
             where.total = {};
             if (filters.minAmount) {
@@ -145,7 +206,7 @@ export class SalesService {
             }
         }
 
-        // Filtro por producto específico (buscar en los items)
+        // Filtro por producto
         if (filters.productId) {
             where.items = {
                 some: {

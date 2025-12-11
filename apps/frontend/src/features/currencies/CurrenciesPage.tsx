@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, StarFilled } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, StarFilled, ReloadOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { currenciesApi } from '../../services/currenciesApi';
 import type { Currency } from '../../services/currenciesApi';
@@ -156,6 +156,7 @@ export const CurrenciesPage = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: 250 }}
                     />
+                    <Button icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries({ queryKey: ['currencies'] })} />
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                         Nueva Moneda
                     </Button>

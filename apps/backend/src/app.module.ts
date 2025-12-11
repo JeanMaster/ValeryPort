@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ClientsModule } from './clients/clients.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
+import { PurchasesModule } from './purchases/purchases.module';
 import { ProductsModule } from './products/products.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
 import { DepartmentsModule } from './departments/departments.module';
@@ -14,6 +15,7 @@ import { SalesModule } from './sales/sales.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { ReturnsModule } from './returns/returns.module';
 import { CashRegisterModule } from './cash-register/cash-register.module';
+import { InventoryAdjustmentsModule } from './inventory-adjustments/inventory-adjustments.module';
 import { DevToolsController } from './dev-tools/dev-tools.controller';
 import { DevToolsService } from './dev-tools/dev-tools.service';
 
@@ -35,6 +37,9 @@ import { DevToolsService } from './dev-tools/dev-tools.service';
     InvoiceModule,
     ReturnsModule,
     CashRegisterModule,
+    InventoryAdjustmentsModule,
+    SuppliersModule,
+    PurchasesModule,
   ],
   controllers: [AppController, DevToolsController],
   providers: [AppService, DevToolsService],

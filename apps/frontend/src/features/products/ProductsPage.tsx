@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatVenezuelanPrice } from '../../utils/formatters';
 import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '../../services/productsApi';
 import type { Product } from '../../services/productsApi';
@@ -207,6 +207,7 @@ export const ProductsPage = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: 250 }}
                     />
+                    <Button icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries({ queryKey: ['products'] })} />
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                         Nuevo Producto
                     </Button>

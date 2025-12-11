@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Table, Button, Space, Input, message, Popconfirm, Tag } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { unitsApi } from '../../services/unitsApi';
 import type { Unit } from '../../services/unitsApi';
@@ -110,6 +110,7 @@ export const UnitsPage = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: 250 }}
                     />
+                    <Button icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries({ queryKey: ['units'] })} />
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                         Nueva Unidad
                     </Button>

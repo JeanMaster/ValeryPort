@@ -53,7 +53,6 @@ export interface CreateReturnItemDto {
     quantity: number;
     unitPrice: number;
     total: number;
-    restockQuantity: number;
 }
 
 export interface CreateReturnDto {

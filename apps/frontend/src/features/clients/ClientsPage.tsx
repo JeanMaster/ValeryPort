@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Table, Button, Input, Space, message, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, WhatsAppOutlined, InstagramOutlined, FacebookOutlined, TwitterOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, WhatsAppOutlined, InstagramOutlined, FacebookOutlined, TwitterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsApi } from '../../services/clientsApi';
 import type { Client } from '../../services/clientsApi';
@@ -134,13 +134,19 @@ export const ClientsPage = () => {
             <Card
                 title="Gestión de Clientes"
                 extra={
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        Nuevo Cliente
-                    </Button>
+                    <Space>
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={() => queryClient.invalidateQueries({ queryKey: ['clients'] })}
+                        />
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            Nuevo Cliente
+                        </Button>
+                    </Space>
                 }
             >
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">

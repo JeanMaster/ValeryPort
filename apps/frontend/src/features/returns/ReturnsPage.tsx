@@ -264,9 +264,7 @@ export const ReturnsPage = () => {
                                 setDateRange(null);
                                 refetch();
                             }}
-                        >
-                            Limpiar
-                        </Button>
+                        />
                     </Space>
                     <Button
                         type="primary"
