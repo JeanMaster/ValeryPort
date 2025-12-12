@@ -10,6 +10,7 @@ import { ProductsModule } from './products/products.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { UnitsModule } from './units/units.module';
+import { StatsModule } from './stats/stats.module';
 import { CurrenciesModule } from './currencies/currencies.module';
 import { SalesModule } from './sales/sales.module';
 import { InvoiceModule } from './invoice/invoice.module';
@@ -18,6 +19,7 @@ import { CashRegisterModule } from './cash-register/cash-register.module';
 import { InventoryAdjustmentsModule } from './inventory-adjustments/inventory-adjustments.module';
 import { DevToolsController } from './dev-tools/dev-tools.controller';
 import { DevToolsService } from './dev-tools/dev-tools.service';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { DevToolsService } from './dev-tools/dev-tools.service';
     InventoryAdjustmentsModule,
     SuppliersModule,
     PurchasesModule,
+    StatsModule,
+    PaymentsModule,
   ],
   controllers: [AppController, DevToolsController],
   providers: [AppService, DevToolsService],

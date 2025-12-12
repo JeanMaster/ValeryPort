@@ -1,0 +1,28 @@
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PaymentsService } from './payments.service';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+
+@ApiTags('payments')
+@Controller('payments')
+export class PaymentsController {
+    constructor(private readonly paymentsService: PaymentsService) { }
+
+    @Post()
+    @ApiOperation({ summary: 'Registrar un pago contra una factura' })
+    create(@Body() createPaymentDto: CreatePaymentDto) {
+        return this.paymentsService.createPayment(createPaymentDto);
+    }
+
+    @Get('invoice/:id')
+    @ApiOperation({ summary: 'Obtener pagos de una factura' })
+    getByInvoice(@Param('id') id: string) {
+        return this.paymentsService.getPaymentsByInvoice(id);
+    }
+
+    @Get()
+    @ApiOperation({ summary: 'Obtener todos los pagos' })
+    getAll() {
+        return this.paymentsService.getAllPayments();
+    }
+}

@@ -83,7 +83,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             if (!open) return;
 
             // Modal-exclusive keys - prevent propagation to background
-            const modalKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F9', 'Escape'];
+            const modalKeys = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F8', 'F9', 'Escape'];
 
             // Check for Ctrl+Fn combinations (excluding F6 which is now standalone)
             const isCtrlFn = e.ctrlKey && ['F9', 'F10', 'F11', 'F12'].includes(e.key);
@@ -100,14 +100,17 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                     setSelectedMethod('DEBIT');
                     addPayment('DEBIT', 'F2 T. Débito');
                 } else if (e.key === 'F3' && inputAmount) {
-                    setSelectedMethod('CREDIT');
-                    addPayment('CREDIT', 'F3 T. Crédito');
+                    setSelectedMethod('CARD_CREDIT');
+                    addPayment('CARD_CREDIT', 'F3 T. Crédito');
                 } else if (e.key === 'F4' && inputAmount) {
                     setSelectedMethod('MOBILE');
                     addPayment('MOBILE', 'F4 Pago Móvil');
                 } else if (e.key === 'F5' && inputAmount) {
                     setSelectedMethod('TRANSFER');
                     addPayment('TRANSFER', 'F5 Transferencia');
+                } else if (e.key === 'F8' && inputAmount) {
+                    setSelectedMethod('ACCOUNT_CREDIT');
+                    addPayment('ACCOUNT_CREDIT', 'F8 Crédito (Cuenta)');
                 } else if (e.key === 'F6' && payments.length > 0) {
                     if (selectedPaymentId) {
                         // Remove selected payment
@@ -231,9 +234,10 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
     const bsPaymentMethods = [
         { key: 'CASH', label: 'F1 Efectivo', icon: <DollarOutlined />, shortcut: 'F1' },
         { key: 'DEBIT', label: 'F2 T. Débito', icon: <CreditCardOutlined />, shortcut: 'F2' },
-        { key: 'CREDIT', label: 'F3 T. Crédito', icon: <CreditCardOutlined />, shortcut: 'F3' },
+        { key: 'CARD_CREDIT', label: 'F3 T. Crédito', icon: <CreditCardOutlined />, shortcut: 'F3' },
         { key: 'MOBILE', label: 'F4 Pago Móvil', icon: <MobileOutlined />, shortcut: 'F4' },
         { key: 'TRANSFER', label: 'F5 Transferencia', icon: <BankOutlined />, shortcut: 'F5' },
+        { key: 'ACCOUNT_CREDIT', label: 'F8 Crédito (Cuenta)', icon: <CreditCardOutlined />, shortcut: 'F8', danger: true },
     ];
 
     // Get available foreign currencies (excluding primary)

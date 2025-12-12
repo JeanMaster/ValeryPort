@@ -97,6 +97,31 @@ export class SalesService {
             }
         }
 
+        // Detectar si hay crédito en el método de pago y crear factura automáticamente
+        if (this.hasCredit(saleData.paymentMethod)) {
+            try {
+                const creditAmount = this.extractCreditAmount(saleData.paymentMethod, Number(sale.total));
+
+                // Calcular fecha de vencimiento (30 días por defecto)
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 30);
+
+                await this.invoiceService.createCreditInvoice({
+                    clientId: sale.clientId || '', // Si no hay cliente, se puede manejar con un cliente genérico
+                    saleId: sale.id,
+                    subtotal: Number(sale.subtotal),
+                    discount: Number(sale.discount),
+                    tax: Number(sale.tax),
+                    total: creditAmount,
+                    dueDate,
+                    notes: `Factura generada automáticamente por venta a crédito - ${sale.invoiceNumber}`,
+                });
+            } catch (error) {
+                console.error('Error creating credit invoice:', error);
+                // No lanzamos error para no revertir la venta
+            }
+        }
+
         return sale;
     }
 
@@ -250,5 +275,33 @@ export class SalesService {
         }
 
         return sale;
+    }
+
+    /**
+     * Helper: Detectar si el método de pago incluye crédito
+     */
+    private hasCredit(paymentMethod: string): boolean {
+        return paymentMethod.toUpperCase().includes('ACCOUNT_CREDIT');
+    }
+
+    /**
+     * Helper: Extraer el monto a crédito del método de pago
+     */
+    private extractCreditAmount(paymentMethod: string, totalAmount: number): number {
+        const methods = paymentMethod.split(', ');
+
+        for (const methodPart of methods) {
+            if (methodPart.toUpperCase().includes('ACCOUNT_CREDIT')) {
+                // Si tiene formato "ACCOUNT_CREDIT:500", extraer el monto
+                if (methodPart.includes(':')) {
+                    const parts = methodPart.split(':');
+                    return parseFloat(parts[1]);
+                }
+                // Si solo dice "ACCOUNT_CREDIT", asumir que es el total
+                return totalAmount;
+            }
+        }
+
+        return totalAmount;
     }
 }

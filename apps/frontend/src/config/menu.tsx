@@ -1,6 +1,5 @@
 import {
     DashboardOutlined,
-    ShoppingCartOutlined,
     ShopOutlined,
     ShoppingOutlined,
     DollarOutlined,
@@ -57,20 +56,20 @@ export const menuItems: MenuItem[] = [
     },
     {
         key: '/sales',
-        icon: <ShoppingCartOutlined />,
+        icon: <DollarOutlined />,
         label: 'Ventas',
         children: [
-            {
-                key: '/clients',
-                label: 'Clientes',
-            },
             {
                 key: '/sales/pos',
                 label: 'Punto de Venta',
             },
             {
-                key: '/sales/returns',
-                label: 'Devoluciones',
+                key: '/sales/history',
+                label: 'Historial de Ventas',
+            },
+            {
+                key: '/accounts-receivable',
+                label: 'Cuentas por Cobrar',
             },
             {
                 key: '/sales/cash-register',
@@ -86,10 +85,6 @@ export const menuItems: MenuItem[] = [
             {
                 key: '/suppliers',
                 label: 'Proveedores',
-            },
-            {
-                key: '/purchases/reception',
-                label: 'Recepción de Compra',
             },
             {
                 key: '/purchases/history',

@@ -112,4 +112,126 @@ export class InvoiceService {
             return invoiceNumber;
         });
     }
+
+    /**
+     * Create a credit invoice
+     */
+    async createCreditInvoice(data: {
+        clientId: string;
+        saleId?: string;
+        subtotal: number;
+        discount?: number;
+        tax?: number;
+        total: number;
+        dueDate?: Date;
+        notes?: string;
+    }) {
+        const invoiceNumber = await this.generateInvoiceNumber();
+        const balance = data.total; // Initially, full amount is due
+
+        const invoice = await this.prisma.invoice.create({
+            data: {
+                number: invoiceNumber,
+                clientId: data.clientId,
+                saleId: data.saleId,
+                subtotal: data.subtotal,
+                discount: data.discount || 0,
+                tax: data.tax || 0,
+                total: data.total,
+                balance,
+                dueDate: data.dueDate,
+                notes: data.notes,
+                status: 'PENDING',
+            },
+            include: {
+                client: true,
+            },
+        });
+
+        return invoice;
+    }
+
+    /**
+     * Get invoices by client
+     */
+    async getClientInvoices(clientId: string) {
+        const invoices = await this.prisma.invoice.findMany({
+            where: {
+                clientId,
+                active: true,
+            },
+            include: {
+                payments: {
+                    orderBy: { paymentDate: 'desc' },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return invoices;
+    }
+
+    /**
+     * Get all pending invoices
+     */
+    async getPendingInvoices() {
+        const invoices = await this.prisma.invoice.findMany({
+            where: {
+                status: { in: ['PENDING', 'PARTIAL'] },
+                active: true,
+            },
+            include: {
+                client: true,
+                payments: true,
+            },
+            orderBy: { dueDate: 'asc' },
+        });
+
+        return invoices;
+    }
+
+    /**
+     * Get overdue invoices
+     */
+    async getOverdueInvoices() {
+        const now = new Date();
+        const invoices = await this.prisma.invoice.findMany({
+            where: {
+                status: { in: ['PENDING', 'PARTIAL'] },
+                dueDate: { lt: now },
+                active: true,
+            },
+            include: {
+                client: true,
+            },
+            orderBy: { dueDate: 'asc' },
+        });
+
+        // Update status to OVERDUE if needed
+        for (const invoice of invoices) {
+            if (invoice.status !== 'OVERDUE') {
+                await this.prisma.invoice.update({
+                    where: { id: invoice.id },
+                    data: { status: 'OVERDUE' },
+                });
+            }
+        }
+
+        return invoices;
+    }
+
+    /**
+     * Get invoice by ID
+     */
+    async getInvoiceById(id: string) {
+        return this.prisma.invoice.findUnique({
+            where: { id },
+            include: {
+                client: true,
+                payments: {
+                    orderBy: { paymentDate: 'desc' },
+                },
+            },
+        });
+    }
 }

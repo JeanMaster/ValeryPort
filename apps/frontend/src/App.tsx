@@ -16,12 +16,12 @@ import { POSPage } from './features/pos/POSPage';
 import { ReturnsPage } from './features/returns/ReturnsPage';
 import { CashRegisterPage } from './features/cash-register/CashRegisterPage';
 import { InventoryAdjustmentsPage } from './features/inventory-adjustments/InventoryAdjustmentsPage';
+import { AccountsReceivablePage } from './features/accounts-receivable/AccountsReceivablePage';
 import { ReportsPage } from './features/reports/ReportsPage';
 import {
   ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
-  DollarOutlined,
   CreditCardOutlined,
   TeamOutlined,
   BankOutlined,
@@ -46,9 +46,8 @@ function App() {
         <Route path="sales/returns" element={<ReturnsPage />} />
         <Route path="sales/cash-register" element={<CashRegisterPage />} />
         <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
-        <Route path="purchases/reception" element={<PurchasesPage />} />
         <Route path="purchases/history" element={<PurchasesPage />} />
-        <Route path="accounts-receivable" element={<ModulePage title="Cuentas por Cobrar" icon={<DollarOutlined />} />} />
+        <Route path="accounts-receivable" element={<AccountsReceivablePage />} />
         <Route path="accounts-payable" element={<ModulePage title="Cuentas por Pagar" icon={<CreditCardOutlined />} />} />
         <Route path="hr" element={<ModulePage title="Nómina" icon={<TeamOutlined />} />} />
         <Route path="banks" element={<ModulePage title="Bancos" icon={<BankOutlined />} />} />

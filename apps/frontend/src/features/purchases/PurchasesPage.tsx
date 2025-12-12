@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { purchasesApi } from '../../services/purchasesApi';
 import type { Purchase } from '../../services/purchasesApi';
 import { CreatePurchaseModal } from './components/CreatePurchaseModal';
+import { PurchaseDetailsModal } from './components/PurchaseDetailsModal';
 // No, previously we removed it because App component wraps routes.
 // But some pages use it?
 // Let's check SuppliersPage. It returns <div>.
@@ -16,6 +17,8 @@ export const PurchasesPage: React.FC = () => {
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false); // For Create Modal
+    const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+    const [detailsVisible, setDetailsVisible] = useState(false);
 
     useEffect(() => {
         fetchPurchases();
@@ -31,6 +34,11 @@ export const PurchasesPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleViewDetails = (purchase: Purchase) => {
+        setSelectedPurchase(purchase);
+        setDetailsVisible(true);
     };
 
     const columns = [
@@ -79,8 +87,12 @@ export const PurchasesPage: React.FC = () => {
         {
             title: 'Acciones',
             key: 'actions',
-            render: (_: any, _record: Purchase) => (
-                <Button icon={<EyeOutlined />} type="text" />
+            render: (_: any, record: Purchase) => (
+                <Button
+                    icon={<EyeOutlined />}
+                    type="text"
+                    onClick={() => handleViewDetails(record)}
+                />
             ),
         },
     ];
@@ -120,6 +132,12 @@ export const PurchasesPage: React.FC = () => {
                     setModalVisible(false);
                     fetchPurchases();
                 }}
+            />
+
+            <PurchaseDetailsModal
+                visible={detailsVisible}
+                purchase={selectedPurchase}
+                onClose={() => setDetailsVisible(false)}
             />
         </div>
     );

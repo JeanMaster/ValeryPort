@@ -37,6 +37,7 @@ model Client {
 
   // Ventas asociadas
   sales         Sale[]
+  invoices      Invoice[]
 
   active        Boolean  @default(true)
   createdAt     DateTime @default(now())
@@ -281,6 +282,9 @@ model Sale {
   // Relaciones con caja
   cashMovements     CashMovement[]
   
+  // Factura asociada (para ventas a crédito)
+  invoice           Invoice?
+  
   // Caja
   cashSessionId     String?
   cashSession       CashSession? @relation(fields: [cashSessionId], references: [id])
@@ -319,6 +323,67 @@ model InvoiceCounter {
 
   @@map("invoice_counters")
 }
+
+model Invoice {
+  id              String   @id @default(uuid())
+  number          String   @unique
+  
+  // Cliente
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id])
+  
+  // Venta relacionada (opcional, si viene de POS)
+  saleId          String?  @unique
+  sale            Sale?    @relation(fields: [saleId], references: [id])
+  
+  // Montos
+  subtotal        Decimal  @db.Decimal(10, 2)
+  discount        Decimal  @db.Decimal(10, 2) @default(0)
+  tax             Decimal  @db.Decimal(10, 2) @default(0)
+  total           Decimal  @db.Decimal(10, 2)
+  
+  // Control de crédito
+  status          String   @default("PENDING") // PENDING, PARTIAL, PAID, OVERDUE, CANCELLED
+  dueDate         DateTime?
+  paidAmount      Decimal  @db.Decimal(10, 2) @default(0)
+  balance         Decimal  @db.Decimal(10, 2) // total - paidAmount
+  
+  // Pagos relacionados
+  payments        Payment[]
+  
+  // Notas
+  notes           String?
+  
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("invoices")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  
+  // Factura a la que se aplica el pago
+  invoiceId       String
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id])
+  
+  // Detalles del pago
+  amount          Decimal  @db.Decimal(10, 2)
+  paymentDate     DateTime @default(now())
+  paymentMethod   String   // CASH, DEBIT, CREDIT, TRANSFER, MOBILE, ZELLE, etc
+  reference       String?  // Número de referencia bancaria
+  notes           String?
+  
+  // Auditoría (para futuro)
+  createdBy       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("payments")
+}
+
 
 model Return {
   id                String   @id @default(uuid())
