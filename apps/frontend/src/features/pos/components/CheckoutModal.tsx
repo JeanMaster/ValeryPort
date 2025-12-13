@@ -26,7 +26,7 @@ interface PaymentEntry {
 interface CheckoutModalProps {
     open: boolean;
     onCancel: () => void;
-    onProcess: (paymentData: any) => void;
+    onProcess: (paymentData: any) => Promise<void> | void;
 }
 
 export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps): React.ReactElement => {
@@ -36,6 +36,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
         currencies,
         primaryCurrency,
         activeCustomer,
+        customerId,
         nextInvoiceNumber,
         reservedInvoiceNumber
     } = usePOSStore();
@@ -47,6 +48,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
     const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
     const [inputAmount, setInputAmount] = useState<number | null>(null);
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Calculate remaining amount
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -109,6 +111,7 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                     setSelectedMethod('TRANSFER');
                     addPayment('TRANSFER', 'F5 Transferencia');
                 } else if (e.key === 'F8' && inputAmount) {
+                    if (!customerId) return;
                     setSelectedMethod('ACCOUNT_CREDIT');
                     addPayment('ACCOUNT_CREDIT', 'F8 Crédito (Cuenta)');
                 } else if (e.key === 'F6' && payments.length > 0) {
@@ -211,23 +214,29 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
         }
     };
 
-    const handleProcessSale = () => {
-        if (!isFullyPaid) return;
+    const handleProcessSale = async () => {
+        if (!isFullyPaid || isProcessing) return;
 
-        // Prepare payment data for backend
-        const paymentData = {
-            payments: payments.map(p => ({
-                method: p.method,
-                amount: p.amount,
-                originalAmount: p.originalAmount,
-                originalCurrency: p.originalCurrency
-            })),
-            total: totals.total,
-            totalPaid,
-            change: totalPaid - totals.total
-        };
+        setIsProcessing(true);
+        try {
+            // Prepare payment data for backend
+            const paymentData = {
+                payments: payments.map(p => ({
+                    method: p.method,
+                    amount: p.amount,
+                    originalAmount: p.originalAmount,
+                    originalCurrency: p.originalCurrency
+                })),
+                total: totals.total,
+                totalPaid,
+                change: totalPaid - totals.total
+            };
 
-        onProcess(paymentData);
+            await onProcess(paymentData);
+        } catch (error) {
+            console.error("Error processing sale:", error);
+            setIsProcessing(false);
+        }
     };
 
     // Payment method buttons configuration
@@ -385,15 +394,20 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
                                 {bsPaymentMethods.map(method => {
                                     const suggestedAmount = remaining;
+                                    const isCreditMethod = method.key === 'ACCOUNT_CREDIT';
+                                    const isDisabled = isFullyPaid || !inputAmount || inputAmount <= 0 || (isCreditMethod && !customerId);
+
                                     return (
                                         <Button
                                             key={method.key}
                                             size="large"
                                             onClick={() => {
+                                                if (isCreditMethod && !customerId) return;
                                                 setSelectedMethod(method.key);
                                                 addPayment(method.key, method.label);
                                             }}
-                                            disabled={isFullyPaid || !inputAmount || inputAmount <= 0}
+                                            disabled={isDisabled}
+                                            title={isCreditMethod && !customerId ? 'Debe seleccionar un cliente para venta a crédito' : ''}
                                             style={{
                                                 height: 80,
                                                 display: 'flex',
@@ -548,7 +562,8 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
                             size="large"
                             block
                             onClick={handleProcessSale}
-                            disabled={!isFullyPaid}
+                            disabled={!isFullyPaid || isProcessing}
+                            loading={isProcessing}
                             icon={<CheckCircleOutlined />}
                         >
                             F9 Registrar

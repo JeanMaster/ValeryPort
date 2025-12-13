@@ -9,15 +9,23 @@ import {
     BarChartOutlined,
     SettingOutlined,
 } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
 
-type MenuItem = Required<MenuProps>['items'][number];
+
+export interface AppMenuItem {
+    key?: string;
+    icon?: React.ReactNode;
+    label: React.ReactNode;
+    children?: AppMenuItem[];
+    type?: 'group' | 'divider';
+    permissions?: string[];
+    roles?: string[];
+}
 
 /**
  * Configuración del menú principal de navegación
  * Basado en los módulos del ERP Valery Corporativo
  */
-export const menuItems: MenuItem[] = [
+export const menuItems: AppMenuItem[] = [
     {
         key: '/',
         icon: <DashboardOutlined />,
@@ -90,22 +98,32 @@ export const menuItems: MenuItem[] = [
                 key: '/purchases/history',
                 label: 'Historial de Compras',
             },
+            {
+                key: '/accounts-payable',
+                icon: <CreditCardOutlined />,
+                label: 'Cuentas por Pagar',
+            },
         ],
     },
     {
-        key: '/accounts-receivable',
+        key: '/expenses',
         icon: <DollarOutlined />,
-        label: 'Cuentas por Cobrar',
-    },
-    {
-        key: '/accounts-payable',
-        icon: <CreditCardOutlined />,
-        label: 'Cuentas por Pagar',
+        label: 'Gastos',
     },
     {
         key: '/hr',
         icon: <TeamOutlined />,
         label: 'Nómina',
+        children: [
+            {
+                key: '/hr/employees',
+                label: 'Empleados',
+            },
+            {
+                key: '/hr/payroll',
+                label: 'Periodos de Nómina',
+            },
+        ]
     },
     {
         key: '/banks',
@@ -121,11 +139,13 @@ export const menuItems: MenuItem[] = [
         type: 'group',
         label: '──────────────────',
         children: [],
+        roles: ['ADMIN'], // Only admin sees the divider group for config
     },
     {
         key: '/configuration',
         icon: <SettingOutlined />,
         label: 'Configuración',
+        roles: ['ADMIN'], // Only admin sees configuration
         children: [
             {
                 key: '/configuration/company',
@@ -138,6 +158,11 @@ export const menuItems: MenuItem[] = [
             {
                 key: '/configuration/general',
                 label: 'Opciones Generales',
+            },
+            {
+                key: '/configuration/users',
+                label: 'Gestión de Usuarios',
+                roles: ['ADMIN'],
             },
         ],
     },

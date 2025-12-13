@@ -20,6 +20,10 @@ import { InventoryAdjustmentsModule } from './inventory-adjustments/inventory-ad
 import { DevToolsController } from './dev-tools/dev-tools.controller';
 import { DevToolsService } from './dev-tools/dev-tools.service';
 import { PaymentsModule } from './payments/payments.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { HrModule } from './hr/hr.module';
 
 @Module({
   imports: [
@@ -42,8 +46,12 @@ import { PaymentsModule } from './payments/payments.module';
     InventoryAdjustmentsModule,
     SuppliersModule,
     PurchasesModule,
+    HrModule,
     StatsModule,
     PaymentsModule,
+    ExpensesModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController, DevToolsController],
   providers: [AppService, DevToolsService],

@@ -125,8 +125,10 @@ export class InvoiceService {
         total: number;
         dueDate?: Date;
         notes?: string;
+        invoiceNumber?: string; // Optional: specify invoice number
     }) {
-        const invoiceNumber = await this.generateInvoiceNumber();
+        // Use provided invoice number or generate a new one
+        const invoiceNumber = data.invoiceNumber || await this.generateInvoiceNumber();
         const balance = data.total; // Initially, full amount is due
 
         const invoice = await this.prisma.invoice.create({

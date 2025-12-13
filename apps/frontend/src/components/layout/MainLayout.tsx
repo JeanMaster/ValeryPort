@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Avatar, Space, Button } from 'antd';
+import { Layout, Menu, Typography, Avatar, Space, Button, Dropdown } from 'antd';
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     UserOutlined,
     BellOutlined,
+    LogoutOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { menuItems } from '../../config/menu';
+import type { AppMenuItem } from '../../config/menu';
 import { companySettingsApi } from '../../services/companySettingsApi';
+import { useAuth } from '../../features/auth/AuthProvider';
+import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -32,6 +36,50 @@ export const MainLayout = () => {
     });
     const navigate = useNavigate();
     const location = useLocation();
+    const { user, logout, hasRole, hasPermission } = useAuth();
+    const [filteredMenuItems, setFilteredMenuItems] = useState<MenuProps['items']>([]);
+
+    useEffect(() => {
+        const filterItems = (items: AppMenuItem[]): any[] => {
+            return items.reduce((acc: any[], item) => {
+                // Verificar roles
+                if (item.roles && item.roles.length > 0) {
+                    const hasAllowedRole = item.roles.some(role => hasRole(role));
+                    if (!hasAllowedRole) return acc;
+                }
+
+                // Verificar permisos
+                if (item.permissions && item.permissions.length > 0) {
+                    const hasAllowedPermission = item.permissions.some(permission => hasPermission(permission));
+                    if (!hasAllowedPermission) return acc;
+                }
+
+                // Si tiene hijos, filtrarlos recursivamente
+                if (item.children) {
+                    const filteredChildren = filterItems(item.children);
+                    // Si después de filtrar no quedan hijos y no es un link directo, quizás ocultarlo?
+                    // Por ahora mantendremos el padre si pasa sus propios checks
+                    if (filteredChildren.length > 0 || (item.key && !item.children.length)) {
+                        acc.push({ ...item, children: filteredChildren.length > 0 ? filteredChildren : undefined });
+                    } else if (item.children.length > 0 && filteredChildren.length === 0) {
+                        // Si tenía hijos y todos fueron filtrados, no mostrar el padre (ej. submenu Configuración vacío)
+                        return acc;
+                    } else {
+                        acc.push({ ...item, children: undefined });
+                    }
+                } else {
+                    acc.push(item);
+                }
+
+                return acc;
+            }, []);
+        };
+
+        const visibleItems = filterItems(menuItems);
+        // Cast to any to avoid strict MenuProps mismatch with custom AppMenuItem props
+        setFilteredMenuItems(visibleItems as MenuProps['items']);
+
+    }, [user, hasRole, hasPermission]);
 
     // Cargar configuración de empresa
     useEffect(() => {
@@ -131,7 +179,7 @@ export const MainLayout = () => {
                     theme={isDarkMode ? 'dark' : 'light'}
                     mode="inline"
                     selectedKeys={[location.pathname]}
-                    items={menuItems}
+                    items={filteredMenuItems}
                     onClick={handleMenuClick}
                 />
             </Sider>
@@ -162,10 +210,24 @@ export const MainLayout = () => {
                             style={{ color: isDarkMode ? '#fff' : '#000' }}
                         />
                         <Button type="text" icon={<BellOutlined />} size="large" style={{ color: isDarkMode ? '#fff' : '#000' }} />
-                        <Space>
-                            <Avatar icon={<UserOutlined />} />
-                            <Text strong style={{ color: isDarkMode ? '#fff' : '#000' }}>Usuario Demo</Text>
-                        </Space>
+                        <Dropdown menu={{
+                            items: [
+                                {
+                                    key: 'logout',
+                                    label: 'Cerrar Sesión',
+                                    icon: <LogoutOutlined />,
+                                    onClick: logout,
+                                    danger: true
+                                }
+                            ]
+                        }}>
+                            <Space style={{ cursor: 'pointer' }}>
+                                <Avatar icon={<UserOutlined />} />
+                                <Text strong style={{ color: isDarkMode ? '#fff' : '#000' }}>
+                                    {user?.name || 'Usuario'}
+                                </Text>
+                            </Space>
+                        </Dropdown>
                     </Space>
                 </Header>
 

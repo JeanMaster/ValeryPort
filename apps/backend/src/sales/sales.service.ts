@@ -115,6 +115,7 @@ export class SalesService {
                     total: creditAmount,
                     dueDate,
                     notes: `Factura generada automáticamente por venta a crédito - ${sale.invoiceNumber}`,
+                    invoiceNumber: sale.invoiceNumber, // Use SAME number as sale
                 });
             } catch (error) {
                 console.error('Error creating credit invoice:', error);

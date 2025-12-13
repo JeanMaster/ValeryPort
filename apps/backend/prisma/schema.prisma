@@ -12,13 +12,19 @@ datasource db {
 
 // Modelo inicial de Usuario
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      String   @default("user")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  username    String   @unique
+  password    String
+  name        String
+  role        String
+  permissions String[]
+  isActive    Boolean  @default(true)
+  lastLogin   DateTime?
+  
+  employee    Employee?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("users")
 }
@@ -402,7 +408,7 @@ model Return {
   items             ReturnItem[]
   
   // Financiero
-  refundAmount      Decimal  @db.Decimal(10, 2)
+  refundAmount      Decimal? @db.Decimal(10, 2)
   refundMethod      String?  // "CASH", "TRANSFER", "CREDIT_NOTE"
   
   // Nueva venta (si es cambio)
@@ -536,4 +542,114 @@ model InventoryAdjustment {
   createdAt     DateTime @default(now())
   
   @@map("inventory_adjustments")
+}
+
+model Expense {
+  id            String   @id @default(uuid())
+  description   String
+  amount        Decimal  @db.Decimal(10, 2)
+  date          DateTime @default(now())
+  category      String   // "RENT", "UTILITIES", "SALARY", "SUPPLIES", "OTHER"
+  paymentMethod String   // "CASH", "TRANSFER", "DEBIT", "CREDIT"
+  reference     String?  // Factura #, Ref Bancaria
+  notes         String?
+  
+  userId        String?  // Quién registró el gasto
+  
+  // Relaciones con caja (opcional, si se paga con efectivo de caja)
+  cashMovementId String? @unique
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+model Employee {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  identification String @unique // CI/DNI
+  
+  // Contact
+  email       String?
+  phone       String?
+  address     String?
+  
+  // Labor Data
+  position    String
+  department  String?
+  baseSalary  Decimal  @db.Decimal(10, 2)
+  currency    String   @default("VES") // Salary currency
+  hireDate    DateTime @default(now())
+  
+  isActive    Boolean  @default(true)
+  
+  // Relation to System User (Optional)
+  userId      String?  @unique
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  payments    PayrollPayment[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("employees")
+}
+
+model PayrollPeriod {
+  id          String   @id @default(uuid())
+  name        String   // "Quincena 1 - Diciembre 2025"
+  startDate   DateTime
+  endDate     DateTime
+  paymentDate DateTime?
+  
+  status      String   @default("DRAFT") // DRAFT, PROCESSED, PAID
+  
+  totalAmount Decimal  @db.Decimal(12, 2) @default(0)
+  
+  payments    PayrollPayment[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("payroll_periods")
+}
+
+model PayrollPayment {
+  id              String   @id @default(uuid())
+  payrollPeriodId String
+  payrollPeriod   PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
+  
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  
+  // Snapshots (Salary might change later)
+  baseSalary      Decimal  @db.Decimal(10, 2)
+  currency        String
+  exchangeRate    Decimal  @db.Decimal(10, 4) @default(1)
+  
+  // Totals
+  totalIncome     Decimal  @db.Decimal(10, 2)
+  totalDeductions Decimal  @db.Decimal(10, 2)
+  netAmount       Decimal  @db.Decimal(10, 2)
+  
+  items           PayrollPaymentItem[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("payroll_payments")
+}
+
+model PayrollPaymentItem {
+  id               String         @id @default(uuid())
+  payrollPaymentId String
+  payrollPayment   PayrollPayment @relation(fields: [payrollPaymentId], references: [id], onDelete: Cascade)
+  
+  type             String         // INCOME, DEDUCTION
+  description      String         // "Bono Alimentación", "Faltas", "ISLR"
+  amount           Decimal        @db.Decimal(10, 2)
+  
+  @@map("payroll_payment_items")
 }

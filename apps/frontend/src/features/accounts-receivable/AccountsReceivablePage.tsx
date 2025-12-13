@@ -222,7 +222,7 @@ export const AccountsReceivablePage = () => {
                             value={totalReceivable}
                             precision={2}
                             prefix="Bs."
-                            valueStyle={{ color: '#ff4d4f' }}
+                            styles={{ content: { color: '#ff4d4f' } }}
                             suffix={<DollarOutlined />}
                         />
                     </Card>
@@ -232,7 +232,7 @@ export const AccountsReceivablePage = () => {
                         <Statistic
                             title="Facturas Pendientes"
                             value={pendingInvoices.length}
-                            valueStyle={{ color: '#1890ff' }}
+                            styles={{ content: { color: '#1890ff' } }}
                             suffix={<FileTextOutlined />}
                         />
                     </Card>
@@ -242,7 +242,7 @@ export const AccountsReceivablePage = () => {
                         <Statistic
                             title="Facturas Vencidas"
                             value={overdueInvoices.length}
-                            valueStyle={{ color: overdueInvoices.length > 0 ? '#ff4d4f' : '#52c41a' }}
+                            styles={{ content: { color: overdueInvoices.length > 0 ? '#ff4d4f' : '#52c41a' } }}
                             suffix={<ClockCircleOutlined />}
                         />
                     </Card>

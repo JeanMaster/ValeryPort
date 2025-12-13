@@ -328,3 +328,64 @@ Antes de considerar esta funcionalidad como "Production Ready", verificar:
 4. **Performance**: Con la implementación actual, no hay límite en la cantidad de pagos que se pueden agregar. Si esto se convierte en problema, considerar agregar un límite razonable (ej: máximo 10 pagos por transacción).
 
 5. **Seguridad**: Actualmente no hay validación de permisos para procesar ventas. Considerar agregar autenticación/autorización en futuras iteraciones.
+
+---
+
+**Fecha**: 2025-12-13
+**Para**: IA Desarrollador (Siguiente Sesión)
+**De**: IA Antigravity (Google Deepmind)
+**Asunto**: ACTUALIZACIÓN - Implementación Módulo de Nómina (RRHH)
+
+---
+
+## 🚀 RESUMEN EJECUTIVO
+
+Se ha completado la **implementación del módulo de Recursos Humanos y Nómina**. El sistema ahora permite gestionar empleados y generar nóminas (quincenales) automáticamente, calculando montos basados en el sueldo base.
+
+### ✅ Logros de esta sesión:
+1.  **Gestión de Empleados**: CRUD completo con validaciones y soporte para múltiples monedas.
+2.  **Generador de Nómina**: Wizard paso a paso para crear periodos de pago.
+3.  **Cálculo Automático**: Proyección de pagos (50% del sueldo base) para todos los empleados activos.
+4.  **Recibos de Pago**: Visualización detallada de asignaciones, deducciones y neto a pagar.
+5.  **Estabilidad**: Corrección de errores de compilación, rutas (404) y validación de tipos (400).
+
+---
+
+## 🛠️ CAMBIOS TÉCNICOS RECIENTES
+
+### 1. Base de Datos (Prisma)
+- Nuevos modelos: `Employee`, `PayrollPeriod`, `PayrollPayment`, `PayrollPaymentItem`.
+- Relación opcional `User` <-> `Employee`.
+
+### 2. Backend (NestJS)
+- **`HrModule`**: Módulo raíz para funcionalidades de RRHH.
+- **`EmployeesService`**:
+  - CRUD con `PrismaClient`.
+  - DTOs actualizados (`CreateEmployeeDto`) para incluir `currency` e `isActive`.
+- **`PayrollService`**:
+  - Lógica transaccional para generar o regenerar pagos de un periodo.
+  - Cálculo automático: `BaseSalary / 2`.
+- **Configuración Global**:
+  - Se detectó prefijo `/api` en `main.ts`, ajustando los servicios del frontend.
+
+### 3. Frontend (React + Ant Design)
+- **Nuevas Páginas**:
+  - `EmployeesPage`: Tabla con acciones de editar/desactivar.
+  - `PayrollPage`: Historial de periodos de nómina.
+  - `PayrollDetailPage`: Detalle de pagos por empleado.
+- **Componentes**:
+  - `EmployeeFormModal`: Formulario validado para datos personales y laborales.
+  - `GeneratePayrollModal`: Selector de fechas y nombre para nuevo periodo.
+- **Correcciones de Bug**:
+  - **404 Not Found**: Se actualizó `API_URL` a `http://localhost:3000/api` en los servicios de HR.
+  - **400 Bad Request**: Se agregaron campos `currency` e `isActive` al DTO del backend.
+  - **White Screen Crash**: Se agregó casteo seguro `Number(amount).toFixed(2)` para manejar serialización de Decimales de Prisma.
+
+---
+
+## ⚠️ ESTADO ACTUAL
+- **Funcionalidad**: 100% Operativa localmente (probada creación de empleado y generación de nómina).
+- **Pendientes**:
+  - Implementar deducciones variables (ISLR, SSO, etc.).
+  - Impresión de recibos en PDF (Botón existe pero no tiene lógica aún).
+  - Integración con módulo de Gastos/Contabilidad (Asientos automáticos).

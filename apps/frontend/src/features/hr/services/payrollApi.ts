@@ -1,0 +1,54 @@
+import axios from 'axios';
+import type { Employee } from './employeesApi';
+
+const API_URL = 'http://localhost:3000/api';
+
+export interface PayrollPeriod {
+    id: string;
+    name: string;
+    startDate: string; // ISO Date
+    endDate: string;   // ISO Date
+    status: 'DRAFT' | 'PROCESSED' | 'PAID';
+    totalAmount: number;
+    payments?: PayrollPayment[];
+}
+
+export interface PayrollPayment {
+    id: string;
+    employeeId: string;
+    employee: Employee;
+    baseSalary: number;
+    totalIncome: number;
+    totalDeductions: number;
+    netAmount: number;
+    items: PayrollPaymentItem[];
+}
+
+export interface PayrollPaymentItem {
+    id: string;
+    type: 'INCOME' | 'DEDUCTION';
+    description: string;
+    amount: number;
+}
+
+export const payrollApi = {
+    findAllPeriods: async (): Promise<PayrollPeriod[]> => {
+        const response = await axios.get(`${API_URL}/hr/payroll/period`);
+        return response.data;
+    },
+
+    findOnePeriod: async (id: string): Promise<PayrollPeriod> => {
+        const response = await axios.get(`${API_URL}/hr/payroll/period/${id}`);
+        return response.data;
+    },
+
+    createPeriod: async (data: { name: string, startDate: string, endDate: string }): Promise<PayrollPeriod> => {
+        const response = await axios.post(`${API_URL}/hr/payroll/period`, data);
+        return response.data;
+    },
+
+    generate: async (data: { payrollPeriodId: string, employeeIds?: string[] }) => {
+        const response = await axios.post(`${API_URL}/hr/payroll/generate`, data);
+        return response.data;
+    }
+};
