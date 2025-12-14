@@ -101,6 +101,19 @@ export const EmployeeFormModal: React.FC<Props> = ({ visible, onClose, employee 
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <Form.Item name="paymentFrequency" label="Frecuencia de Pago" rules={[{ required: true }]} initialValue="BIWEEKLY">
+                        <Select>
+                            <Select.Option value="WEEKLY">Semanal (Pago / 4)</Select.Option>
+                            <Select.Option value="BIWEEKLY">Quincenal (Pago / 2)</Select.Option>
+                            <Select.Option value="MONTHLY">Mensual (Pago Completo)</Select.Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item name="isActive" label="Estado" valuePropName="checked">
+                        <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
+                    </Form.Item>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <Form.Item name="baseSalary" label="Sueldo Base Mensual" rules={[{ required: true }]}>
                         <InputNumber
                             style={{ width: '100%' }}

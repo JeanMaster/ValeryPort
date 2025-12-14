@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Form, Input, DatePicker, message } from 'antd';
+import { Modal, Form, Input, DatePicker, message, Select } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { payrollApi } from '../services/payrollApi';
 
@@ -25,6 +25,7 @@ export const GeneratePayrollModal: React.FC<Props> = ({ visible, onClose }) => {
             // 2. Generate Payments (Default for all active)
             await payrollApi.generate({
                 payrollPeriodId: period.id,
+                frequency: values.frequency
             });
 
             return period;
@@ -65,6 +66,14 @@ export const GeneratePayrollModal: React.FC<Props> = ({ visible, onClose }) => {
                     initialValue={`Quincena`}
                 >
                     <Input placeholder="Ej: Quincena 1 - Diciembre 2025" />
+                </Form.Item>
+
+                <Form.Item name="frequency" label="Grupo de Pago (Opcional)">
+                    <Select placeholder="Generar para todos" allowClear>
+                        <Select.Option value="WEEKLY">Semanal (Solo empleados semanales)</Select.Option>
+                        <Select.Option value="BIWEEKLY">Quincenal (Solo empleados quincenales)</Select.Option>
+                        <Select.Option value="MONTHLY">Mensual (Solo empleados mensuales)</Select.Option>
+                    </Select>
                 </Form.Item>
 
                 <Form.Item

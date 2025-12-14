@@ -16,6 +16,7 @@ export interface Employee {
     currency?: string;
     userId?: string;
     isActive: boolean;
+    paymentFrequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
     user?: {
         username: string;
     };

@@ -67,6 +67,24 @@ export const EmployeesPage = () => {
             key: 'department',
         },
         {
+            title: 'Frecuencia',
+            dataIndex: 'paymentFrequency',
+            key: 'paymentFrequency',
+            render: (freq: string) => {
+                const map: any = { WEEKLY: 'Semanal', BIWEEKLY: 'Quincenal', MONTHLY: 'Mensual' };
+                return map[freq] || freq;
+            }
+        },
+        {
+            title: 'Frecuencia',
+            dataIndex: 'paymentFrequency',
+            key: 'paymentFrequency',
+            render: (freq: string) => {
+                const map: any = { WEEKLY: 'Semanal', BIWEEKLY: 'Quincenal', MONTHLY: 'Mensual' };
+                return map[freq] || freq;
+            }
+        },
+        {
             title: 'Sueldo Base',
             key: 'salary',
             render: (_: any, record: Employee) => (

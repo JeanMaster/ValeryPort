@@ -21,6 +21,7 @@ export class EmployeesService {
                 baseSalary: createEmployeeDto.baseSalary,
                 currency: createEmployeeDto.currency,
                 isActive: createEmployeeDto.isActive,
+                paymentFrequency: createEmployeeDto.paymentFrequency,
                 userId: createEmployeeDto.userId || undefined,
             },
         });
@@ -70,6 +71,7 @@ export class EmployeesService {
                 currency: updateEmployeeDto.currency,
                 userId: updateEmployeeDto.userId,
                 isActive: updateEmployeeDto.isActive,
+                paymentFrequency: updateEmployeeDto.paymentFrequency,
             },
         });
     }

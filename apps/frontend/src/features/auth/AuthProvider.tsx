@@ -20,6 +20,7 @@ interface AuthContextType {
     login: (token: string, user: User) => void;
     logout: () => void;
     isAuthenticated: boolean;
+    isLoading: boolean;
     hasPermission: (permission: string) => boolean;
     hasRole: (role: string) => boolean;
 }
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     // Check localStorage on mount
@@ -41,6 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(JSON.parse(storedUser));
             axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
+        setLoading(false);
     }, []);
 
     const login = (newToken: string, newUser: User) => {
@@ -81,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             login,
             logout,
             isAuthenticated: !!token,
+            isLoading: loading,
             hasPermission,
             hasRole
         }}>

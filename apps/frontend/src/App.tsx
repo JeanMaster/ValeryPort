@@ -5,6 +5,7 @@ import { ModulePage } from './pages/ModulePage';
 import { ClientsPage } from './features/clients/ClientsPage';
 
 import { PurchasesPage } from './features/purchases/PurchasesPage';
+import { SuppliersPage } from './features/purchases/SuppliersPage';
 import { ProductsPage } from './features/products/ProductsPage';
 import { CompanySettingsPage } from './features/company-settings/CompanySettingsPage';
 import { GeneralOptionsPage } from './features/company-settings/GeneralOptionsPage';
@@ -55,11 +56,11 @@ function App() {
           <Route path="configuration/users" element={<UsersPage />} />
 
           <Route path="clients" element={<ClientsPage />} />
-          <Route path="products" element={<ProductsPage />} />
+          <Route path="inventory/products" element={<ProductsPage />} />
           <Route path="inventory/adjustments" element={<InventoryAdjustmentsPage />} />
-          <Route path="departments" element={<DepartmentsPage />} />
-          <Route path="units" element={<UnitsPage />} />
-          <Route path="currencies" element={<CurrenciesPage />} />
+          <Route path="inventory/departments" element={<DepartmentsPage />} />
+          <Route path="inventory/units" element={<UnitsPage />} />
+          <Route path="inventory/currencies" element={<CurrenciesPage />} />
 
           <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
           <Route path="sales/pos" element={<POSPage />} />
@@ -68,6 +69,7 @@ function App() {
           <Route path="sales/cash-register" element={<CashRegisterPage />} />
 
           <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
+          <Route path="suppliers" element={<SuppliersPage />} />
           <Route path="purchases/history" element={<PurchasesPage />} />
           <Route path="accounts-payable" element={<ModulePage title="Cuentas por Pagar" icon={<CreditCardOutlined />} />} />
 

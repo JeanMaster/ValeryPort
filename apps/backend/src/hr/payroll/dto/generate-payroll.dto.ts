@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsArray, IsOptional, IsEnum } from 'class-validator';
+import { PaymentFrequency } from '../../employees/dto/create-employee.dto';
 
 export class GeneratePayrollDto {
     @IsNotEmpty()
@@ -9,4 +10,8 @@ export class GeneratePayrollDto {
     @IsArray()
     @IsString({ each: true })
     employeeIds?: string[];
+
+    @IsOptional()
+    @IsEnum(PaymentFrequency)
+    frequency?: PaymentFrequency;
 }

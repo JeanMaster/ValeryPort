@@ -584,6 +584,7 @@ model Employee {
   hireDate    DateTime @default(now())
   
   isActive    Boolean  @default(true)
+  paymentFrequency PaymentFrequency @default(BIWEEKLY)
   
   // Relation to System User (Optional)
   userId      String?  @unique
@@ -595,6 +596,12 @@ model Employee {
   updatedAt   DateTime @updatedAt
 
   @@map("employees")
+}
+
+enum PaymentFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
 }
 
 model PayrollPeriod {

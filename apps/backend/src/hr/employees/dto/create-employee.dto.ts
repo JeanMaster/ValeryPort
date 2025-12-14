@@ -1,5 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsEmail, IsNumber, Min, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsNumber, Min, IsBoolean, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export enum PaymentFrequency {
+    WEEKLY = 'WEEKLY',
+    BIWEEKLY = 'BIWEEKLY',
+    MONTHLY = 'MONTHLY'
+}
 
 export class CreateEmployeeDto {
     @IsNotEmpty()
@@ -51,4 +57,10 @@ export class CreateEmployeeDto {
     @IsOptional()
     @IsBoolean()
     isActive?: boolean;
+
+    @IsOptional()
+    @IsEnum(PaymentFrequency)
+    paymentFrequency?: PaymentFrequency;
 }
+
+

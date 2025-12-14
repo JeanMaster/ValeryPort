@@ -50,8 +50,13 @@ export class PayrollService {
 
         // Fetch eligible employees
         const whereClause: any = { isActive: true };
+
         if (generatePayrollDto.employeeIds && generatePayrollDto.employeeIds.length > 0) {
             whereClause.id = { in: generatePayrollDto.employeeIds };
+        }
+
+        if (generatePayrollDto.frequency) {
+            whereClause.paymentFrequency = generatePayrollDto.frequency;
         }
 
         const employees = await (this.prisma as any).employee.findMany({
@@ -87,7 +92,32 @@ export class PayrollService {
                 // No, let's just pay BaseSalary for now as 'Salary', and maybe we add a 'Quantity' logic later.
                 // *Decision*: Pay 50% of BaseSalary by default (common in LatAm for Quincena).
 
-                const incomeAmount = Number(emp.baseSalary) / 2;
+                let incomeAmount = 0;
+                let description = 'Sueldo Base';
+
+                // Calculate based on frequency
+                // Default handling if paymentFrequency is missing (should be BIWEEKLY by db default)
+                const freq = emp.paymentFrequency || 'BIWEEKLY';
+
+                switch (freq) {
+                    case 'WEEKLY':
+                        incomeAmount = Number(emp.baseSalary) / 4;
+                        description = 'Sueldo Base (Semanal)';
+                        break;
+                    case 'BIWEEKLY':
+                        incomeAmount = Number(emp.baseSalary) / 2;
+                        description = 'Sueldo Base (Quincenal)';
+                        break;
+                    case 'MONTHLY':
+                        incomeAmount = Number(emp.baseSalary);
+                        description = 'Sueldo Base (Mensual)';
+                        break;
+                    default:
+                        incomeAmount = Number(emp.baseSalary) / 2;
+                        description = 'Sueldo Base';
+                }
+
+                // const incomeAmount = Number(emp.baseSalary) / 2;
 
                 const payment = await tx.payrollPayment.create({
                     data: {
@@ -103,7 +133,7 @@ export class PayrollService {
                             create: [
                                 {
                                     type: 'INCOME',
-                                    description: 'Sueldo Base (Quincenal)',
+                                    description: description,
                                     amount: incomeAmount
                                 }
                             ]

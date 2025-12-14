@@ -42,12 +42,12 @@ export const payrollApi = {
         return response.data;
     },
 
-    createPeriod: async (data: { name: string, startDate: string, endDate: string }): Promise<PayrollPeriod> => {
+    createPeriod: async (data: Partial<PayrollPeriod>): Promise<PayrollPeriod> => {
         const response = await axios.post(`${API_URL}/hr/payroll/period`, data);
         return response.data;
     },
 
-    generate: async (data: { payrollPeriodId: string, employeeIds?: string[] }) => {
+    generate: async (data: { payrollPeriodId: string, employeeIds?: string[], frequency?: string }): Promise<any> => {
         const response = await axios.post(`${API_URL}/hr/payroll/generate`, data);
         return response.data;
     }
