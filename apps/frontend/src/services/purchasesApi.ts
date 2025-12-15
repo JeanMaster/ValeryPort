@@ -32,7 +32,13 @@ export interface Purchase {
     currencyCode: string;
     exchangeRate: number;
     status: string;
+    // Cuentas por Pagar
+    paymentStatus: string;
+    paidAmount: number;
+    balance: number;
+    dueDate?: string;
     items: PurchaseItem[];
+    payments?: any[]; // Simplified for now
     createdAt: string;
 }
 
@@ -49,6 +55,18 @@ export interface CreatePurchaseDto {
     items: CreatePurchaseItemDto[];
     currencyCode?: string;
     exchangeRate?: number;
+    // Cuentas por Pagar
+    paymentStatus?: string;
+    paidAmount?: number;
+    dueDate?: Date;
+}
+
+export interface CreatePurchasePaymentDto {
+    purchaseId: string;
+    amount: number;
+    paymentMethod: string;
+    reference?: string;
+    notes?: string;
 }
 
 export const purchasesApi = {
@@ -64,6 +82,11 @@ export const purchasesApi = {
 
     create: async (data: CreatePurchaseDto): Promise<Purchase> => {
         const response = await axios.post(`${API_URL}/purchases`, data);
+        return response.data;
+    },
+
+    registerPayment: async (data: CreatePurchasePaymentDto): Promise<any> => {
+        const response = await axios.post(`${API_URL}/purchases/payments`, data);
         return response.data;
     },
 };

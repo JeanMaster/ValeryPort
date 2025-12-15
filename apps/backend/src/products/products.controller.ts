@@ -23,11 +23,13 @@ export class ProductsController {
     @ApiQuery({ name: 'search', required: false, type: String, description: 'Buscar por nombre o SKU' })
     @ApiQuery({ name: 'categoryId', required: false, type: String, description: 'Filtrar por categoría' })
     @ApiQuery({ name: 'subcategoryId', required: false, type: String, description: 'Filtrar por subcategoría' })
+    @ApiQuery({ name: 'type', required: false, enum: ['PRODUCT', 'SERVICE'], description: 'Filtrar por tipo de producto/servicio' })
     findAll(
         @Query('active') active?: string,
         @Query('search') search?: string,
         @Query('categoryId') categoryId?: string,
         @Query('subcategoryId') subcategoryId?: string,
+        @Query('type') type?: 'PRODUCT' | 'SERVICE',
     ) {
         const isActive = active === undefined ? true : active === 'true';
         return this.productsService.findAll({
@@ -35,6 +37,7 @@ export class ProductsController {
             search,
             categoryId,
             subcategoryId,
+            type,
         });
     }
 

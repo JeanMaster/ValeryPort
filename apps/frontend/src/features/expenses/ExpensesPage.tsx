@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, Table, Button, Input, Tag, Typography, Statistic, Row, Col, Space } from 'antd';
 import { PlusOutlined, ReloadOutlined, SearchOutlined, DollarOutlined } from '@ant-design/icons';
@@ -5,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { expensesApi, type Expense } from '../../services/expensesApi';
 import { CreateExpenseModal } from './components/CreateExpenseModal';
-import { usePOSStore } from '../../store/posStore';
 import { formatVenezuelanPrice } from '../../utils/formatters';
 
 const { Title } = Typography;
@@ -13,7 +13,6 @@ const { Title } = Typography;
 export const ExpensesPage = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const { primaryCurrency } = usePOSStore();
 
     const { data: expenses = [], isLoading, refetch } = useQuery({
         queryKey: ['expenses'],
@@ -28,14 +27,37 @@ export const ExpensesPage = () => {
         expense.category.toLowerCase().includes(searchText.toLowerCase())
     );
 
-    // Calculate totals
-    const totalToday = filteredExpenses
-        .filter(e => dayjs(e.date).isSame(dayjs(), 'day'))
-        .reduce((sum, e) => sum + Number(e.amount), 0);
+    // Calculate totals - This logic needs to be smarter about currencies
+    // Ideally user wants to see total in USD (or base currency)
+    // We can assume if currencyCode is not VES, we use amount directly (assuming USD)
+    // If it is VES, we divide by exchangeRate.
+    // Or we simply sum by currency for now.
 
-    const totalMonth = filteredExpenses
-        .filter(e => dayjs(e.date).isSame(dayjs(), 'month'))
-        .reduce((sum, e) => sum + Number(e.amount), 0);
+    // Calculate totals
+    const calculateTotalInUSD = (list: Expense[]) => {
+        return list.reduce((sum, e) => {
+            // If currency is USD, take amount directly
+            if (e.currencyCode === 'USD') {
+                return sum + Number(e.amount);
+            }
+            // If currency is NOT USD (e.g. VES), divide by rate
+            // Assuming rate is always stored as VES/USD (e.g. 50)
+            const rate = Number(e.exchangeRate) || 1;
+            // If the rate is 1, it means we probably don't have a conversion, so we might as well return amount 
+            // BUT if it's VES and rate is 1, then $1000 VES = $1000 USD is WRONG.
+            // If rate is 1, it's virtually 0 dollars in hyperinflation, or data error.
+            // However, to avoid NaN, we divide by rate.
+            return sum + (Number(e.amount) / rate);
+        }, 0);
+    };
+
+    const totalTodayUSD = calculateTotalInUSD(
+        filteredExpenses.filter(e => dayjs(e.date).isSame(dayjs(), 'day'))
+    );
+
+    const totalMonthUSD = calculateTotalInUSD(
+        filteredExpenses.filter(e => dayjs(e.date).isSame(dayjs(), 'month'))
+    );
 
     const columns = [
         {
@@ -44,6 +66,7 @@ export const ExpensesPage = () => {
             key: 'date',
             render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
             sorter: (a: Expense, b: Expense) => dayjs(a.date).unix() - dayjs(b.date).unix(),
+            width: 100,
         },
         {
             title: 'Descripción',
@@ -55,19 +78,47 @@ export const ExpensesPage = () => {
             dataIndex: 'category',
             key: 'category',
             render: (category: string) => <Tag color="blue">{category}</Tag>,
-            filters: Array.from(new Set(expenses.map(e => e.category))).map(c => ({ text: c, value: c })),
+            filters: Array.from(new Set(safeExpenses.map(e => e.category))).map(c => ({ text: c, value: c })),
             onFilter: (value: any, record: Expense) => record.category === value,
         },
         {
-            title: 'Monto',
-            dataIndex: 'amount',
-            key: 'amount',
+            title: 'Monto Original',
+            key: 'originalAmount',
             align: 'right' as const,
-            render: (amount: number) => (
-                <Typography.Text strong style={{ color: '#cf1322' }}>
-                    {formatVenezuelanPrice(amount, primaryCurrency?.symbol)}
-                </Typography.Text>
+            render: (_: any, record: Expense) => (
+                <Space direction="vertical" size={0} style={{ textAlign: 'right' }}>
+                    <Typography.Text strong>
+                        {formatVenezuelanPrice(record.amount, record.currencyCode === 'VES' ? 'Bs' : '$')}
+                    </Typography.Text>
+                    {record.exchangeRate && Number(record.exchangeRate) !== 1 && (
+                        <Typography.Text type="secondary" style={{ fontSize: '11px' }}>
+                            Tasa: {record.exchangeRate}
+                        </Typography.Text>
+                    )}
+                </Space>
             ),
+        },
+        {
+            title: 'Relativo ($)',
+            key: 'usdAmount',
+            align: 'right' as const,
+            render: (_: any, record: Expense) => {
+                let usdAmount = 0;
+                const rate = Number(record.exchangeRate) || 1;
+
+                if (record.currencyCode === 'USD') {
+                    usdAmount = Number(record.amount);
+                } else {
+                    // Assume VES or other weak currency divided by rate
+                    usdAmount = Number(record.amount) / rate;
+                }
+
+                return (
+                    <Typography.Text type="secondary">
+                        {formatVenezuelanPrice(usdAmount, '$')}
+                    </Typography.Text>
+                );
+            }
         },
         {
             title: 'Método',
@@ -80,7 +131,8 @@ export const ExpensesPage = () => {
                     'PAGO_MOVIL': 'Pago Móvil',
                     'DEBIT': 'Débito',
                     'CREDIT': 'Crédito',
-                    'ZELLE': 'Zelle'
+                    'ZELLE': 'Zelle',
+                    'USDT': 'USDT'
                 };
                 return methodMap[method] || method;
             }
@@ -100,24 +152,24 @@ export const ExpensesPage = () => {
                     <Col span={6}>
                         <Card>
                             <Statistic
-                                title="Gastos de Hoy"
-                                value={totalToday}
+                                title="Gastos de Hoy (Ref $)"
+                                value={totalTodayUSD}
                                 precision={2}
                                 valueStyle={{ color: '#cf1322' }}
                                 prefix={<DollarOutlined />}
-                                suffix={primaryCurrency?.symbol}
+                                suffix="$"
                             />
                         </Card>
                     </Col>
                     <Col span={6}>
                         <Card>
                             <Statistic
-                                title="Gastos del Mes"
-                                value={totalMonth}
+                                title="Gastos del Mes (Ref $)"
+                                value={totalMonthUSD}
                                 precision={2}
                                 valueStyle={{ color: '#cf1322' }}
                                 prefix={<DollarOutlined />}
-                                suffix={primaryCurrency?.symbol}
+                                suffix="$"
                             />
                         </Card>
                     </Col>

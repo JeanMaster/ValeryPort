@@ -15,6 +15,11 @@ export class PurchasesController {
         return this.purchasesService.create(createPurchaseDto);
     }
 
+    @Post('payments')
+    registerPayment(@Body() createPaymentDto: any) { // Use CreatePurchasePaymentDto
+        return this.purchasesService.registerPayment(createPaymentDto);
+    }
+
     @Get()
     @ApiOperation({ summary: 'Listar historial de compras' })
     findAll() {

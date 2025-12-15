@@ -12,6 +12,15 @@ export class CreateExpenseDto {
     @Type(() => Number)
     amount: number;
 
+    @IsNotEmpty()
+    @IsString()
+    currencyCode: string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    @Type(() => Number)
+    exchangeRate: number;
+
     @IsOptional()
     @IsDateString()
     date?: string;

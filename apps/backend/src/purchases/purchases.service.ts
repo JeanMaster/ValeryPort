@@ -71,6 +71,11 @@ export class PurchasesService {
         const taxAmount = subtotal * taxRate;
         const total = subtotal + taxAmount;
 
+        // Calculate initial balance
+        const paidAmount = purchaseData.paidAmount || 0;
+        const balance = total - paidAmount;
+        const paymentStatus = balance <= 0 ? 'PAID' : (paidAmount > 0 ? 'PARTIAL' : 'UNPAID');
+
         return this.prisma.$transaction(async (tx) => {
             // 1. Create Purchase
             const purchase = await tx.purchase.create({
@@ -80,6 +85,12 @@ export class PurchasesService {
                     subtotal,
                     taxAmount,
                     total,
+                    // Payment tracking
+                    paymentStatus,
+                    paidAmount,
+                    balance,
+                    dueDate: purchaseData.dueDate,
+
                     items: {
                         create: itemsWithTotal.map(item => ({
                             productId: item.productId,
@@ -89,10 +100,19 @@ export class PurchasesService {
                             oldCost: item.oldCost,
                         })),
                     },
+                    // If initial payment exists, create it
+                    payments: paidAmount > 0 ? {
+                        create: {
+                            amount: paidAmount,
+                            paymentMethod: 'CASH', // Default or need DTO field
+                            notes: 'Pago inicial al registrar compra',
+                        }
+                    } : undefined,
                 },
                 include: {
                     items: true,
                     supplier: true,
+                    payments: true,
                 },
             });
 
@@ -144,5 +164,54 @@ export class PurchasesService {
         }
 
         return purchase;
+    }
+
+    async registerPayment(dto: any) { // Use DTO type if imported, avoiding circular dep issues. Assuming CreatePurchasePaymentDto structure.
+        const { purchaseId, amount, paymentMethod, reference, notes } = dto;
+
+        const purchase = await this.prisma.purchase.findUnique({
+            where: { id: purchaseId }
+        });
+
+        if (!purchase) {
+            throw new NotFoundException('Compra no encontrada');
+        }
+
+        if (purchase.paymentStatus === 'PAID') {
+            throw new BadRequestException('Esta compra ya está pagada');
+        }
+
+        if (Number(purchase.balance) < amount) {
+            throw new BadRequestException(`El monto excede el saldo pendiente (${purchase.balance})`);
+        }
+
+        return this.prisma.$transaction(async (tx) => {
+            // 1. Create Payment
+            const payment = await tx.purchasePayment.create({
+                data: {
+                    purchaseId,
+                    amount,
+                    paymentMethod,
+                    reference,
+                    notes,
+                }
+            });
+
+            // 2. Update Purchase Balance
+            const newPaidAmount = Number(purchase.paidAmount) + amount;
+            const newBalance = Number(purchase.total) - newPaidAmount;
+            const newStatus = newBalance <= 0.01 ? 'PAID' : 'PARTIAL'; // Tolerance for float
+
+            await tx.purchase.update({
+                where: { id: purchaseId },
+                data: {
+                    paidAmount: newPaidAmount,
+                    balance: newBalance,
+                    paymentStatus: newStatus,
+                }
+            });
+
+            return payment;
+        });
     }
 }

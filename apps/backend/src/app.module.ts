@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { BanksModule } from './banks/banks.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -47,6 +48,7 @@ import { HrModule } from './hr/hr.module';
     SuppliersModule,
     PurchasesModule,
     HrModule,
+    BanksModule,
     StatsModule,
     PaymentsModule,
     ExpensesModule,

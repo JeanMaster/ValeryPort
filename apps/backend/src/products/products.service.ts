@@ -30,7 +30,10 @@ export class ProductsService {
             return await this.prisma.product.create({
                 data: {
                     ...createProductDto,
-                    costPrice: new Decimal(createProductDto.costPrice),
+                    type: createProductDto.type || 'PRODUCT', // Default logic
+                    costPrice: createProductDto.costPrice
+                        ? new Decimal(createProductDto.costPrice)
+                        : null,
                     salePrice: new Decimal(createProductDto.salePrice),
                     offerPrice: createProductDto.offerPrice
                         ? new Decimal(createProductDto.offerPrice)
@@ -52,10 +55,14 @@ export class ProductsService {
         }
     }
 
-    async findAll(options: { active?: boolean; search?: string; categoryId?: string; subcategoryId?: string } = {}) {
-        const { active = true, search, categoryId, subcategoryId } = options;
+    async findAll(options: { active?: boolean; search?: string; categoryId?: string; subcategoryId?: string; type?: 'PRODUCT' | 'SERVICE' } = {}) {
+        const { active = true, search, categoryId, subcategoryId, type } = options;
 
         const where: any = { active };
+
+        if (type) {
+            where.type = type;
+        }
 
         if (categoryId) {
             where.categoryId = categoryId;
@@ -171,24 +178,33 @@ export class ProductsService {
 
     // Validar que los precios de venta sean >= costo
     private validatePrices(dto: CreateProductDto | UpdateProductDto) {
+        // Si es servicio, el costo puede ser irrelevante, pero asumimos 0 para validar que precio venta > 0
         const costPrice = dto.costPrice || 0;
 
         if (dto.salePrice !== undefined && dto.salePrice < costPrice) {
-            throw new BadRequestException(
-                'El precio de venta no puede ser menor al precio de costo',
-            );
+            // Nota: Para servicios, costPrice es 0, así que salePrice solo debe ser >= 0
+            if (costPrice > 0 || dto.salePrice < 0) {
+                throw new BadRequestException(
+                    'El precio de venta no puede ser menor al precio de costo',
+                );
+            }
         }
 
+        // ... (resto igual, costPrice es 0 si undefined)
         if (dto.offerPrice !== undefined && dto.offerPrice < costPrice) {
-            throw new BadRequestException(
-                'El precio en oferta no puede ser menor al precio de costo',
-            );
+            if (costPrice > 0 || dto.offerPrice < 0) {
+                throw new BadRequestException(
+                    'El precio en oferta no puede ser menor al precio de costo',
+                );
+            }
         }
 
         if (dto.wholesalePrice !== undefined && dto.wholesalePrice < costPrice) {
-            throw new BadRequestException(
-                'El precio al mayor no puede ser menor al precio de costo',
-            );
+            if (costPrice > 0 || dto.wholesalePrice < 0) {
+                throw new BadRequestException(
+                    'El precio al mayor no puede ser menor al precio de costo',
+                );
+            }
         }
     }
 

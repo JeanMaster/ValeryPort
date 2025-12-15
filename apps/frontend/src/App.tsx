@@ -7,6 +7,7 @@ import { ClientsPage } from './features/clients/ClientsPage';
 import { PurchasesPage } from './features/purchases/PurchasesPage';
 import { SuppliersPage } from './features/purchases/SuppliersPage';
 import { ProductsPage } from './features/products/ProductsPage';
+import { ServicesPage } from './features/products/ServicesPage';
 import { CompanySettingsPage } from './features/company-settings/CompanySettingsPage';
 import { GeneralOptionsPage } from './features/company-settings/GeneralOptionsPage';
 import { DepartmentsPage } from './features/departments/DepartmentsPage';
@@ -23,14 +24,16 @@ import { ExpensesPage } from './features/expenses/ExpensesPage';
 import { EmployeesPage } from './features/hr/pages/EmployeesPage';
 import { PayrollPage } from './features/hr/pages/PayrollPage';
 import { PayrollDetailPage } from './features/hr/pages/PayrollDetailPage';
+import { AccountsPayablePage } from './features/purchases/AccountsPayablePage';
+import { BanksPage } from './features/banks/BanksPage'; // Importación
 import { UsersPage } from './features/users/UsersPage';
 import {
   ShoppingCartOutlined,
   ShoppingOutlined,
-  CreditCardOutlined,
   TeamOutlined,
   BankOutlined,
-  SettingOutlined, // Added for configuration module
+  SettingOutlined,
+  BarChartOutlined, // Added
 } from '@ant-design/icons';
 
 import { AuthProvider } from './features/auth/AuthProvider';
@@ -60,6 +63,7 @@ function App() {
           <Route path="inventory/adjustments" element={<InventoryAdjustmentsPage />} />
           <Route path="inventory/departments" element={<DepartmentsPage />} />
           <Route path="inventory/units" element={<UnitsPage />} />
+          <Route path="inventory/services" element={<ServicesPage />} />
           <Route path="inventory/currencies" element={<CurrenciesPage />} />
 
           <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
@@ -71,7 +75,7 @@ function App() {
           <Route path="purchases" element={<ModulePage title="Compras" icon={<ShoppingOutlined />} />} />
           <Route path="suppliers" element={<SuppliersPage />} />
           <Route path="purchases/history" element={<PurchasesPage />} />
-          <Route path="accounts-payable" element={<ModulePage title="Cuentas por Pagar" icon={<CreditCardOutlined />} />} />
+          <Route path="accounts-payable" element={<AccountsPayablePage />} />
 
           <Route path="expenses" element={<ExpensesPage />} />
 
@@ -79,11 +83,11 @@ function App() {
           <Route path="hr/employees" element={<EmployeesPage />} />
           <Route path="hr/payroll" element={<PayrollPage />} />
           <Route path="hr/payroll/:id" element={<PayrollDetailPage />} />
-
+          <Route path="banks" element={<BanksPage />} />
           <Route path="accounts-receivable" element={<AccountsReceivablePage />} />
           <Route path="hr" element={<ModulePage title="Nómina" icon={<TeamOutlined />} />} />
           <Route path="banks" element={<ModulePage title="Bancos" icon={<BankOutlined />} />} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="reports" element={<ModulePage title="Reportes" icon={<BarChartOutlined />} />} />
         </Route>
 
         {/* Fallback */}

@@ -12,6 +12,8 @@ export class ExpensesService {
       data: {
         description: createExpenseDto.description,
         amount: createExpenseDto.amount,
+        currencyCode: createExpenseDto.currencyCode,
+        exchangeRate: createExpenseDto.exchangeRate,
         date: createExpenseDto.date ? new Date(createExpenseDto.date) : new Date(),
         category: createExpenseDto.category,
         paymentMethod: createExpenseDto.paymentMethod,

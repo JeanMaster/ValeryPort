@@ -5,6 +5,8 @@ export interface Expense {
     id: string;
     description: string;
     amount: number;
+    currencyCode: string;
+    exchangeRate: number;
     date: string;
     category: string;
     paymentMethod: string;
@@ -17,6 +19,8 @@ export interface Expense {
 export interface CreateExpenseDto {
     description: string;
     amount: number;
+    currencyCode: string;
+    exchangeRate: number;
     date?: string;
     category: string;
     paymentMethod: string;

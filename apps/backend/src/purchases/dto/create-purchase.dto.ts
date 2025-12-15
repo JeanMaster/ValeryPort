@@ -50,6 +50,24 @@ export class CreatePurchaseDto {
     @IsNumber()
     @IsOptional()
     exchangeRate?: number;
+
+    @ApiProperty({ enum: ['UNPAID', 'PARTIAL', 'PAID'] })
+    @IsString()
+    @IsOptional()
+    @IsEnum(['UNPAID', 'PARTIAL', 'PAID'])
+    paymentStatus?: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsType(() => Date)
+    @IsDate()
+    dueDate?: Date;
+
+    @ApiProperty()
+    @IsNumber()
+    @IsOptional()
+    @Min(0)
+    paidAmount?: number;
 }
 
 // Function helper since IsDate sometimes needs help with transformation

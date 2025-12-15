@@ -89,7 +89,14 @@ model Purchase {
   
   status          String   @default("COMPLETED") // PENDING, COMPLETED, CANCELLED
   
+  // Cuentas por Pagar
+  paymentStatus   String   @default("UNPAID") // UNPAID, PARTIAL, PAID
+  dueDate         DateTime?
+  paidAmount      Decimal  @db.Decimal(10, 2) @default(0)
+  balance         Decimal  @db.Decimal(10, 2) @default(0)
+
   items           PurchaseItem[]
+  payments        PurchasePayment[]
   
   userId          String?  // Usuario que registró la compra
   
@@ -97,6 +104,26 @@ model Purchase {
   updatedAt       DateTime @updatedAt
 
   @@map("purchases")
+}
+
+model PurchasePayment {
+  id              String   @id @default(uuid())
+  
+  purchaseId      String
+  purchase        Purchase @relation(fields: [purchaseId], references: [id])
+  
+  amount          Decimal  @db.Decimal(10, 2)
+  paymentDate     DateTime @default(now())
+  paymentMethod   String   
+  reference       String?
+  notes           String?
+  
+  createdBy       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("purchase_payments")
 }
 
 model PurchaseItem {
@@ -135,8 +162,11 @@ model Product {
   currencyId      String
   currency        Currency    @relation(fields: [currencyId], references: [id])
   
+  // Tipo de Producto
+  type            ProductType @default(PRODUCT)
+
   // Precios (en la moneda seleccionada)
-  costPrice       Decimal     @db.Decimal(10, 2)
+  costPrice       Decimal?    @db.Decimal(10, 2)
   salePrice       Decimal     @db.Decimal(10, 2)
   offerPrice      Decimal?    @db.Decimal(10, 2)
   wholesalePrice  Decimal?    @db.Decimal(10, 2)
@@ -144,9 +174,9 @@ model Product {
   // Inventario
   stock           Int         @default(0)
   
-  // Unidad principal (obligatoria)
-  unitId          String
-  unit            Unit        @relation("ProductPrimaryUnit", fields: [unitId], references: [id])
+  // Unidad principal (obligatoria para productos)
+  unitId          String?
+  unit            Unit?       @relation("ProductPrimaryUnit", fields: [unitId], references: [id])
   
   // Unidad secundaria (opcional - ej: caja, paquete)
   secondaryUnitId       String?
@@ -181,6 +211,11 @@ model Product {
   updatedAt       DateTime    @updatedAt
 
   @@map("products")
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
 }
 
 model CompanySettings {
@@ -246,6 +281,9 @@ model Currency {
 
   // Configuraciones que usan esta moneda
   companySettings CompanySettings[]
+
+  // Cuentas Bancarias
+  bankAccounts BankAccount[]
 
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -548,6 +586,8 @@ model Expense {
   id            String   @id @default(uuid())
   description   String
   amount        Decimal  @db.Decimal(10, 2)
+  currencyCode  String   @default("VES")
+  exchangeRate  Decimal  @db.Decimal(10, 4) @default(1)
   date          DateTime @default(now())
   category      String   // "RENT", "UTILITIES", "SALARY", "SUPPLIES", "OTHER"
   paymentMethod String   // "CASH", "TRANSFER", "DEBIT", "CREDIT"
@@ -659,4 +699,26 @@ model PayrollPaymentItem {
   amount           Decimal        @db.Decimal(10, 2)
   
   @@map("payroll_payment_items")
+}
+
+model BankAccount {
+  id              String   @id @default(uuid())
+  bankName        String
+  accountNumber   String
+  accountType     String   // CHECKING, SAVINGS
+  
+  holderName      String
+  holderId        String
+  
+  currencyId      String
+  currency        Currency @relation(fields: [currencyId], references: [id])
+  
+  balance         Decimal  @db.Decimal(12, 2) @default(0)
+  
+  active          Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("bank_accounts")
 }

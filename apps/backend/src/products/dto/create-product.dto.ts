@@ -1,8 +1,18 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsInt, IsUUID, ValidateIf } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsInt, IsUUID, ValidateIf, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
+export enum ProductType {
+    PRODUCT = 'PRODUCT',
+    SERVICE = 'SERVICE'
+}
+
 export class CreateProductDto {
+    @ApiProperty({ description: 'Tipo de producto: PRODUCT o SERVICE', enum: ProductType, default: ProductType.PRODUCT })
+    @IsOptional()
+    @IsEnum(ProductType)
+    type?: ProductType;
+
     @ApiProperty({ example: 'PROD-001', description: 'SKU del producto' })
     @IsNotEmpty({ message: 'El SKU es requerido' })
     @IsString()
@@ -33,11 +43,12 @@ export class CreateProductDto {
     @IsUUID()
     currencyId: string;
 
-    @ApiProperty({ example: 10.50, description: 'Precio de costo' })
+    @ApiProperty({ example: 10.50, description: 'Precio de costo (Requerido para Productos)' })
+    @ValidateIf(o => o.type !== ProductType.SERVICE)
     @Type(() => Number)
     @IsNumber()
     @Min(0, { message: 'El precio de costo debe ser mayor o igual a 0' })
-    costPrice: number;
+    costPrice?: number;
 
     @ApiProperty({ example: 15.00, description: 'Precio de venta normal' })
     @Type(() => Number)
@@ -66,10 +77,11 @@ export class CreateProductDto {
     @Min(0, { message: 'El stock debe ser mayor o igual a 0' })
     stock?: number;
 
-    @ApiProperty({ example: 'uuid-de-la-unidad', description: 'ID de la unidad principal' })
+    @ApiProperty({ example: 'uuid-de-la-unidad', description: 'ID de la unidad principal (Requerido para Productos)' })
+    @ValidateIf(o => o.type !== ProductType.SERVICE)
     @IsNotEmpty({ message: 'La unidad principal es requerida' })
     @IsUUID()
-    unitId: string;
+    unitId?: string;
 
     // Unidad secundaria
     @ApiProperty({ example: 'uuid-de-la-unidad-secundaria', required: false, description: 'ID de la unidad secundaria' })

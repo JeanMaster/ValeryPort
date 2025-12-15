@@ -86,3 +86,11 @@ export const formatVenezuelanPrice = (value: number | null | undefined, currency
 export const formatVenezuelanPriceOnly = (value: number | null | undefined, decimals: number = 2, abbreviate: boolean = false): string => {
     return formatVenezuelanNumber(value, decimals, abbreviate);
 };
+
+/**
+ * Formatea una fecha a formato local (DD/MM/YYYY)
+ */
+export const formatDate = (date: string | Date | undefined): string => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString();
+};

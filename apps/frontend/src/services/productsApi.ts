@@ -47,23 +47,25 @@ export interface Product {
     secondaryOfferPrice?: number;
     secondaryWholesalePrice?: number;
     active: boolean;
+    type: 'PRODUCT' | 'SERVICE';
     createdAt: string;
     updatedAt: string;
 }
 
 export interface CreateProductDto {
+    type?: 'PRODUCT' | 'SERVICE';
     sku: string;
     name: string;
     description?: string;
     categoryId: string;
     subcategoryId?: string;
     currencyId: string;
-    costPrice: number;
+    costPrice?: number;
     salePrice: number;
     offerPrice?: number;
     wholesalePrice?: number;
     stock?: number;
-    unitId: string;
+    unitId?: string;
     secondaryUnitId?: string;
     unitsPerSecondaryUnit?: number;
     conversionDirection?: string;
@@ -74,6 +76,7 @@ export interface CreateProductDto {
 }
 
 export interface UpdateProductDto {
+    type?: 'PRODUCT' | 'SERVICE';
     sku?: string;
     name?: string;
     description?: string;
@@ -96,13 +99,14 @@ export interface UpdateProductDto {
 }
 
 export const productsApi = {
-    getAll: async (filters: { active?: boolean; search?: string; categoryId?: string; subcategoryId?: string } = {}): Promise<Product[]> => {
-        const { active, search, categoryId, subcategoryId } = filters;
+    getAll: async (filters: { active?: boolean; search?: string; categoryId?: string; subcategoryId?: string; type?: 'PRODUCT' | 'SERVICE' } = {}): Promise<Product[]> => {
+        const { active, search, categoryId, subcategoryId, type } = filters;
         const params = new URLSearchParams();
         if (active !== undefined) params.append('active', String(active));
         if (search) params.append('search', search);
         if (categoryId) params.append('categoryId', categoryId);
         if (subcategoryId) params.append('subcategoryId', subcategoryId);
+        if (type) params.append('type', type);
 
         const { data } = await axios.get(`${API_URL}/products`, { params });
         return data;
