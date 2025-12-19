@@ -11,16 +11,22 @@ async function main() {
 
     if (!adminExists) {
         const hashedPassword = await bcrypt.hash('admin123', 10);
+        const allPermissions = [
+            'MODULE_POS', 'VIEW_SALES', 'MANAGE_CASH_REGISTER', 'VOID_SALES',
+            'VIEW_PRODUCTS', 'EDIT_PRODUCTS', 'INVENTORY_ADJUSTMENTS',
+            'MODULE_PURCHASES', 'MODULE_EXPENSES', 'MODULE_REPORTS', 'MODULE_CONFIG'
+        ];
+
         await (prisma as any).user.create({
             data: {
                 username: 'admin',
                 password: hashedPassword,
                 name: 'Administrador Sistema',
                 role: 'ADMIN',
-                permissions: [],
+                permissions: allPermissions,
             },
         });
-        console.log('✅ Default admin user created (admin/admin123)');
+        console.log('✅ Default admin user created (admin/admin123) with ALL permissions');
     } else {
         console.log('ℹ️ Admin user already exists');
     }
