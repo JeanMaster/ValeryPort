@@ -3,9 +3,10 @@ import { Card, Table, Button, Tag, Space, Modal, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import { BASE_URL } from '../../services/apiConfig';
 import { UserFormModal } from './components/UserFormModal';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = BASE_URL;
 
 export const UsersPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { BASE_URL } from './apiConfig';
 import type { Invoice, Payment } from './invoicesApi';
 
 export type { Payment };
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    baseURL: BASE_URL,
 });
 
 export interface CreatePaymentDto {

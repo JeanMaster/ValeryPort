@@ -3,9 +3,10 @@ import { Form, Input, Button, Card, Typography, Alert } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from './AuthProvider';
 import axios from 'axios';
+import { BASE_URL } from '../../services/apiConfig';
 
 const { Title } = Typography;
-const API_URL = 'http://localhost:3000/api';
+const API_URL = BASE_URL;
 
 export const LoginPage = () => {
     const { login } = useAuth();

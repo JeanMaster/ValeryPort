@@ -2,9 +2,10 @@ import { Modal, Form, Input, Select, Checkbox, Row, Col, Typography, message, Sw
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect } from 'react';
+import { BASE_URL } from '../../../services/apiConfig';
 
 const { Text } = Typography;
-const API_URL = 'http://localhost:3000/api';
+const API_URL = BASE_URL;
 
 interface UserFormModalProps {
     open: boolean;

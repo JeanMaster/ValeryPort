@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { BASE_URL } from './apiConfig';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    baseURL: BASE_URL,
 });
 
 export interface DashboardStats {

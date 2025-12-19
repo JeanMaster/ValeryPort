@@ -42,5 +42,5 @@ ENV NODE_ENV=production
 # Expose port
 EXPOSE 3000
 
-# Script to push schema and start the app
-CMD npx prisma db push && node dist/src/main
+# Script to push schema, seed and start the app
+CMD npx prisma db push && npx prisma db seed && node dist/src/main
