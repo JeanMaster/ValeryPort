@@ -59,13 +59,21 @@ async function bootstrap() {
   // Prefijo global para todas las rutas
   app.setGlobalPrefix('api');
 
+  // Trust proxy for production (important for getting real IP and secure cookies behind Render/Vercel/Railway)
+  if (process.env.NODE_ENV === 'production') {
+    const expressApp = app.getHttpAdapter().getInstance();
+    expressApp.set('trust proxy', 1);
+  }
+
   const port = process.env.PORT ?? 3000;
-  // Escuchar en 0.0.0.0 para permitir acceso desde la red local
+  // Escuchar en 0.0.0.0 para permitir acceso desde la red local o contenedores
   await app.listen(port, '0.0.0.0');
 
-  console.log(`🚀 Backend running on port ${port}`);
-  console.log(`🌐 Acceso local: http://localhost:${port}`);
-  console.log(`🌐 Acceso en red: http://(tu-ip-local):${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🚀 Backend running on port ${port}`);
+    console.log(`🌐 Acceso local: http://localhost:${port}`);
+    console.log(`🌐 Acceso en red: http://(tu-ip-local):${port}`);
+    console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  }
 }
 bootstrap();
