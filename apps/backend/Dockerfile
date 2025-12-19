@@ -1,6 +1,9 @@
 # Build stage
 FROM node:22-alpine AS builder
 
+# Install build dependencies for Prisma
+RUN apk add --no-cache libc6-compat openssl
+
 WORKDIR /app
 
 # Copy package files
@@ -21,6 +24,9 @@ RUN npm run build
 
 # Production stage
 FROM node:22-alpine
+
+# Install production dependencies for Prisma
+RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
 
