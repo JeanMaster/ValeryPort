@@ -1,37 +1,46 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS - Permitir localhost y también IPs de red privada para modo LAN
+  // Filtro de excepciones global para debuguear errores 500 en producción
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+
+  // CORS - Permitir localhost, IPs de red privada y el dominio de Vercel
   app.enableCors({
     origin: (origin, callback) => {
+      // Si no hay origen (ej. Postman o herramientas del mismo servidor), permitir
       if (!origin) return callback(null, true);
 
       const allowedOriginPatterns = [
         /^http:\/\/localhost:\d+$/,
         /^http:\/\/127\.0\.0\.1:\d+$/,
-        /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // LAN IPs comunes
-        /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,  // Otros rangos privados
-        /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+:\d+$/
+        /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
+        /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,
+        /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+:\d+$/,
+        /\.vercel\.app$/, // Permitir cualquier subdominio de vercel.app
       ];
 
       const isAllowed = allowedOriginPatterns.some(pattern => pattern.test(origin));
 
-      if (isAllowed) {
+      if (isAllowed || process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
 
-      // En desarrollo, podrías querer ser más permisivo o usar env vars
-      if (process.env.NODE_ENV !== 'production') {
+      // Para producción, permitir orígenes definidos en env vars o dominios conocidos
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+      if (allowedOrigins.includes(origin) || origin.includes('valery-port')) {
         return callback(null, true);
       }
 
       return callback(new Error('Not allowed by CORS'));
     },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
