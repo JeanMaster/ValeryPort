@@ -6,20 +6,27 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS
+  // CORS - Permitir localhost y también IPs de red privada para modo LAN
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      const allowedOrigins = [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000'
+      const allowedOriginPatterns = [
+        /^http:\/\/localhost:\d+$/,
+        /^http:\/\/127\.0\.0\.1:\d+$/,
+        /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // LAN IPs comunes
+        /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,  // Otros rangos privados
+        /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+:\d+$/
       ];
 
-      if (allowedOrigins.includes(origin)) {
+      const isAllowed = allowedOriginPatterns.some(pattern => pattern.test(origin));
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+
+      // En desarrollo, podrías querer ser más permisivo o usar env vars
+      if (process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
 
@@ -53,9 +60,12 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  // Escuchar en 0.0.0.0 para permitir acceso desde la red local
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`🚀 Backend running on: http://localhost:${port}`);
+  console.log(`🚀 Backend running on port ${port}`);
+  console.log(`🌐 Acceso local: http://localhost:${port}`);
+  console.log(`🌐 Acceso en red: http://(tu-ip-local):${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 bootstrap();

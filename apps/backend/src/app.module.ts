@@ -26,6 +26,7 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { HrModule } from './hr/hr.module';
+import { SystemModule } from './system/system.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { HrModule } from './hr/hr.module';
     ExpensesModule,
     UsersModule,
     AuthModule,
+    SystemModule,
   ],
   controllers: [AppController, DevToolsController],
   providers: [AppService, DevToolsService],

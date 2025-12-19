@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';
+import { BASE_URL as API_URL } from './apiConfig';
 
 export interface BankAccount {
     id: string;

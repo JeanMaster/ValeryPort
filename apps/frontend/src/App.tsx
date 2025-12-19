@@ -11,6 +11,7 @@ import { ProductsPage } from './features/products/ProductsPage';
 import { ServicesPage } from './features/products/ServicesPage';
 import { CompanySettingsPage } from './features/company-settings/CompanySettingsPage';
 import { GeneralOptionsPage } from './features/company-settings/GeneralOptionsPage';
+import { NetworkSettingsPage } from './features/company-settings/NetworkSettingsPage';
 import { DepartmentsPage } from './features/departments/DepartmentsPage';
 import { UnitsPage } from './features/units/UnitsPage';
 import { CurrenciesPage } from './features/currencies/CurrenciesPage';
@@ -56,6 +57,7 @@ function App() {
           <Route path="configuration/company" element={<CompanySettingsPage />} />
           <Route path="configuration/dev-tools" element={<DevToolsPage />} />
           <Route path="configuration/general" element={<GeneralOptionsPage />} />
+          <Route path="configuration/network" element={<NetworkSettingsPage />} />
           <Route path="configuration/users" element={<UsersPage />} />
 
           <Route path="clients" element={<ClientsPage />} />

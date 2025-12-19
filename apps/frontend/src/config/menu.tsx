@@ -160,6 +160,10 @@ export const menuItems: AppMenuItem[] = [
                 label: 'Opciones Generales',
             },
             {
+                key: '/configuration/network',
+                label: 'Conexión de Red (LAN)',
+            },
+            {
                 key: '/configuration/users',
                 label: 'Gestión de Usuarios',
                 roles: ['ADMIN'],
