@@ -43,4 +43,4 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # Script to run migrations and start the app
-CMD npx prisma migrate deploy && npm run start:prod
+CMD npx prisma migrate deploy && node dist/src/main
