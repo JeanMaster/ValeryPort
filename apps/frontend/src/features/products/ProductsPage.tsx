@@ -68,7 +68,18 @@ export const ProductsPage = () => {
             title: 'Nombre',
             dataIndex: 'name',
             key: 'name',
-            width: '20%',
+            width: '25%', // Increased width slightly
+            render: (text: string) => (
+                <Tooltip title={text} placement="topLeft">
+                    <div style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}>
+                        {text}
+                    </div>
+                </Tooltip>
+            ),
         },
         {
             title: 'Categoría',

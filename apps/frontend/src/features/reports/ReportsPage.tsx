@@ -1,18 +1,12 @@
 import { useState } from 'react';
 import { Card, Tabs } from 'antd';
-import { SalesReports } from './components/SalesReports';
 import { InventoryReports } from './components/InventoryReports';
 import { FinancialReports } from './components/FinancialReports';
 
 export const ReportsPage = () => {
-    const [activeTab, setActiveTab] = useState('sales');
+    const [activeTab, setActiveTab] = useState('inventory');
 
     const tabItems = [
-        {
-            key: 'sales',
-            label: 'Ventas',
-            children: <SalesReports />
-        },
         {
             key: 'inventory',
             label: 'Inventario',

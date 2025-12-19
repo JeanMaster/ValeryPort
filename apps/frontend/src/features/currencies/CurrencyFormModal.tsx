@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, Checkbox, message, Alert } from 'antd';
+import { Modal, Form, Input, InputNumber, Checkbox, message, Alert, Select } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { currenciesApi } from '../../services/currenciesApi';
 import type { Currency, CreateCurrencyDto, UpdateCurrencyDto } from '../../services/currenciesApi';
@@ -52,6 +52,8 @@ export const CurrencyFormModal = ({ open, currency, onClose }: CurrencyFormModal
                 symbol: currency.symbol,
                 isPrimary: currency.isPrimary,
                 exchangeRate: currency.exchangeRate,
+                isAutomatic: currency.isAutomatic,
+                apiSymbol: currency.apiSymbol,
             });
         } else {
             form.resetFields();
@@ -68,6 +70,8 @@ export const CurrencyFormModal = ({ open, currency, onClose }: CurrencyFormModal
                 symbol: values.symbol,
                 isPrimary: values.isPrimary || false,
                 exchangeRate: values.isPrimary ? undefined : values.exchangeRate,
+                isAutomatic: values.isAutomatic,
+                apiSymbol: values.apiSymbol,
             };
 
             if (currency) {
@@ -139,22 +143,51 @@ export const CurrencyFormModal = ({ open, currency, onClose }: CurrencyFormModal
                 )}
 
                 {!isPrimary && (
-                    <Form.Item
-                        label="Tasa de Cambio"
-                        name="exchangeRate"
-                        rules={[
-                            { required: !isPrimary, message: 'La tasa de cambio es requerida para monedas secundarias' },
-                            { type: 'number', min: 0.0001, message: 'La tasa debe ser mayor a 0' },
-                        ]}
-                        help="¿Cuántas unidades de la moneda principal equivalen a 1 unidad de esta moneda? Ej: 1 USD = 100 Bs"
-                    >
-                        <InputNumber
-                            placeholder="Ej: 100.00"
-                            style={{ width: '100%' }}
-                            precision={4}
-                            min={0.0001}
-                        />
-                    </Form.Item>
+                    <>
+                        <Form.Item name="isAutomatic" valuePropName="checked">
+                            <Checkbox>
+                                <strong>Actualización Automática</strong>
+                            </Checkbox>
+                        </Form.Item>
+
+                        <Form.Item
+                            noStyle
+                            shouldUpdate={(prev, current) => prev.isAutomatic !== current.isAutomatic}
+                        >
+                            {({ getFieldValue }) =>
+                                getFieldValue('isAutomatic') ? (
+                                    <Form.Item
+                                        label="Fuente de Datos"
+                                        name="apiSymbol"
+                                        rules={[{ required: true, message: 'Seleccione una fuente' }]}
+                                    >
+                                        <Select placeholder="Seleccione fuente externa">
+                                            <Select.Option value="binance_p2p">Binance P2P (USDT)</Select.Option>
+                                            <Select.Option value="bcv">Banco Central de Venezuela (BCV)</Select.Option>
+                                            <Select.Option value="enparalelo">EnParaleloVzla</Select.Option>
+                                        </Select>
+                                    </Form.Item>
+                                ) : (
+                                    <Form.Item
+                                        label="Tasa de Cambio"
+                                        name="exchangeRate"
+                                        rules={[
+                                            { required: !isPrimary, message: 'La tasa de cambio es requerida para monedas secundarias' },
+                                            { type: 'number', min: 0.0001, message: 'La tasa debe ser mayor a 0' },
+                                        ]}
+                                        help="¿Cuántas unidades de la moneda principal equivalen a 1 unidad de esta moneda? Ej: 1 USD = 100 Bs"
+                                    >
+                                        <InputNumber
+                                            placeholder="Ej: 100.00"
+                                            style={{ width: '100%' }}
+                                            precision={4}
+                                            min={0.0001}
+                                        />
+                                    </Form.Item>
+                                )
+                            }
+                        </Form.Item>
+                    </>
                 )}
             </Form>
         </Modal>

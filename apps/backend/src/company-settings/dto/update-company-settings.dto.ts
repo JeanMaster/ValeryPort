@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsBoolean, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateCompanySettingsDto {
@@ -21,4 +21,14 @@ export class UpdateCompanySettingsDto {
     @IsOptional()
     @IsString()
     preferredSecondaryCurrencyId?: string;
+
+    @ApiProperty({ example: true, required: false, description: 'Activar actualización automática de tasas' })
+    @IsOptional()
+    @IsBoolean()
+    autoUpdateRates?: boolean;
+
+    @ApiProperty({ example: 60, required: false, description: 'Frecuencia de actualización en minutos' })
+    @IsOptional()
+    @IsNumber()
+    updateFrequency?: number;
 }

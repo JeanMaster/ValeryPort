@@ -18,7 +18,6 @@ interface CreatePurchaseModalProps {
 }
 
 export const CreatePurchaseModal: React.FC<CreatePurchaseModalProps> = ({ visible, onCancel, onSuccess }) => {
-    // const [step, setStep] = useState(1); // Unused
     const [form] = Form.useForm();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -34,7 +33,6 @@ export const CreatePurchaseModal: React.FC<CreatePurchaseModalProps> = ({ visibl
         if (visible) {
             loadSuppliers();
             loadCurrencies();
-            // setStep(1);
             setSelectedItems([]);
             form.resetFields();
             form.setFieldValue('invoiceDate', dayjs());

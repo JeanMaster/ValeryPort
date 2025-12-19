@@ -227,6 +227,10 @@ model CompanySettings {
   preferredSecondaryCurrencyId String?
   preferredSecondaryCurrency   Currency? @relation(fields: [preferredSecondaryCurrencyId], references: [id])
   
+  // Rate Automation
+  autoUpdateRates Boolean  @default(false)
+  updateFrequency Int      @default(60) // minutes
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -275,6 +279,10 @@ model Currency {
   symbol       String
   isPrimary    Boolean  @default(false)
   exchangeRate Decimal? @db.Decimal(10, 4)
+  
+  // Automation
+  isAutomatic  Boolean  @default(false)
+  apiSymbol    String?  // "binance_p2p", "bcv", "enparalelo"
 
   // Productos en esta moneda
   products     Product[]

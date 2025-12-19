@@ -9,6 +9,8 @@ export interface Currency {
     symbol: string;
     isPrimary: boolean;
     exchangeRate: number | null;
+    isAutomatic?: boolean;
+    apiSymbol?: string | null;
     active: boolean;
     createdAt: string;
     updatedAt: string;
@@ -20,6 +22,8 @@ export interface CreateCurrencyDto {
     symbol: string;
     isPrimary: boolean;
     exchangeRate?: number;
+    isAutomatic?: boolean;
+    apiSymbol?: string;
 }
 
 export interface UpdateCurrencyDto {
@@ -28,6 +32,8 @@ export interface UpdateCurrencyDto {
     symbol?: string;
     isPrimary?: boolean;
     exchangeRate?: number;
+    isAutomatic?: boolean;
+    apiSymbol?: string;
 }
 
 export const currenciesApi = {

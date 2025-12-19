@@ -3,6 +3,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { ModulePage } from './pages/ModulePage';
 import { ClientsPage } from './features/clients/ClientsPage';
+import { SalesHistoryPage } from './features/sales/SalesHistoryPage';
 
 import { PurchasesPage } from './features/purchases/PurchasesPage';
 import { SuppliersPage } from './features/purchases/SuppliersPage';
@@ -33,7 +34,6 @@ import {
   TeamOutlined,
   BankOutlined,
   SettingOutlined,
-  BarChartOutlined, // Added
 } from '@ant-design/icons';
 
 import { AuthProvider } from './features/auth/AuthProvider';
@@ -68,7 +68,7 @@ function App() {
 
           <Route path="sales" element={<ModulePage title="Ventas" icon={<ShoppingCartOutlined />} />} />
           <Route path="sales/pos" element={<POSPage />} />
-          <Route path="sales/history" element={<ReportsPage />} />
+          <Route path="sales/history" element={<SalesHistoryPage />} />
           <Route path="sales/returns" element={<ReturnsPage />} />
           <Route path="sales/cash-register" element={<CashRegisterPage />} />
 
@@ -87,7 +87,7 @@ function App() {
           <Route path="accounts-receivable" element={<AccountsReceivablePage />} />
           <Route path="hr" element={<ModulePage title="Nómina" icon={<TeamOutlined />} />} />
           <Route path="banks" element={<ModulePage title="Bancos" icon={<BankOutlined />} />} />
-          <Route path="reports" element={<ModulePage title="Reportes" icon={<BarChartOutlined />} />} />
+          <Route path="reports" element={<ReportsPage />} />
         </Route>
 
         {/* Fallback */}

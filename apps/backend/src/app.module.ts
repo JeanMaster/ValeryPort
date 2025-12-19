@@ -13,6 +13,7 @@ import { DepartmentsModule } from './departments/departments.module';
 import { UnitsModule } from './units/units.module';
 import { StatsModule } from './stats/stats.module';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { ExchangeRatesModule } from './currencies/exchange-rates.module';
 import { SalesModule } from './sales/sales.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { ReturnsModule } from './returns/returns.module';
@@ -40,6 +41,7 @@ import { HrModule } from './hr/hr.module';
     DepartmentsModule,
     UnitsModule,
     CurrenciesModule,
+    ExchangeRatesModule,
     SalesModule,
     InvoiceModule,
     ReturnsModule,

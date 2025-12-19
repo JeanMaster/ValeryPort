@@ -27,10 +27,22 @@ export class CreateCurrencyDto {
         required: false,
         description: 'Tasa de cambio respecto a la moneda principal (solo para monedas secundarias)'
     })
-    @ValidateIf(o => !o.isPrimary)
-    @IsNotEmpty({ message: 'La tasa de cambio es requerida para monedas secundarias' })
+    @ValidateIf(o => !o.isPrimary && !o.isAutomatic)
+    @IsNotEmpty({ message: 'La tasa de cambio es requerida para monedas no automáticas' })
     @Type(() => Number)
     @IsNumber()
     @Min(0.0001, { message: 'La tasa de cambio debe ser mayor a 0' })
+    @IsOptional()
     exchangeRate?: number;
+
+    @ApiProperty({ example: true, description: '¿Se actualiza automáticamente?', required: false })
+    @IsBoolean()
+    @IsOptional()
+    isAutomatic?: boolean;
+
+    @ApiProperty({ example: 'binance_p2p', description: 'Identificador para API externa', required: false })
+    @ValidateIf(o => o.isAutomatic)
+    @IsNotEmpty({ message: 'Debe seleccionar una fuente de datos para actualización automática' })
+    @IsString()
+    apiSymbol?: string;
 }

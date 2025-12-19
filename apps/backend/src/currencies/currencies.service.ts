@@ -17,9 +17,9 @@ export class CurrenciesService {
                 data: { isPrimary: false },
             });
         } else {
-            // Validar que tenga tasa de cambio
-            if (!createCurrencyDto.exchangeRate) {
-                throw new BadRequestException('Las monedas secundarias requieren tasa de cambio');
+            // Validar que tenga tasa de cambio si no es automática
+            if (!createCurrencyDto.isAutomatic && !createCurrencyDto.exchangeRate) {
+                throw new BadRequestException('Las monedas secundarias manuales requieren tasa de cambio');
             }
         }
 
@@ -27,9 +27,9 @@ export class CurrenciesService {
             return await this.prisma.currency.create({
                 data: {
                     ...createCurrencyDto,
-                    exchangeRate: createCurrencyDto.isPrimary
+                    exchangeRate: (createCurrencyDto.isPrimary || !createCurrencyDto.exchangeRate)
                         ? null
-                        : new Decimal(createCurrencyDto.exchangeRate!),
+                        : new Decimal(createCurrencyDto.exchangeRate),
                 },
             });
         } catch (error) {
@@ -87,8 +87,17 @@ export class CurrenciesService {
         }
 
         // Validar tasa de cambio
-        if (updateCurrencyDto.isPrimary === false && !updateCurrencyDto.exchangeRate) {
-            throw new BadRequestException('Las monedas secundarias requieren tasa de cambio');
+        const isPrimary = updateCurrencyDto.isPrimary ?? (await this.findOne(id)).isPrimary;
+        const isAutomatic = updateCurrencyDto.isAutomatic ?? (await this.findOne(id)).isAutomatic;
+
+        if (isPrimary === false && isAutomatic === false) {
+            const currentCurrency = await this.findOne(id);
+            const hasNewRate = updateCurrencyDto.exchangeRate !== undefined && updateCurrencyDto.exchangeRate !== null;
+            const hasExistingRate = currentCurrency.exchangeRate !== null;
+
+            if (!hasNewRate && !hasExistingRate) {
+                throw new BadRequestException('Las monedas secundarias manuales requieren tasa de cambio');
+            }
         }
 
         try {
