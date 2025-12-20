@@ -14,7 +14,7 @@ const getApiBaseUrl = () => {
     if (customUrl) return customUrl;
 
     // Check for environment variable
-    const envUrl = (import.meta as any).env?.VITE_API_URL;
+    const envUrl = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_APP_URL;
     if (envUrl) return envUrl;
 
     // Default development fallback

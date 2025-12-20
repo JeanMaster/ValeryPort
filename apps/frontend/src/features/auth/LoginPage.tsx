@@ -24,9 +24,15 @@ export const LoginPage = () => {
 
             const { access_token, user } = response.data;
             login(access_token, user);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Login failed', err);
-            setError('Usuario o contraseña incorrectos');
+            if (!err.response) {
+                setError(`No se pudo conectar al servidor. Revisa la configuración de red. (Usando: ${API_URL})`);
+            } else if (err.response.status === 401) {
+                setError('Usuario o contraseña incorrectos');
+            } else {
+                setError('Error en el servidor al intentar iniciar sesión');
+            }
         } finally {
             setLoading(false);
         }
