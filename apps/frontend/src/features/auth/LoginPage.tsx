@@ -48,7 +48,7 @@ export const LoginPage = () => {
         }}>
             <Card style={{ width: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                    <Title level={3}>ValeryPort ERP</Title>
+                    <Title level={3}>Zenith ERP</Title>
                     <Typography.Text type="secondary">Inicia sesión para continuar</Typography.Text>
                 </div>
 

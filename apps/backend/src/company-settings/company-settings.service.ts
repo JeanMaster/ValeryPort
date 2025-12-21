@@ -17,7 +17,7 @@ export class CompanySettingsService {
         if (!settings) {
             settings = await this.prisma.companySettings.create({
                 data: {
-                    name: 'Valery Corporativo',
+                    name: 'Zenith',
                     rif: 'J-00000000-0',
                     logoUrl: null,
                 },

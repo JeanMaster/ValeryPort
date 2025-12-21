@@ -23,7 +23,7 @@ export interface AppMenuItem {
 
 /**
  * Configuración del menú principal de navegación
- * Basado en los módulos del ERP Valery Corporativo
+ * Basado en los módulos del ERP Zenith
  */
 export const menuItems: AppMenuItem[] = [
     {
@@ -82,6 +82,10 @@ export const menuItems: AppMenuItem[] = [
             {
                 key: '/sales/cash-register',
                 label: 'Caja',
+            },
+            {
+                key: '/clients',
+                label: 'Clientes',
             },
         ],
     },

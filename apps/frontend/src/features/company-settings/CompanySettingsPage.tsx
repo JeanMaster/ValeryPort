@@ -47,7 +47,7 @@ const CompanySettingsForm = ({ settings, onSubmit, isUpdating }: { settings: any
                 name="name"
                 rules={[{ required: true, message: 'El nombre es requerido' }]}
             >
-                <Input placeholder="Valery Corporativo" size="large" />
+                <Input placeholder="Zenith" size="large" />
             </Form.Item>
 
             <Form.Item

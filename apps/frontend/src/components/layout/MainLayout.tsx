@@ -27,7 +27,7 @@ const { Text } = Typography;
  */
 export const MainLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
-    const [companyName, setCompanyName] = useState('Valery');
+    const [companyName, setCompanyName] = useState('Zenith');
     const [companyLogo, setCompanyLogo] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState(() => {
         // Cargar preferencia del usuario desde localStorage

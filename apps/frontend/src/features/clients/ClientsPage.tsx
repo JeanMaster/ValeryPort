@@ -45,6 +45,22 @@ export const ClientsPage = () => {
         setEditingClient(null);
     };
 
+    const formatWhatsAppUrl = (phone: string, name: string) => {
+        // Remove non-numeric characters
+        let cleanPhone = phone.replace(/\D/g, '');
+
+        // Handle common Venezuelan format: if starts with 04, replace with 584
+        if (cleanPhone.startsWith('04')) {
+            cleanPhone = '58' + cleanPhone.substring(1);
+        } else if (!cleanPhone.startsWith('58') && cleanPhone.length === 10) {
+            // Assume missing 58 for local mobile 4xx
+            cleanPhone = '58' + cleanPhone;
+        }
+
+        const message = encodeURIComponent(`Hola ${name}, te contactamos de Zenith...`);
+        return `https://wa.me/${cleanPhone}/?text=${message}`;
+    };
+
     const columns: ColumnsType<Client> = [
         {
             title: 'ID',
@@ -65,8 +81,13 @@ export const ClientsPage = () => {
             render: (phone: string, record: Client) => (
                 <Space>
                     {phone}
-                    {record.hasWhatsapp && (
-                        <WhatsAppOutlined style={{ color: '#25D366' }} />
+                    {record.hasWhatsapp && phone && (
+                        <Tooltip title="Enviar WhatsApp">
+                            <WhatsAppOutlined
+                                style={{ color: '#25D366', cursor: 'pointer', fontSize: 16 }}
+                                onClick={() => window.open(formatWhatsAppUrl(phone, record.name), '_blank')}
+                            />
+                        </Tooltip>
                     )}
                 </Space>
             ),
@@ -84,17 +105,26 @@ export const ClientsPage = () => {
                 <Space>
                     {record.social1 && (
                         <Tooltip title={`Instagram: ${record.social1}`}>
-                            <InstagramOutlined style={{ color: '#E1306C', cursor: 'pointer' }} />
+                            <InstagramOutlined
+                                style={{ color: '#E1306C', cursor: 'pointer' }}
+                                onClick={() => window.open(`https://instagram.com/${record.social1}`, '_blank')}
+                            />
                         </Tooltip>
                     )}
                     {record.social2 && (
                         <Tooltip title={`Facebook: ${record.social2}`}>
-                            <FacebookOutlined style={{ color: '#4267B2', cursor: 'pointer' }} />
+                            <FacebookOutlined
+                                style={{ color: '#4267B2', cursor: 'pointer' }}
+                                onClick={() => window.open(`https://facebook.com/${record.social2}`, '_blank')}
+                            />
                         </Tooltip>
                     )}
                     {record.social3 && (
                         <Tooltip title={`Twitter/X: ${record.social3}`}>
-                            <TwitterOutlined style={{ color: '#1DA1F2', cursor: 'pointer' }} />
+                            <TwitterOutlined
+                                style={{ color: '#1DA1F2', cursor: 'pointer' }}
+                                onClick={() => window.open(`https://x.com/${record.social3}`, '_blank')}
+                            />
                         </Tooltip>
                     )}
                 </Space>

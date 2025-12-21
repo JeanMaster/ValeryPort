@@ -70,7 +70,7 @@ export const NetworkSettingsPage = () => {
         <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
             <Title level={2}>Configuración de Red y Conexión</Title>
             <Paragraph>
-                Configure cómo esta aplicación se comunica con el servidor central de ValeryPort.
+                Configure cómo esta aplicación se comunica con el servidor central de Zenith.
             </Paragraph>
 
             <Card style={{ marginBottom: 24 }}>
@@ -179,7 +179,7 @@ export const NetworkSettingsPage = () => {
             {mode === 'lan' && networkInfo && (
                 <Card title="Guía de Conexión para Otros Dispositivos" style={{ marginTop: 24 }}>
                     <Paragraph>
-                        Para que otro dispositivo entre a ValeryPort, abra el navegador en ese dispositivo e ingrese:
+                        Para que otro dispositivo entre a Zenith, abra el navegador en ese dispositivo e ingrese:
                     </Paragraph>
                     <Title level={3} style={{ textAlign: 'center', color: '#1890ff' }}>
                         {lanAppUrl}

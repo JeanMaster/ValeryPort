@@ -1,7 +1,7 @@
 {
-  "name": "backend",
-  "version": "0.0.1",
-  "description": "",
+  "name": "zenith-backend",
+  "version": "1.0.0",
+  "description": "Zenith ERP - Backend API Server",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

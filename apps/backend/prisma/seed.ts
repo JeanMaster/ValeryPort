@@ -21,7 +21,7 @@ async function main() {
             data: {
                 username: 'admin',
                 password: hashedPassword,
-                name: 'Administrador Sistema',
+                name: 'Zenith Admin',
                 role: 'ADMIN',
                 permissions: allPermissions,
             },

@@ -1,6 +1,6 @@
 
 /**
- * Centralized API configuration for ValeryPort
+ * Centralized API configuration for Zenith
  * 
  * Logic priority:
  * 1. localStorage.getItem('CUSTOM_API_URL') - For UI switching (Local/LAN/Remote)

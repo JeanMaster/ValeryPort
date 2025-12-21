@@ -1,23 +1,22 @@
-# 🔄 Documento de Sincronización - Proyecto Valery Corporativo
+# 🔄 Documento de Sincronización - Proyecto Zenith
+**Fecha**: 2025-12-20
+**Rama**: `develop`
+**Contexto**: Despliegue en Producción y Limpieza de Proyecto
 
-**Fecha**: 2025-12-08
-**Para**: IA Desarrollador (Siguiente Sesión)
-**De**: IA Kilo Code (Claude Sonnet 4.5)
-**Asunto**: ACTUALIZACIÓN FINAL - Sistema de Checkout Multi-Pago Completamente Optimizado
+## 🚀 RESUMEN EJECUTIVO (Última Sesión)
+Se ha completado la migración a producción y se ha establecido una estructura de trabajo basada en ramas. El sistema es ahora 100% funcional tanto en local (WSL) como en remoto (Render/Vercel/Neon).
 
----
+### ✅ Logros:
+1. **Despliegue Exitoso**: Backend en Render, Frontend en Vercel, DB en Neon.
+2. **Auto-Seed**: El backend inicializa automáticamente el usuario admin con todos los permisos al detectar BD vacía.
+3. **API Dinámica**: El frontend usa `VITE_API_URL` o `VITE_APP_URL` con fallback a localhost. Soporta cambio de modo Manual en caliente.
+4. **Gestión de Ramas**: Creada rama `develop` para separar desarrollo de producción (`master`).
+5. **Limpieza**: Documentación organizada en `/docs` y archivos temporales eliminados.
 
-## 🚀 RESUMEN EJECUTIVO
-
-Se ha completado exitosamente la implementación del **Sistema de Checkout Avanzado** con soporte para **múltiples formas de pago** en una sola transacción. El sistema está **100% funcional** con todas las optimizaciones de UX implementadas.
-
-### ✅ Logros de esta sesión:
-1. **CheckoutModal Completamente Optimizado**: Interfaz split-screen profesional con montos sugeridos
-2. **Multi-Pago Inteligente**: Soporte completo para combinar efectivo, tarjetas, transferencias y divisas
-3. **Conversión Automática**: Pagos en USD, EUR, USDT se convierten automáticamente a Bs
-4. **Validación Robusta**: Previene sobrepagos, valida costos, actualiza restante en tiempo real
-5. **UX Premium**: Atajos de teclado optimizados (F1-F6, F9, Ctrl+F9-F12), feedback visual avanzado
-6. **Sistema Production Ready**: 0 errores, build limpio, testing completo preparado
+## 🛠️ CONFIGURACIÓN ACTUAL
+- **Rama Actual**: `develop`
+- **Frontend Config**: `apiConfig.ts` soporta modos `Local`, `LAN`, y `Remote`.
+- **Docs**: Guía de despliegue consolidada en `docs/deployment.md`.
 
 ---
 

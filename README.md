@@ -1,4 +1,4 @@
-# Valery Corporativo - Web Edition
+# Zenith - Next-Gen ERP System
 
 Sistema ERP completo migrado desde aplicación de escritorio Windows a plataforma web moderna.
 
@@ -32,7 +32,10 @@ ValeryPort/
 │   └── backend/           # API NestJS
 ├── packages/
 │   └── types/             # Tipos TypeScript compartidos
-├── docs/                  # Documentación del proyecto
+├── docs/                  # Documentación centralizada
+│   ├── deployment.md      # Guía de despliegue (consolidada)
+│   ├── reports_guide.md   # Manual de reportes
+│   └── migration_plan.md  # Plan de migración legacy
 ├── docker-compose.yml     # Servicios Docker
 └── README.md
 ```
@@ -249,19 +252,12 @@ El ERP se divide en los siguientes módulos principales:
 
 ## 🚦 Estado del Proyecto
 
-**Fase Actual**: Fase 3 - POS Core & Checkout (En Progreso) 🚧
+**Fase Actual**: Despliegue y Mantenimiento (Rama `develop`) 🚧
 
-- [x] Fase 0: Configuración del entorno
-- [x] Fase 1: Hello World con BD
-- [x] Fase 2: Módulos Base (Clientes, Proveedores, Productos)
-- [ ] Fase 3: Punto de Venta (POS) - En Progreso
-- [ ] Fase 4: Autenticación JWT
-- [ ] Fase 5: Módulo de Ventas
-- [ ] Fase 6: Módulo de Compras
-- [ ] Fase 7: Módulo de Contabilidad
-- [ ] Fase 8: Reportes
-- [ ] Fase 9: Testing
-- [ ] Fase 10: Despliegue
+- [x] Fase 0-20: Desarrollo del Core (POS, RRHH, Inventario)
+- [x] Fase 21: Logística de Despliegue (Render/Vercel/Neon)
+- [x] Estabilización: Auto-seed de base de datos y URLs dinámicas
+- [ ] Próxima Fase: Módulos de contabilidad avanzada y reportes PDF
 
 ## 🤝 Contribución
 
