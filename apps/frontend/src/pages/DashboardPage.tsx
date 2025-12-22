@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Button, Table, Spin, Empty } from 'antd';
+import { Card, Row, Col, Statistic, Button, Table, Spin, Empty, Segmented } from 'antd';
 import {
     ShoppingCartOutlined,
     ShopOutlined,
@@ -19,21 +19,29 @@ export const DashboardPage = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [range, setRange] = useState('7days');
 
     useEffect(() => {
         fetchStats();
-    }, []);
+    }, [range]);
 
     const fetchStats = async () => {
         try {
             setLoading(true);
-            const data = await statsApi.getDashboardStats();
+            const data = await statsApi.getDashboardStats(range);
             setStats(data);
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const rangeLabels: Record<string, string> = {
+        '7days': 'Últimos 7 días',
+        '30days': 'Últimos 30 días',
+        '1year': 'Último año',
+        'all': 'Histórico total'
     };
 
     if (loading) {
@@ -74,10 +82,26 @@ export const DashboardPage = () => {
     return (
         <div style={{ padding: 24 }}>
             <div style={{ marginBottom: 24 }}>
-                <h1 style={{ margin: 0, fontSize: 28 }}>📊 Dashboard</h1>
-                <p style={{ color: '#666', marginTop: 8 }}>
-                    Resumen de tu negocio
-                </p>
+                <Row justify="space-between" align="middle">
+                    <Col>
+                        <h1 style={{ margin: 0, fontSize: 28 }}>📊 Dashboard</h1>
+                        <p style={{ color: '#666', marginTop: 8 }}>
+                            Resumen de tu negocio
+                        </p>
+                    </Col>
+                    <Col>
+                        <Segmented
+                            options={[
+                                { label: '7 Días', value: '7days' },
+                                { label: '1 Mes', value: '30days' },
+                                { label: '1 Año', value: '1year' },
+                                { label: 'Todo', value: 'all' },
+                            ]}
+                            value={range}
+                            onChange={(value) => setRange(value as string)}
+                        />
+                    </Col>
+                </Row>
             </div>
 
             {/* KPI Cards */}
@@ -148,7 +172,7 @@ export const DashboardPage = () => {
             <Row gutter={[16, 16]}>
                 {/* Sales Trend */}
                 <Col xs={24} lg={16}>
-                    <Card title="Tendencia de Ventas (Últimos 7 días)">
+                    <Card title={`Tendencia de Ventas (${rangeLabels[range]})`}>
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={stats.salesTrend}>
                                 <CartesianGrid strokeDasharray="3 3" />

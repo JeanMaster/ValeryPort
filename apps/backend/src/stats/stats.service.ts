@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 export class StatsService {
     constructor(private prisma: PrismaService) { }
 
-    async getDashboardStats() {
+    async getDashboardStats(range: string = '7days') {
         const today = dayjs().startOf('day').toDate();
         const monthStart = dayjs().startOf('month').toDate();
         const lastMonthStart = dayjs().subtract(1, 'month').startOf('month').toDate();
@@ -14,13 +14,13 @@ export class StatsService {
 
         // Today's sales
         const todaySales = await this.prisma.sale.aggregate({
-            where: { createdAt: { gte: today } },
+            where: { createdAt: { gte: today }, active: true },
             _sum: { total: true },
         });
 
         // This month's sales
         const thisMonthSales = await this.prisma.sale.aggregate({
-            where: { createdAt: { gte: monthStart } },
+            where: { createdAt: { gte: monthStart }, active: true },
             _sum: { total: true },
         });
 
@@ -28,6 +28,7 @@ export class StatsService {
         const lastMonthSales = await this.prisma.sale.aggregate({
             where: {
                 createdAt: { gte: lastMonthStart, lte: lastMonthEnd },
+                active: true
             },
             _sum: { total: true },
         });
@@ -36,6 +37,7 @@ export class StatsService {
         const topProducts = await this.prisma.saleItem.groupBy({
             by: ['productId'],
             _sum: { quantity: true },
+            where: { sale: { active: true } },
             orderBy: { _sum: { quantity: 'desc' } },
             take: 5,
         });
@@ -47,41 +49,94 @@ export class StatsService {
                 });
                 return {
                     name: product?.name,
-                    quantity: item._sum.quantity,
+                    quantity: Number(item._sum.quantity || 0),
                 };
             }),
         );
 
         // Products with critical stock (below 10 units as example)
         const criticalStock = await this.prisma.product.count({
-            where: { stock: { lt: 10 } },
+            where: { stock: { lt: 10 }, active: true },
         });
 
         // Total products
-        const totalProducts = await this.prisma.product.count();
+        const totalProducts = await this.prisma.product.count({ where: { active: true } });
 
         // Active cash session balance
         const activeSession = await this.prisma.cashSession.findFirst({
             where: { status: 'OPEN' },
         });
 
-        // Last 7 days sales trend
-        const last7Days: { date: string; sales: number }[] = [];
-        for (let i = 6; i >= 0; i--) {
-            const date = dayjs().subtract(i, 'day').startOf('day').toDate();
-            const nextDate = dayjs().subtract(i, 'day').endOf('day').toDate();
+        // Dynamic Sales Trend based on Range
+        const salesTrend: { date: string; sales: number }[] = [];
 
-            const daySales = await this.prisma.sale.aggregate({
-                where: {
-                    createdAt: { gte: date, lte: nextDate },
-                },
-                _sum: { total: true },
+        if (range === '7days' || range === '30days') {
+            const daysToFetch = range === '7days' ? 7 : 30;
+            for (let i = daysToFetch - 1; i >= 0; i--) {
+                const date = dayjs().subtract(i, 'day').startOf('day').toDate();
+                const nextDate = dayjs().subtract(i, 'day').endOf('day').toDate();
+
+                const daySales = await this.prisma.sale.aggregate({
+                    where: {
+                        createdAt: { gte: date, lte: nextDate },
+                        active: true
+                    },
+                    _sum: { total: true },
+                });
+
+                salesTrend.push({
+                    date: dayjs(date).format('DD/MM'),
+                    sales: Number(daySales._sum.total || 0),
+                });
+            }
+        } else if (range === '1year') {
+            for (let i = 11; i >= 0; i--) {
+                const date = dayjs().subtract(i, 'month').startOf('month').toDate();
+                const nextDate = dayjs().subtract(i, 'month').endOf('month').toDate();
+
+                const monthSales = await this.prisma.sale.aggregate({
+                    where: {
+                        createdAt: { gte: date, lte: nextDate },
+                        active: true
+                    },
+                    _sum: { total: true },
+                });
+
+                salesTrend.push({
+                    date: dayjs(date).format('MMM YY'),
+                    sales: Number(monthSales._sum.total || 0),
+                });
+            }
+        } else if (range === 'all') {
+            // Get first sale date
+            const firstSale = await this.prisma.sale.findFirst({
+                where: { active: true },
+                orderBy: { createdAt: 'asc' },
             });
 
-            last7Days.push({
-                date: dayjs(date).format('DD/MM'),
-                sales: Number(daySales._sum.total || 0),
-            });
+            const startDate = firstSale ? dayjs(firstSale.createdAt).startOf('month') : dayjs().subtract(5, 'month').startOf('month');
+            const now = dayjs().endOf('month');
+
+            let current = startDate;
+            while (current.isBefore(now)) {
+                const start = current.startOf('month').toDate();
+                const end = current.endOf('month').toDate();
+
+                const monthSales = await this.prisma.sale.aggregate({
+                    where: {
+                        createdAt: { gte: start, lte: end },
+                        active: true
+                    },
+                    _sum: { total: true },
+                });
+
+                salesTrend.push({
+                    date: current.format('MMM YY'),
+                    sales: Number(monthSales._sum.total || 0),
+                });
+
+                current = current.add(1, 'month');
+            }
         }
 
         return {
@@ -92,7 +147,7 @@ export class StatsService {
             criticalStock,
             totalProducts,
             cashBalance: activeSession ? Number(activeSession.openingBalance) : 0,
-            salesTrend: last7Days,
+            salesTrend,
         };
     }
 
@@ -221,5 +276,47 @@ export class StatsService {
                 }),
             ),
         };
+    }
+
+    async getBalanceReport() {
+        // Last 12 months balance
+        const balanceData: { month: string; income: number; expenses: number; total: number }[] = [];
+        const now = dayjs();
+
+        for (let i = 11; i >= 0; i--) {
+            const currentMonth = now.subtract(i, 'month');
+            const start = currentMonth.startOf('month').toDate();
+            const end = currentMonth.endOf('month').toDate();
+
+            // Income from sales
+            const sales = await this.prisma.sale.aggregate({
+                where: { createdAt: { gte: start, lte: end }, active: true },
+                _sum: { total: true },
+            });
+
+            // Egress from purchases
+            const purchases = await this.prisma.purchase.aggregate({
+                where: { createdAt: { gte: start, lte: end } },
+                _sum: { total: true },
+            });
+
+            // Egress from other expenses
+            const expenses = await this.prisma.expense.aggregate({
+                where: { date: { gte: start, lte: end } },
+                _sum: { amount: true },
+            });
+
+            const income = Number(sales._sum.total || 0);
+            const egress = Number(purchases._sum.total || 0) + Number(expenses._sum.amount || 0);
+
+            balanceData.push({
+                month: currentMonth.format('MMMM YYYY'),
+                income: income,
+                expenses: egress,
+                total: income - egress,
+            });
+        }
+
+        return balanceData;
     }
 }

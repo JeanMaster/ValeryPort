@@ -29,9 +29,18 @@ export interface FinanceReport {
     dailySalesData: { date: string; amount: number }[];
 }
 
+export interface BalanceEntry {
+    month: string;
+    income: number;
+    expenses: number;
+    total: number;
+}
+
 export const statsApi = {
-    getDashboardStats: async (): Promise<DashboardStats> => {
-        const response = await apiClient.get('/stats/dashboard');
+    getDashboardStats: async (range?: string): Promise<DashboardStats> => {
+        const response = await apiClient.get('/stats/dashboard', {
+            params: { range }
+        });
         return response.data;
     },
 
@@ -42,6 +51,11 @@ export const statsApi = {
 
     getFinanceReport: async (): Promise<FinanceReport> => {
         const response = await apiClient.get('/stats/finance');
+        return response.data;
+    },
+
+    getBalanceReport: async (): Promise<BalanceEntry[]> => {
+        const response = await apiClient.get('/stats/balance');
         return response.data;
     },
 };

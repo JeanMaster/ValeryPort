@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { StatsService } from './stats.service';
 
 @ApiTags('stats')
@@ -9,8 +9,9 @@ export class StatsController {
 
     @Get('dashboard')
     @ApiOperation({ summary: 'Get dashboard statistics' })
-    getDashboardStats() {
-        return this.statsService.getDashboardStats();
+    @ApiQuery({ name: 'range', required: false, enum: ['7days', '30days', '1year', 'all'] })
+    getDashboardStats(@Query('range') range?: string) {
+        return this.statsService.getDashboardStats(range);
     }
 
     @Get('inventory')
@@ -23,5 +24,11 @@ export class StatsController {
     @ApiOperation({ summary: 'Get finance report' })
     getFinanceReport() {
         return this.statsService.getFinanceReport();
+    }
+
+    @Get('balance')
+    @ApiOperation({ summary: 'Get balance report' })
+    getBalanceReport() {
+        return this.statsService.getBalanceReport();
     }
 }
