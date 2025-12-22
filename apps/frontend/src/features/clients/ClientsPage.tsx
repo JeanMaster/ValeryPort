@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsApi } from '../../services/clientsApi';
 import type { Client } from '../../services/clientsApi';
 import { ClientFormModal } from './ClientFormModal';
+import { ClientPurchaseHistory } from '../../components/ClientPurchaseHistory';
 import type { ColumnsType } from 'antd/es/table';
 
 export const ClientsPage = () => {
@@ -133,9 +134,10 @@ export const ClientsPage = () => {
         {
             title: 'Acciones',
             key: 'actions',
-            width: 120,
+            width: 180,
             render: (_, record) => (
                 <Space>
+                    <ClientPurchaseHistory clientId={record.id} clientName={record.name} />
                     <Button
                         type="text"
                         icon={<EditOutlined />}

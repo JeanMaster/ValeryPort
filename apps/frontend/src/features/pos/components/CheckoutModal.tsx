@@ -233,6 +233,8 @@ export const CheckoutModal = ({ open, onCancel, onProcess }: CheckoutModalProps)
             };
 
             await onProcess(paymentData);
+            // Reset processing state after successful sale
+            setIsProcessing(false);
         } catch (error) {
             console.error("Error processing sale:", error);
             setIsProcessing(false);

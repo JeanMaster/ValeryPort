@@ -2,12 +2,13 @@ import { Layout, Typography, Row, Col, Space, Popover } from 'antd';
 import { useState, useEffect } from 'react';
 import { usePOSStore } from '../../../store/posStore';
 import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
+import { ClientPurchaseHistoryCompact } from '../../../components/ClientPurchaseHistory';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
 
 export const POSHeader = () => {
-    const { totals, activeCustomer, preferredSecondaryCurrency, currencies, primaryCurrency, nextInvoiceNumber } = usePOSStore();
+    const { totals, activeCustomer, customerId, preferredSecondaryCurrency, currencies, primaryCurrency, nextInvoiceNumber } = usePOSStore();
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
@@ -44,7 +45,10 @@ export const POSHeader = () => {
                         </Space>
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Cliente</Text>
-                            <Text strong style={{ fontSize: 16 }}>{activeCustomer}</Text>
+                            <Space size={4}>
+                                <Text strong style={{ fontSize: 16 }}>{activeCustomer}</Text>
+                                {customerId && <ClientPurchaseHistoryCompact clientId={customerId} />}
+                            </Space>
                         </Space>
                         <Space direction="vertical" size={0}>
                             <Text type="secondary" style={{ fontSize: 12 }}>Factura</Text>

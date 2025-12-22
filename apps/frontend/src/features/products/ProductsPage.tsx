@@ -175,7 +175,7 @@ export const ProductsPage = () => {
             title: 'Unidad',
             key: 'unit',
             width: '8%',
-            render: (_: any, record: Product) => record.unit.abbreviation,
+            render: (_: any, record: Product) => record.unit?.abbreviation || '-',
         },
         {
             title: 'Acciones',

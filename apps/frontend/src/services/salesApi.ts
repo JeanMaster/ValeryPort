@@ -105,4 +105,9 @@ export const salesApi = {
         const { data } = await axios.post(`${API_URL}/sales`, dto);
         return data;
     },
+
+    getClientRecentPurchases: async (clientId: string, limit: number = 5): Promise<Sale[]> => {
+        const { data } = await axios.get(`${API_URL}/sales/client/${clientId}/recent?limit=${limit}`);
+        return data;
+    },
 };

@@ -6,20 +6,27 @@ import { POSRightPanel } from './components/POSRightPanel';
 import { POSFooter } from './components/POSFooter';
 import { CheckoutModal } from './components/CheckoutModal';
 import { ClientSelectionModal } from './components/ClientSelectionModal';
+import { InvoiceModal } from './components/InvoiceModal';
 import { usePOSStore } from '../../store/posStore';
+import type { Sale } from '../../services/salesApi';
 
 const { Content, Sider, Footer } = Layout;
 
 export const POSPage = () => {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+    const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+    const [completedSale, setCompletedSale] = useState<Sale | null>(null);
     const { processSale, setCustomer, refreshInvoiceNumber } = usePOSStore();
 
     const handleCheckoutProcess = async (paymentData: any) => {
         try {
-            const invoiceNumber = await processSale(paymentData);
-            message.success(`Venta procesada exitosamente. Factura: ${invoiceNumber}`);
+            const sale = await processSale(paymentData);
+            message.success(`Venta procesada exitosamente. Factura: ${sale.invoiceNumber}`);
             setIsCheckoutOpen(false);
+            // Open invoice modal with sale data
+            setCompletedSale(sale);
+            setIsInvoiceModalOpen(true);
             // Refresh the next invoice number for the next sale
             await refreshInvoiceNumber();
         } catch (error) {
@@ -102,6 +109,15 @@ export const POSPage = () => {
                     setIsClientModalOpen(false);
                 }}
                 onCancel={() => setIsClientModalOpen(false)}
+            />
+
+            <InvoiceModal
+                open={isInvoiceModalOpen}
+                sale={completedSale}
+                onClose={() => {
+                    setIsInvoiceModalOpen(false);
+                    setCompletedSale(null);
+                }}
             />
         </Layout>
     );

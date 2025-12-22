@@ -62,6 +62,16 @@ export class SalesController {
         return this.salesService.findAll();
     }
 
+    @Get('client/:clientId/recent')
+    @ApiOperation({ summary: 'Obtener las últimas compras de un cliente' })
+    @ApiResponse({ status: 200, description: 'Últimas compras del cliente' })
+    getClientRecentPurchases(
+        @Param('clientId') clientId: string,
+        @Query('limit') limit?: string
+    ) {
+        return this.salesService.getClientRecentPurchases(clientId, parseInt(limit || '5'));
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Obtener una venta por ID' })
     @ApiResponse({ status: 200, description: 'Venta encontrada' })

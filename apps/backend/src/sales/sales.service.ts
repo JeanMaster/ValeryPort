@@ -256,6 +256,32 @@ export class SalesService {
     }
 
     /**
+     * Obtener las últimas compras de un cliente
+     */
+    async getClientRecentPurchases(clientId: string, limit: number = 5) {
+        return this.prisma.sale.findMany({
+            where: {
+                clientId,
+                active: true
+            },
+            include: {
+                items: {
+                    include: {
+                        product: {
+                            select: {
+                                id: true,
+                                name: true,
+                            }
+                        },
+                    },
+                },
+            },
+            orderBy: { date: 'desc' },
+            take: limit,
+        });
+    }
+
+    /**
      * Obtener una venta por ID
      */
     async findOne(id: string) {
