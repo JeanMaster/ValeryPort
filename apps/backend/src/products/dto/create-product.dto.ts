@@ -134,4 +134,9 @@ export class CreateProductDto {
     @IsNumber()
     @Min(0)
     secondaryWholesalePrice?: number;
+
+    @ApiProperty({ example: 'https://example.com/image.jpg', required: false, description: 'URL o base64 de la imagen del producto' })
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
 }

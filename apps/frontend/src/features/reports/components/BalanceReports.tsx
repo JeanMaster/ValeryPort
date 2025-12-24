@@ -1,11 +1,11 @@
 import { Card, Table, Statistic, Row, Col, Typography, Tag, Space, Spin, Empty } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import { statsApi, type BalanceEntry } from '../../../services/statsApi';
+import { statsApi } from '../../../services/statsApi';
 import { formatVenezuelanPrice } from '../../../utils/formatters';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { ArrowUpOutlined, ArrowDownOutlined, AccountBookOutlined } from '@ant-design/icons';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export const BalanceReports = () => {
     const { data, isLoading, error } = useQuery({

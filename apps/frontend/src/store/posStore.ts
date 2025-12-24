@@ -37,8 +37,12 @@ interface POSState {
     preferredSecondaryCurrency: Currency | null;
     currencies: Currency[]; // All available currencies
     primaryCurrency: Currency | null;
+    searchTerm: string;
+    searchResults: Product[];
 
     // Actions
+    setSearchTerm: (term: string) => void;
+    setSearchResults: (results: Product[]) => void;
     addItem: (product: Product, isSecondary: boolean) => void;
     removeItem: (productId: string) => void;
     updateQuantity: (productId: string, quantity: number) => void;
@@ -85,6 +89,10 @@ export const usePOSStore = create<POSState>()(
             preferredSecondaryCurrency: null,
             currencies: [],
             primaryCurrency: null,
+            searchTerm: '',
+            searchResults: [],
+            setSearchTerm: (term) => set({ searchTerm: term }),
+            setSearchResults: (results) => set({ searchResults: results }),
 
             calculatePriceInPrimary: (product: Product, isSecondaryUnit: boolean) => {
                 const { currencies, primaryCurrency } = get();

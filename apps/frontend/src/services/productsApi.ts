@@ -46,6 +46,7 @@ export interface Product {
     secondarySalePrice?: number;
     secondaryOfferPrice?: number;
     secondaryWholesalePrice?: number;
+    imageUrl?: string;
     active: boolean;
     type: 'PRODUCT' | 'SERVICE';
     createdAt: string;
@@ -73,6 +74,7 @@ export interface CreateProductDto {
     secondarySalePrice?: number;
     secondaryOfferPrice?: number;
     secondaryWholesalePrice?: number;
+    imageUrl?: string;
 }
 
 export interface UpdateProductDto {
@@ -96,6 +98,7 @@ export interface UpdateProductDto {
     secondarySalePrice?: number;
     secondaryOfferPrice?: number;
     secondaryWholesalePrice?: number;
+    imageUrl?: string;
 }
 
 export const productsApi = {

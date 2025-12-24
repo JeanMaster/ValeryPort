@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Table, Button, Card, Select, Modal, Tag } from 'antd';
 import { usePOSStore } from '../../../store/posStore';
 import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
@@ -27,25 +27,36 @@ export const POSLeftPanel = () => {
         calculatePriceInPrimary,
         calculatePriceInCurrency,
         calculateCostInPrimary,
+        searchTerm,
+        setSearchTerm,
+        setSearchResults,
+        searchResults
     } = usePOSStore();
 
-    const [searchResults, setSearchResults] = useState<Product[]>([]);
+    // Removed local state: const [searchResults, setSearchResults] = useState<Product[]>([]);
 
     // Modal States
     const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
     const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
 
-    const handleSearch = useCallback(
-        debounce((value: string) => {
-            if (value.length > 2) {
-                productsApi.getAll({ search: value }).then(setSearchResults);
-            } else {
-                setSearchResults([]);
-            }
-        }, 500),
-        []
+    // Debounced API call for search
+    const debouncedSearch = useMemo(
+        () =>
+            debounce((value: string) => {
+                if (value.length > 2) {
+                    productsApi.getAll({ search: value }).then(setSearchResults);
+                } else {
+                    setSearchResults([]);
+                }
+            }, 500),
+        [setSearchResults]
     );
+
+    const handleSearch = (value: string) => {
+        setSearchTerm(value);
+        debouncedSearch(value);
+    };
 
     const handleSelectProduct = (_productId: string, option: any) => {
         if (option.product) {
@@ -226,6 +237,7 @@ export const POSLeftPanel = () => {
             {/* Buscador */}
             <Select
                 showSearch
+                searchValue={searchTerm}
                 value={null}
                 placeholder="Escanee código o busque producto"
                 defaultActiveFirstOption={false}

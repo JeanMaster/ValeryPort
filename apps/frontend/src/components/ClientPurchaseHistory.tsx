@@ -1,7 +1,7 @@
 import { List, Typography, Tag, Empty, Spin, Popover, Button } from 'antd';
 import { HistoryOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { salesApi, type Sale } from '../services/salesApi';
+import { salesApi } from '../services/salesApi';
 import { formatVenezuelanPrice } from '../utils/formatters';
 
 const { Text } = Typography;
@@ -85,7 +85,7 @@ export const ClientPurchaseHistory = ({ clientId, clientName, limit = 5 }: Clien
 };
 
 // Compact version for POS
-export const ClientPurchaseHistoryCompact = ({ clientId, clientName }: { clientId: string; clientName?: string }) => {
+export const ClientPurchaseHistoryCompact = ({ clientId }: { clientId: string; clientName?: string }) => {
     return (
         <Popover
             content={<PurchaseHistoryContent clientId={clientId} limit={5} />}

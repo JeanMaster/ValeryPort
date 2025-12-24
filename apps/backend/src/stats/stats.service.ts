@@ -152,7 +152,7 @@ export class StatsService {
     }
 
     async getInventoryReport() {
-        // Stock by department - get all products and group by category
+        // Stock by department - get all active products with cost and currency info
         const products = await this.prisma.product.findMany({
             where: { active: true },
             select: {
@@ -160,17 +160,29 @@ export class StatsService {
                 costPrice: true,
                 categoryId: true,
                 category: { select: { name: true } },
+                currency: { select: { isPrimary: true, exchangeRate: true } }
             },
         });
 
-        // Group by department/category
+        // Group by department/category and calculate value in Primary Currency
         const deptMap = new Map<string, { units: number; value: number }>();
+        let totalValue = 0;
+
         products.forEach((p) => {
             const deptName = p.category?.name || 'Sin Categoría';
             const existing = deptMap.get(deptName) || { units: 0, value: 0 };
+
+            // Calculate Cost in Primary Currency
+            // If currency is not primary, multiply by rate (e.g. 10 USD * 40 Bs/USD = 400 Bs)
+            const rate = p.currency?.isPrimary ? 1 : Number(p.currency?.exchangeRate || 1);
+            const costInPrimary = Number(p.costPrice || 0) * rate;
+            const productValue = p.stock * costInPrimary;
+
             existing.units += p.stock;
-            existing.value += p.stock * Number(p.costPrice);
+            existing.value += productValue;
+
             deptMap.set(deptName, existing);
+            totalValue += productValue;
         });
 
         const stockByDept = Array.from(deptMap.entries()).map(
@@ -183,7 +195,7 @@ export class StatsService {
 
         // Products below minimum stock (assuming 10 as threshold)
         const lowStock = await this.prisma.product.findMany({
-            where: { stock: { lt: 10 } },
+            where: { stock: { lt: 10 }, active: true },
             select: {
                 name: true,
                 stock: true,
@@ -191,15 +203,6 @@ export class StatsService {
             },
             take: 20,
         });
-
-        // Total inventory value
-        const allProducts = await this.prisma.product.findMany({
-            select: { stock: true, costPrice: true },
-        });
-        const totalValue = allProducts.reduce(
-            (sum, p) => sum + p.stock * Number(p.costPrice),
-            0,
-        );
 
         return {
             stockByDepartment: stockByDept,

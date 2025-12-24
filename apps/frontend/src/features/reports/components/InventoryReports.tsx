@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Spin, Empty, Row, Col, Statistic } from 'antd';
-import { ShopOutlined, DollarOutlined, WarningOutlined } from '@ant-design/icons';
+import { Card, Table, Spin, Empty, Row, Col, Statistic, Tooltip } from 'antd';
+import { ShopOutlined, DollarOutlined, WarningOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { statsApi, type InventoryReport } from '../../../services/statsApi';
-import { formatVenezuelanPrice } from '../../../utils/formatters';
+import { currenciesApi } from '../../../services/currenciesApi';
+import { useQuery } from '@tanstack/react-query';
+import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
 
 export const InventoryReports = () => {
     const [report, setReport] = useState<InventoryReport | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const { data: currencies = [] } = useQuery({
+        queryKey: ['currencies'],
+        queryFn: () => currenciesApi.getAll(),
+    });
 
     useEffect(() => {
         fetchReport();
@@ -87,14 +94,38 @@ export const InventoryReports = () => {
             <Row gutter={16} style={{ marginBottom: 24 }}>
                 <Col xs={24} sm={12} lg={8}>
                     <Card>
-                        <Statistic
-                            title="Valor Total de Inventario"
-                            value={report.totalInventoryValue}
-                            precision={2}
-                            prefix="Bs."
-                            valueStyle={{ color: '#1890ff' }}
-                            suffix={<DollarOutlined />}
-                        />
+                        <Tooltip
+                            title={
+                                <div>
+                                    <div style={{ marginBottom: 4, fontWeight: 'bold' }}>Valor en otras monedas:</div>
+                                    {currencies
+                                        .filter(c => !c.isPrimary)
+                                        .map(c => {
+                                            const val = report.totalInventoryValue / Number(c.exchangeRate || 1);
+                                            return (
+                                                <div key={c.code}>
+                                                    {c.symbol} {formatVenezuelanPriceOnly(val)}
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            }
+                        >
+                            <div style={{ cursor: 'help' }}>
+                                <Statistic
+                                    title={
+                                        <span>
+                                            Valor Total de Inventario <InfoCircleOutlined style={{ fontSize: 12, marginLeft: 4 }} />
+                                        </span>
+                                    }
+                                    value={report.totalInventoryValue}
+                                    precision={2}
+                                    prefix="Bs."
+                                    valueStyle={{ color: '#1890ff' }}
+                                    suffix={<DollarOutlined />}
+                                />
+                            </div>
+                        </Tooltip>
                     </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={8}>

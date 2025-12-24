@@ -19,7 +19,8 @@ import {
     ReloadOutlined,
     DownloadOutlined,
     DollarOutlined,
-    ShoppingOutlined
+    ShoppingOutlined,
+    PrinterOutlined
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi, type Sale, type SalesFilters } from '../../../services/salesApi';
@@ -29,6 +30,7 @@ import { currenciesApi } from '../../../services/currenciesApi';
 import { formatVenezuelanPrice } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 import { SaleDetailModal } from './SaleDetailModal';
+import { InvoiceModal } from '../../pos/components/InvoiceModal';
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -38,6 +40,7 @@ export const SalesReports = () => {
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
     // Fetch sales data with filters
     const { data: sales = [], isLoading, refetch } = useQuery({
@@ -165,6 +168,25 @@ export const SalesReports = () => {
                 </Text>
             ),
             sorter: (a: Sale, b: Sale) => (a.total || 0) - (b.total || 0)
+        },
+        {
+            title: 'Acciones',
+            key: 'actions',
+            width: 80,
+            align: 'center' as const,
+            render: (_: any, record: Sale) => (
+                <Button
+                    type="text"
+                    icon={<PrinterOutlined />}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSale(record);
+                        setIsInvoiceModalOpen(true);
+                    }}
+                    title="Reimprimir Factura"
+                    style={{ color: '#1890ff' }}
+                />
+            )
         }
     ];
 
@@ -386,6 +408,13 @@ export const SalesReports = () => {
                 open={isDetailModalOpen}
                 sale={selectedSale}
                 onCancel={() => setIsDetailModalOpen(false)}
+            />
+
+            {/* Invoice Modal for Reprinting */}
+            <InvoiceModal
+                open={isInvoiceModalOpen}
+                sale={selectedSale}
+                onClose={() => setIsInvoiceModalOpen(false)}
             />
         </div>
     );

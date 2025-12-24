@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatVenezuelanPrice } from '../../utils/formatters';
-import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Tooltip, Popover, Image } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, PictureOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '../../services/productsApi';
 import type { Product } from '../../services/productsApi';
@@ -68,17 +68,36 @@ export const ProductsPage = () => {
             title: 'Nombre',
             dataIndex: 'name',
             key: 'name',
-            width: '25%', // Increased width slightly
-            render: (text: string) => (
-                <Tooltip title={text} placement="topLeft">
-                    <div style={{
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                    }}>
-                        {text}
-                    </div>
-                </Tooltip>
+            width: '25%',
+            render: (text: string, record: Product) => (
+                <Space>
+                    {record.imageUrl && (
+                        <Popover
+                            content={
+                                <Image
+                                    src={record.imageUrl}
+                                    alt={text}
+                                    style={{ maxWidth: 200, maxHeight: 200 }}
+                                    preview={false}
+                                />
+                            }
+                            title={text}
+                            trigger="hover"
+                            placement="right"
+                        >
+                            <PictureOutlined style={{ color: '#1890ff', cursor: 'pointer' }} />
+                        </Popover>
+                    )}
+                    <Tooltip title={text} placement="topLeft">
+                        <div style={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                        }}>
+                            {text}
+                        </div>
+                    </Tooltip>
+                </Space>
             ),
         },
         {

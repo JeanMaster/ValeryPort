@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Row, Col, Card, Spin } from 'antd';
-import { ShopOutlined, ArrowLeftOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { Button, Row, Col, Card, Spin, Popover, Image } from 'antd';
+import { ShopOutlined, ArrowLeftOutlined, AppstoreOutlined, PictureOutlined } from '@ant-design/icons';
 import { departmentsApi } from '../../../services/departmentsApi';
 import type { Department } from '../../../services/departmentsApi';
 import { productsApi } from '../../../services/productsApi';
@@ -9,7 +9,9 @@ import { usePOSStore } from '../../../store/posStore';
 import { formatVenezuelanPrice } from '../../../utils/formatters';
 
 export const POSRightPanel = () => {
-    const { addItem } = usePOSStore();
+    const { addItem, searchTerm, searchResults, setSearchTerm, setSearchResults } = usePOSStore();
+    const isSearching = !!(searchTerm && searchTerm.length > 2);
+
 
     // Navigation State
     const [viewMode, setViewMode] = useState<'ROOT' | 'DEPT' | 'SUBDEPT'>('ROOT');
@@ -73,6 +75,12 @@ export const POSRightPanel = () => {
     };
 
     const handleBack = () => {
+        if (isSearching) {
+            setSearchTerm('');
+            setSearchResults([]);
+            return;
+        }
+
         if (viewMode === 'SUBDEPT') {
             setViewMode('DEPT');
             setCurrentSubDept(null);
@@ -84,10 +92,57 @@ export const POSRightPanel = () => {
         }
     };
 
+    const renderProductCard = (prod: Product) => (
+        <Col span={6} key={prod.id}>
+            <Card
+                hoverable
+                onClick={() => handleProductClick(prod)}
+                bodyStyle={{ padding: '12px 8px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+                style={{ textAlign: 'center', height: 110 }}
+            >
+                {prod.imageUrl && (
+                    <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 20 }} onClick={(e) => e.stopPropagation()}>
+                        <Popover
+                            content={
+                                <Image
+                                    src={prod.imageUrl}
+                                    alt={prod.name}
+                                    style={{ maxWidth: 200, maxHeight: 200 }}
+                                    preview={false}
+                                />
+                            }
+                            title={prod.name}
+                            trigger="hover"
+                            placement="left"
+                        >
+                            <PictureOutlined style={{ color: '#fff', fontSize: 14, cursor: 'pointer', background: '#1890ff', borderRadius: '50%', padding: 4, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }} />
+                        </Popover>
+                    </div>
+                )}
+                <div style={{ fontSize: 12, fontWeight: 'bold', overflow: 'hidden', maxHeight: 40, width: '100%', paddingLeft: prod.imageUrl ? 24 : 0, paddingRight: prod.imageUrl ? 24 : 0 }}>{prod.name}</div>
+                <TagPrice product={prod} />
+            </Card>
+        </Col>
+    );
+
     // Render Logic
     const renderContent = () => {
         if (loading) {
             return <div style={{ textAlign: 'center', padding: 20 }}><Spin /></div>;
+        }
+
+        // 0. SEARCH MODE (Global)
+        if (searchTerm && searchTerm.length > 2) {
+            if (searchResults.length === 0) {
+                return (
+                    <Col span={24}>
+                        <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>
+                            <div style={{ fontSize: 16 }}>No se encontraron productos para "{searchTerm}"</div>
+                        </div>
+                    </Col>
+                );
+            }
+            return searchResults.map(renderProductCard);
         }
 
         // VIEW: ROOT (Departments)
@@ -124,37 +179,14 @@ export const POSRightPanel = () => {
                 </Col>
             ));
 
-            const productNodes = products.map(prod => (
-                <Col span={6} key={prod.id}>
-                    <Card
-                        hoverable
-                        onClick={() => handleProductClick(prod)}
-                        style={{ textAlign: 'center', height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                        <div style={{ fontSize: 12, fontWeight: 'bold', overflow: 'hidden', maxHeight: 40 }}>{prod.name}</div>
-                        <TagPrice product={prod} />
-                    </Card>
-                </Col>
-            ));
+            const productNodes = products.map(renderProductCard);
 
             return [...subDeptNodes, ...productNodes];
         }
 
         // VIEW: SUBDEPT (Products only)
         if (viewMode === 'SUBDEPT') {
-            return products.map(prod => (
-                <Col span={6} key={prod.id}>
-                    <Card
-                        hoverable
-                        onClick={() => handleProductClick(prod)}
-                        bodyStyle={{ padding: '12px 8px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-                        style={{ textAlign: 'center', height: 110 }}
-                    >
-                        <div style={{ fontSize: 12, fontWeight: 'bold', overflow: 'hidden', maxHeight: 40 }}>{prod.name}</div>
-                        <TagPrice product={prod} />
-                    </Card>
-                </Col>
-            ));
+            return products.map(renderProductCard);
         }
     };
 
@@ -240,14 +272,18 @@ export const POSRightPanel = () => {
                 <Button
                     icon={<ArrowLeftOutlined />}
                     onClick={handleBack}
-                    disabled={viewMode === 'ROOT'}
+                    disabled={viewMode === 'ROOT' && !isSearching}
                 >
                     Regresar
                 </Button>
                 <div style={{ flex: 1, textAlign: 'center', fontWeight: 'bold' }}>
-                    {viewMode === 'ROOT' && 'Departamentos'}
-                    {viewMode === 'DEPT' && currentDept?.name}
-                    {viewMode === 'SUBDEPT' && `${currentDept?.name} > ${currentSubDept?.name}`}
+                    {isSearching ? `Resultados para: "${searchTerm}"` : (
+                        <>
+                            {viewMode === 'ROOT' && 'Departamentos'}
+                            {viewMode === 'DEPT' && currentDept?.name}
+                            {viewMode === 'SUBDEPT' && `${currentDept?.name} > ${currentSubDept?.name}`}
+                        </>
+                    )}
                 </div>
                 <div style={{ display: 'flex', gap: 5 }}>
                     <Button disabled>Más...</Button>

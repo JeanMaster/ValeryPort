@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, message, Row, Col, Divider, Card, Alert } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, message, Row, Col, Divider, Card, Alert, Upload } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '../../services/productsApi';
 import type { Product, CreateProductDto, UpdateProductDto } from '../../services/productsApi';
@@ -19,6 +20,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
     const [hasSecondaryUnit, setHasSecondaryUnit] = useState(false);
     const [conversionDirection, setConversionDirection] = useState<string>('primary_to_secondary');
+    const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
     // Fetch departments
     const { data: departments = [] } = useQuery({
@@ -101,6 +103,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
 
             setHasSecondaryUnit(!!product.secondaryUnitId);
             setConversionDirection(product.conversionDirection || 'primary_to_secondary');
+            setImageUrl(product.imageUrl || undefined);
 
             form.setFieldsValue({
                 sku: product.sku,
@@ -128,10 +131,12 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                 secondaryOfferProfitPercent: Number(secondaryOfferProfitPercent.toFixed(2)),
                 secondaryWholesalePrice: product.secondaryWholesalePrice,
                 secondaryWholesaleProfitPercent: Number(secondaryWholesaleProfitPercent.toFixed(2)),
+                imageUrl: product.imageUrl,
             });
         } else {
             setSelectedCategory(undefined);
             setHasSecondaryUnit(false);
+            setImageUrl(undefined);
             form.resetFields();
         }
     }, [product, form]);
@@ -159,6 +164,7 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
                 secondarySalePrice: values.secondarySalePrice,
                 secondaryOfferPrice: values.secondaryOfferPrice,
                 secondaryWholesalePrice: values.secondaryWholesalePrice,
+                imageUrl: imageUrl,
             };
 
             if (product) {
@@ -400,6 +406,92 @@ export const ProductFormModal = ({ open, product, onClose }: ProductFormModalPro
 
                 <Form.Item label="Descripción" name="description">
                     <Input.TextArea rows={2} placeholder="Descripción del producto..." />
+                </Form.Item>
+
+                {/* Imagen del producto */}
+                <Form.Item label="Imagen del producto (opcional)">
+                    <Row gutter={16} align="middle">
+                        <Col>
+                            <Upload
+                                name="image"
+                                listType="picture-card"
+                                showUploadList={false}
+                                beforeUpload={async (file) => {
+                                    try {
+                                        // Compression configuration
+                                        const maxWidth = 800;
+                                        const maxHeight = 800;
+                                        const quality = 0.7;
+
+                                        // Create a promise to handle the image loading and compression
+                                        const compressImage = (file: File): Promise<string> => {
+                                            return new Promise((resolve, reject) => {
+                                                const reader = new FileReader();
+                                                reader.readAsDataURL(file);
+                                                reader.onload = (event) => {
+                                                    const img = document.createElement('img');
+                                                    img.src = event.target?.result as string;
+                                                    img.onload = () => {
+                                                        let width = img.width;
+                                                        let height = img.height;
+
+                                                        // Resize logic
+                                                        if (width > height) {
+                                                            if (width > maxWidth) {
+                                                                height = Math.round((height * maxWidth) / width);
+                                                                width = maxWidth;
+                                                            }
+                                                        } else {
+                                                            if (height > maxHeight) {
+                                                                width = Math.round((width * maxHeight) / height);
+                                                                height = maxHeight;
+                                                            }
+                                                        }
+
+                                                        const canvas = document.createElement('canvas');
+                                                        canvas.width = width;
+                                                        canvas.height = height;
+                                                        const ctx = canvas.getContext('2d');
+                                                        ctx?.drawImage(img, 0, 0, width, height);
+
+                                                        // Compress to JPEG
+                                                        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                                                        resolve(compressedDataUrl);
+                                                    };
+                                                    img.onerror = (error) => reject(error);
+                                                };
+                                                reader.onerror = (error) => reject(error);
+                                            });
+                                        };
+
+                                        message.loading({ content: 'Comprimiendo imagen...', key: 'compression' });
+                                        const compressedImage = await compressImage(file);
+                                        setImageUrl(compressedImage);
+                                        message.success({ content: 'Imagen procesada', key: 'compression' });
+                                    } catch (error) {
+                                        console.error('Error compressing image:', error);
+                                        message.error('Error al procesar la imagen');
+                                    }
+                                    return false; // Prevent default upload
+                                }}
+                                accept="image/*"
+                            >
+                                {imageUrl ? (
+                                    <img src={imageUrl} alt="producto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div>
+                                        <PlusOutlined />
+                                        <div style={{ marginTop: 8 }}>Subir</div>
+                                    </div>
+                                )}
+                            </Upload>
+                        </Col>
+                        {imageUrl && (
+                            <Col>
+                                <a onClick={() => setImageUrl(undefined)} style={{ color: '#ff4d4f' }}>Eliminar imagen</a>
+                            </Col>
+                        )}
+                    </Row>
                 </Form.Item>
 
                 {/* Categorización */}
