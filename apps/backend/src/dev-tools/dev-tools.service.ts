@@ -3,11 +3,14 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
+import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 const execAsync = promisify(exec);
 
 @Injectable()
 export class DevToolsService {
+    constructor(private readonly prisma: PrismaService) { }
     /**
      * Resetear la base de datos (SOLO PARA DESARROLLO)
      */
@@ -17,25 +20,160 @@ export class DevToolsService {
         }
 
         try {
-            // Ejecutar prisma db push con force reset
-            const { stdout, stderr } = await execAsync('npx prisma db push --force-reset --accept-data-loss', {
-                cwd: process.cwd(),
+            console.log('Starting selective database cleanup...');
+
+            // List of tables to clear in order (to minimize constraint issues, though we use CASCADE)
+            const tables = [
+                'purchase_payments', 'purchase_items', 'purchases',
+                'payments', 'invoices', 'sale_items', 'sales',
+                'inventory_adjustments', 'return_items', 'returns',
+                'cash_movements', 'cash_sessions', 'cash_registers',
+                'expenses', 'payroll_payment_items', 'payroll_payments',
+                'payroll_periods', 'employees', 'bank_accounts',
+                'products', 'clients', 'suppliers', 'departments',
+                'units', 'currencies', 'company_settings', 'invoice_counters'
+            ];
+
+            for (const table of tables) {
+                try {
+                    await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE;`);
+                } catch (e) {
+                    console.warn(`Could not truncate ${table} (it might not exist yet):`, e.message);
+                }
+            }
+
+            // Delete all users except 'admin'
+            try {
+                await (this.prisma as any).user.deleteMany({
+                    where: {
+                        username: { not: 'admin' }
+                    }
+                });
+            } catch (e) {
+                console.error('Error clearing other users:', e);
+            }
+
+            // Ensure admin exists
+            await this.ensureAdminExists();
+
+            return {
+                success: true,
+                message: 'Base de datos limpiada exitosamente. El usuario admin ha sido preservado.',
+            };
+        } catch (error) {
+            console.error('Error during selective reset:', error);
+
+            // Fallback to force reset if manual cleanup fails completely
+            try {
+                console.log('Falling back to force reset...');
+                await execAsync('npx prisma db push --force-reset --accept-data-loss');
+                await this.ensureAdminExists();
+                return {
+                    success: true,
+                    message: 'Reset forzado completado. Usuario admin recreado.',
+                };
+            } catch (fallbackError) {
+                throw new Error('Error crítico al resetear la base de datos: ' + fallbackError.message);
+            }
+        }
+    }
+
+    /**
+     * Garantiza que el usuario administrador exista con todos los permisos
+     */
+    private async ensureAdminExists() {
+        try {
+            const admin = await (this.prisma as any).user.findUnique({
+                where: { username: 'admin' }
             });
 
-            console.log('Database reset output:', stdout);
-            if (stderr) {
-                console.error('Database reset stderr:', stderr);
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            const allPermissions = [
+                'MODULE_POS', 'VIEW_SALES', 'MANAGE_CASH_REGISTER', 'VOID_SALES',
+                'VIEW_PRODUCTS', 'EDIT_PRODUCTS', 'INVENTORY_ADJUSTMENTS',
+                'MODULE_PURCHASES', 'MODULE_EXPENSES', 'MODULE_REPORTS', 'MODULE_CONFIG'
+            ];
+
+            if (!admin) {
+                await (this.prisma as any).user.create({
+                    data: {
+                        username: 'admin',
+                        password: hashedPassword,
+                        name: 'Zenith Admin',
+                        role: 'ADMIN',
+                        permissions: allPermissions,
+                    },
+                });
+                console.log('✅ Default admin user created');
+            } else {
+                // Si existe, nos aseguramos que tenga todos los permisos
+                await (this.prisma as any).user.update({
+                    where: { username: 'admin' },
+                    data: { permissions: allPermissions }
+                });
+                console.log('✅ Admin user updated with full permissions');
+            }
+        } catch (error) {
+            console.error('Critical error ensuring admin exists:', error);
+            throw error;
+        }
+    }
+    /**
+     * Reinicio financiero: Borra transacciones pero mantiene catálogos
+     */
+    async financialReset(): Promise<{ message: string; success: boolean }> {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('Esta operación no está permitida en producción');
+        }
+
+        try {
+            console.log('Starting financial cleanup...');
+
+            const tables = [
+                'purchase_payments', 'purchase_items', 'purchases',
+                'payments', 'invoices', 'sale_items', 'sales',
+                'inventory_adjustments', 'return_items', 'returns',
+                'cash_movements', 'cash_sessions',
+                'expenses', 'payroll_payment_items', 'payroll_payments',
+                'payroll_periods'
+            ];
+
+            for (const table of tables) {
+                try {
+                    await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE;`);
+                } catch (e) {
+                    console.warn(`Could not truncate ${table}:`, e.message);
+                }
+            }
+
+            // Resetear contadores de facturas
+            try {
+                await (this.prisma as any).invoiceCounter.updateMany({
+                    data: { currentNumber: 1 }
+                });
+            } catch (e) {
+                console.warn('Could not reset invoice counters:', e.message);
+            }
+
+            // Resetear saldos bancarios a 0
+            try {
+                await (this.prisma as any).bankAccount.updateMany({
+                    data: { balance: 0 }
+                });
+            } catch (e) {
+                console.warn('Could not reset bank balances:', e.message);
             }
 
             return {
                 success: true,
-                message: 'Base de datos reseteada exitosamente',
+                message: 'Reinicio financiero completado. Se han borrado ventas, compras, gastos y movimientos de caja sin afectar catálogos.',
             };
         } catch (error) {
-            console.error('Error resetting database:', error);
-            throw new Error('Error al resetear la base de datos: ' + error.message);
+            console.error('Error during financial reset:', error);
+            throw new Error('Error al realizar el reinicio financiero: ' + error.message);
         }
     }
+
     /**
      * Respalda la base de datos generando un archivo SQL
      */
@@ -53,8 +191,12 @@ export class DevToolsService {
             // Limpiar la URL de parámetros query que pg_dump no soporta (como ?schema=public)
             const cleanDbUrl = dbUrl.split('?')[0];
 
-            // Usamos pg_dump con la URL de conexión limpia
-            await execAsync(`pg_dump "${cleanDbUrl}" > "${outputPath}"`);
+            // Usamos pg_dump con flags para asegurar una restauración limpia:
+            // --clean: incluye comandos para borrar objetos antes de crearlos
+            // --if-exists: no falla si los objetos no existen
+            // --no-owner: evita errores de permisos de usuario
+            // --no-privileges: evita errores de permisos de sistema
+            await execAsync(`pg_dump --clean --if-exists --no-owner --no-privileges "${cleanDbUrl}" > "${outputPath}"`);
 
             return {
                 path: outputPath,
@@ -96,9 +238,12 @@ export class DevToolsService {
             // Ejecutar el archivo SQL
             await execAsync(`psql "${cleanDbUrl}" < "${filePath}"`);
 
+            // Asegurar que el admin existe tras restaurar (por si el backup es muy viejo)
+            await this.ensureAdminExists();
+
             return {
                 success: true,
-                message: 'Base de datos restaurada exitosamente'
+                message: 'Base de datos restaurada exitosamente. Se ha validado el acceso de administrador.'
             };
         } catch (error) {
             console.error('Error durante la restauración:', error);

@@ -11,11 +11,9 @@ import {
     Statistic,
     Space,
     Typography,
-    Spin,
-    Alert
+    Grid
 } from 'antd';
 import {
-    SearchOutlined,
     ReloadOutlined,
     DownloadOutlined,
     DollarOutlined,
@@ -26,7 +24,6 @@ import { useQuery } from '@tanstack/react-query';
 import { salesApi, type Sale, type SalesFilters } from '../../../services/salesApi';
 import { productsApi } from '../../../services/productsApi';
 import { clientsApi } from '../../../services/clientsApi';
-import { currenciesApi } from '../../../services/currenciesApi';
 import { formatVenezuelanPrice } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 import { SaleDetailModal } from './SaleDetailModal';
@@ -36,6 +33,8 @@ const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
 export const SalesReports = () => {
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.lg;
     const [filters, setFilters] = useState<SalesFilters>({});
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -58,11 +57,6 @@ export const SalesReports = () => {
     const { data: clients = [] } = useQuery({
         queryKey: ['clients'],
         queryFn: () => clientsApi.getAll(),
-    });
-
-    const { data: currencies = [] } = useQuery({
-        queryKey: ['currencies'],
-        queryFn: () => currenciesApi.getAll(),
     });
 
     // Calculate summary statistics
@@ -108,6 +102,7 @@ export const SalesReports = () => {
             dataIndex: 'invoiceNumber',
             key: 'invoiceNumber',
             width: 100,
+            fixed: 'left' as const,
             render: (invoiceNumber: string, record: Sale) => (
                 <Button
                     type="link"
@@ -160,7 +155,7 @@ export const SalesReports = () => {
             title: 'Total',
             dataIndex: 'total',
             key: 'total',
-            width: 100,
+            width: 120,
             align: 'right' as const,
             render: (value: number | null | undefined) => (
                 <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>
@@ -174,6 +169,7 @@ export const SalesReports = () => {
             key: 'actions',
             width: 80,
             align: 'center' as const,
+            fixed: isMobile ? false : ('right' as const),
             render: (_: any, record: Sale) => (
                 <Button
                     type="text"
@@ -191,226 +187,180 @@ export const SalesReports = () => {
     ];
 
     return (
-        <div>
-            {/* Summary Cards */}
-            <Row gutter={16} style={{ marginBottom: 24 }}>
-                <Col span={6}>
-                    <Card>
-                        <Statistic
-                            title="Total Ventas"
-                            value={totalSales}
-                            prefix={<ShoppingOutlined />}
-                            valueStyle={{ color: '#1890ff' }}
-                        />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card>
-                        <Statistic
-                            title="Ingresos Totales"
-                            value={totalRevenue}
-                            precision={2}
-                            prefix={<DollarOutlined />}
-                            formatter={(value) => formatVenezuelanPrice(Number(value))}
-                            valueStyle={{ color: '#52c41a' }}
-                        />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card>
-                        <Statistic
-                            title="Descuentos"
-                            value={totalDiscount}
-                            precision={2}
-                            prefix={<DollarOutlined />}
-                            formatter={(value) => formatVenezuelanPrice(Number(value))}
-                            valueStyle={{ color: '#ff4d4f' }}
-                        />
-                    </Card>
-                </Col>
-                <Col span={6}>
-                    <Card>
-                        <Statistic
-                            title="Ticket Promedio"
-                            value={averageTicket}
-                            precision={2}
-                            prefix={<DollarOutlined />}
-                            formatter={(value) => formatVenezuelanPrice(Number(value))}
-                            valueStyle={{ color: '#722ed1' }}
-                        />
-                    </Card>
-                </Col>
-            </Row>
-
-            {/* Filters */}
-            <Card title="Filtros" style={{ marginBottom: 16 }}>
-                <Row gutter={16}>
-                    <Col span={8}>
-                        <div style={{ marginBottom: 16 }}>
-                            <Text strong>Rango de Fechas:</Text>
-                            <RangePicker
-                                style={{ width: '100%', marginTop: 8 }}
-                                value={dateRange}
-                                onChange={handleDateRangeChange}
-                                format="DD/MM/YYYY"
-                                placeholder={['Fecha inicio', 'Fecha fin']}
-                            />
-                        </div>
+        <div style={{ padding: isMobile ? 8 : 24 }}>
+            <div style={{ marginBottom: 24 }}>
+                <Row justify="space-between" align="middle" gutter={[16, 16]}>
+                    <Col xs={24} md={12}>
+                        <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>📊 Reportes de Ventas</Title>
+                        <Text type="secondary">Visualiza y analiza el desempeño de tus ventas</Text>
                     </Col>
-                    <Col span={4}>
-                        <div style={{ marginBottom: 16 }}>
-                            <Text strong>Cliente:</Text>
-                            <Select
-                                style={{ width: '100%', marginTop: 8 }}
-                                placeholder="Todos los clientes"
-                                allowClear
-                                onChange={(value) => handleFilterChange('clientId', value)}
-                                value={filters.clientId}
-                            >
-                                {clients.map(client => (
-                                    <Select.Option key={client.id} value={client.id}>
-                                        {client.name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </div>
-                    </Col>
-                    <Col span={4}>
-                        <div style={{ marginBottom: 16 }}>
-                            <Text strong>Producto:</Text>
-                            <Select
-                                style={{ width: '100%', marginTop: 8 }}
-                                placeholder="Todos los productos"
-                                allowClear
-                                onChange={(value) => handleFilterChange('productId', value)}
-                                value={filters.productId}
-                            >
-                                {products.map(product => (
-                                    <Select.Option key={product.id} value={product.id}>
-                                        {product.sku} - {product.name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </div>
-                    </Col>
-                    <Col span={4}>
-                        <div style={{ marginBottom: 16 }}>
-                            <Text strong>Forma de Pago:</Text>
-                            <Select
-                                style={{ width: '100%', marginTop: 8 }}
-                                placeholder="Todas las formas"
-                                allowClear
-                                onChange={(value) => handleFilterChange('paymentMethod', value)}
-                                value={filters.paymentMethod}
-                            >
-                                <Select.OptGroup label="Métodos de Pago">
-                                    <Select.Option value="CASH">Efectivo</Select.Option>
-                                    <Select.Option value="DEBIT">T. Débito</Select.Option>
-                                    <Select.Option value="CREDIT">T. Crédito</Select.Option>
-                                    <Select.Option value="TRANSFER">Transferencia</Select.Option>
-                                    <Select.Option value="MOBILE">Pago Móvil</Select.Option>
-                                </Select.OptGroup>
-                                {currencies.filter(c => !c.isPrimary).length > 0 && (
-                                    <Select.OptGroup label="Divisas">
-                                        {currencies.filter(c => !c.isPrimary).map(currency => (
-                                            <Select.Option key={currency.code} value={`CURRENCY_${currency.code}`}>
-                                                {currency.code} - {currency.name}
-                                            </Select.Option>
-                                        ))}
-                                    </Select.OptGroup>
-                                )}
-                            </Select>
-                        </div>
-                    </Col>
-                    <Col span={4}>
-                        <div style={{ marginBottom: 16 }}>
-                            <Text strong>Monto Mínimo:</Text>
-                            <InputNumber
-                                style={{ width: '100%', marginTop: 8 }}
-                                placeholder="0.00"
-                                min={0}
-                                onChange={(value) => handleFilterChange('minAmount', value)}
-                                value={filters.minAmount}
-                            />
-                        </div>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col span={24}>
-                        <Space>
+                    <Col xs={24} md={12} style={{ textAlign: isMobile ? 'left' : 'right' }}>
+                        <Space wrap>
                             <Button
                                 type="primary"
-                                icon={<SearchOutlined />}
-                                onClick={() => refetch()}
-                                loading={isLoading}
-                            >
-                                Generar Reporte
-                            </Button>
-                            <Button
                                 icon={<ReloadOutlined />}
-                                onClick={handleResetFilters}
+                                onClick={() => refetch()}
+                                block={isMobile}
                             >
-                                Limpiar Filtros
+                                Actualizar
                             </Button>
                             <Button
                                 icon={<DownloadOutlined />}
                                 disabled={sales.length === 0}
+                                block={isMobile}
                             >
                                 Exportar
                             </Button>
                         </Space>
                     </Col>
                 </Row>
-            </Card>
+            </div>
 
-            {/* Results */}
-            <Card>
-                <div style={{ marginBottom: 16 }}>
-                    <Title level={4}>
-                        Resultados del Reporte
-                        <Text type="secondary" style={{ fontSize: '14px', marginLeft: 16 }}>
-                            ({sales.length} ventas encontradas)
-                        </Text>
-                    </Title>
+            {/* Summary Statistics */}
+            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={12} lg={6}>
+                    <Card size="small">
+                        <Statistic
+                            title="Total Ventas"
+                            value={totalSales}
+                            prefix={<ShoppingOutlined />}
+                            valueStyle={{ color: '#1890ff', fontSize: isMobile ? 18 : 24 }}
+                            styles={{ content: { color: '#1890ff', fontSize: isMobile ? 18 : 24 } }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={12} lg={6}>
+                    <Card size="small">
+                        <Statistic
+                            title="Ingreso Bruto"
+                            value={totalRevenue}
+                            precision={2}
+                            prefix={<DollarOutlined />}
+                            formatter={(value) => formatVenezuelanPrice(Number(value))}
+                            valueStyle={{ color: '#52c41a', fontSize: isMobile ? 18 : 24 }}
+                            styles={{ content: { color: '#52c41a', fontSize: isMobile ? 18 : 24 } }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={12} lg={6}>
+                    <Card size="small">
+                        <Statistic
+                            title="Descuentos"
+                            value={totalDiscount}
+                            precision={2}
+                            prefix={<DollarOutlined />}
+                            formatter={(value) => formatVenezuelanPrice(Number(value))}
+                            valueStyle={{ color: '#ff4d4f', fontSize: isMobile ? 18 : 24 }}
+                            styles={{ content: { color: '#ff4d4f', fontSize: isMobile ? 18 : 24 } }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={12} lg={6}>
+                    <Card size="small">
+                        <Statistic
+                            title="Ticket Promedio"
+                            value={averageTicket}
+                            precision={2}
+                            prefix={<DollarOutlined />}
+                            formatter={(value) => formatVenezuelanPrice(Number(value))}
+                            valueStyle={{ color: '#722ed1', fontSize: isMobile ? 18 : 24 }}
+                            styles={{ content: { color: '#722ed1', fontSize: isMobile ? 18 : 24 } }}
+                        />
+                    </Card>
+                </Col>
+            </Row>
+
+            <Card title="Filtros" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} md={8}>
+                        <Text strong>Rango de Fechas:</Text>
+                        <RangePicker
+                            style={{ width: '100%', marginTop: 8 }}
+                            value={dateRange}
+                            onChange={handleDateRangeChange}
+                            format="DD/MM/YYYY"
+                            placeholder={['Inicio', 'Fin']}
+                        />
+                    </Col>
+                    <Col xs={12} md={4}>
+                        <Text strong>Cliente:</Text>
+                        <Select
+                            style={{ width: '100%', marginTop: 8 }}
+                            placeholder="Todos"
+                            allowClear
+                            onChange={(value) => handleFilterChange('clientId', value)}
+                            value={filters.clientId}
+                            options={clients.map(c => ({ label: c.name, value: c.id }))}
+                        />
+                    </Col>
+                    <Col xs={12} md={4}>
+                        <Text strong>Producto:</Text>
+                        <Select
+                            style={{ width: '100%', marginTop: 8 }}
+                            placeholder="Todos"
+                            allowClear
+                            onChange={(value) => handleFilterChange('productId', value)}
+                            value={filters.productId}
+                            options={products.map(p => ({ label: p.name, value: p.id }))}
+                        />
+                    </Col>
+                    <Col xs={12} md={4}>
+                        <Text strong>Pago:</Text>
+                        <Select
+                            style={{ width: '100%', marginTop: 8 }}
+                            placeholder="Todos"
+                            allowClear
+                            onChange={(value) => handleFilterChange('paymentMethod', value)}
+                            value={filters.paymentMethod}
+                        >
+                            <Select.Option value="CASH">Efectivo</Select.Option>
+                            <Select.Option value="DEBIT">T. Débito</Select.Option>
+                            <Select.Option value="CREDIT">T. Crédito</Select.Option>
+                            <Select.Option value="TRANSFER">Transferencia</Select.Option>
+                            <Select.Option value="MOBILE">Pago Móvil</Select.Option>
+                        </Select>
+                    </Col>
+                    <Col xs={12} md={4}>
+                        <Text strong>Monto Mín:</Text>
+                        <InputNumber
+                            style={{ width: '100%', marginTop: 8 }}
+                            placeholder="0.00"
+                            min={0}
+                            onChange={(value) => handleFilterChange('minAmount', value)}
+                            value={filters.minAmount}
+                        />
+                    </Col>
+                </Row>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                    <Space>
+                        <Button onClick={handleResetFilters}>Limpiar</Button>
+                        <Button type="primary" onClick={() => refetch()} loading={isLoading}>Filtrar</Button>
+                    </Space>
                 </div>
-
-                {isLoading ? (
-                    <div style={{ textAlign: 'center', padding: 50 }}>
-                        <Spin size="large" />
-                    </div>
-                ) : sales.length === 0 ? (
-                    <Alert
-                        message="No se encontraron ventas"
-                        description="No hay ventas que coincidan con los filtros seleccionados."
-                        type="info"
-                        showIcon
-                    />
-                ) : (
-                    <Table
-                        columns={columns}
-                        dataSource={sales}
-                        rowKey="id"
-                        pagination={{
-                            pageSize: 20,
-                            showSizeChanger: true,
-                            showQuickJumper: true,
-                            showTotal: (total, range) =>
-                                `${range[0]}-${range[1]} de ${total} ventas`
-                        }}
-                        scroll={{ x: 'max-content' }}
-                        size="small"
-                        style={{ overflowX: 'auto' }}
-                    />
-                )}
             </Card>
-            {/* Sale Detail Modal */}
+
+            <Card styles={{ body: { padding: isMobile ? 0 : 24 } }}>
+                <Table
+                    columns={columns}
+                    dataSource={sales}
+                    rowKey="id"
+                    loading={isLoading}
+                    pagination={{
+                        pageSize: 10,
+                        size: isMobile ? 'small' : 'default',
+                        responsive: true
+                    }}
+                    scroll={{ x: 800 }}
+                    size={isMobile ? 'small' : 'middle'}
+                />
+            </Card>
+
             <SaleDetailModal
                 open={isDetailModalOpen}
                 sale={selectedSale}
                 onCancel={() => setIsDetailModalOpen(false)}
             />
 
-            {/* Invoice Modal for Reprinting */}
             <InvoiceModal
                 open={isInvoiceModalOpen}
                 sale={selectedSale}

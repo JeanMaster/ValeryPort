@@ -83,18 +83,19 @@ export const DashboardPage = () => {
         <div style={{ padding: 24 }}>
             <div style={{ marginBottom: 24 }}>
                 <Row justify="space-between" align="middle">
-                    <Col>
-                        <h1 style={{ margin: 0, fontSize: 28 }}>📊 Dashboard</h1>
+                    <Col xs={24} sm={12}>
+                        <h1 className="responsive-title" style={{ margin: 0 }}>📊 Dashboard</h1>
                         <p style={{ color: '#666', marginTop: 8 }}>
                             Resumen de tu negocio
                         </p>
                     </Col>
-                    <Col>
+                    <Col xs={24} sm={12} style={{ textAlign: 'right', marginTop: 16 }}>
                         <Segmented
+                            block
                             options={[
-                                { label: '7 Días', value: '7days' },
-                                { label: '1 Mes', value: '30days' },
-                                { label: '1 Año', value: '1year' },
+                                { label: '7 D (7D)', value: '7days' },
+                                { label: '1 M', value: '30days' },
+                                { label: '1 A', value: '1year' },
                                 { label: 'Todo', value: 'all' },
                             ]}
                             value={range}
@@ -114,6 +115,7 @@ export const DashboardPage = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#3f8600' }}
+                            styles={{ content: { color: '#3f8600' } }}
                             suffix={<ShoppingCartOutlined />}
                         />
                     </Card>
@@ -126,6 +128,7 @@ export const DashboardPage = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#1890ff' }}
+                            styles={{ content: { color: '#1890ff' } }}
                             suffix={
                                 monthChange >= 0 ? (
                                     <ArrowUpOutlined style={{ color: '#3f8600' }} />
@@ -148,6 +151,7 @@ export const DashboardPage = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#722ed1' }}
+                            styles={{ content: { color: '#722ed1' } }}
                             suffix={<BankOutlined />}
                         />
                     </Card>
@@ -159,6 +163,7 @@ export const DashboardPage = () => {
                             value={stats.criticalStock}
                             suffix={`/ ${stats.totalProducts}`}
                             valueStyle={{ color: stats.criticalStock > 0 ? '#faad14' : '#52c41a' }}
+                            styles={{ content: { color: stats.criticalStock > 0 ? '#faad14' : '#52c41a' } }}
                             prefix={stats.criticalStock > 0 ? <WarningOutlined /> : <ShopOutlined />}
                         />
                         <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
@@ -209,31 +214,34 @@ export const DashboardPage = () => {
 
             {/* Quick Actions */}
             <Card title="Accesos Rápidos" style={{ marginTop: 16 }}>
-                <Row gutter={16}>
-                    <Col>
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} sm={8}>
                         <Button
                             type="primary"
                             size="large"
                             icon={<ShoppingCartOutlined />}
                             onClick={() => navigate('/sales/pos')}
+                            block
                         >
                             Punto de Venta
                         </Button>
                     </Col>
-                    <Col>
+                    <Col xs={24} sm={8}>
                         <Button
                             size="large"
                             icon={<PlusOutlined />}
                             onClick={() => navigate('/purchases/history')}
+                            block
                         >
                             Registrar Compra
                         </Button>
                     </Col>
-                    <Col>
+                    <Col xs={24} sm={8}>
                         <Button
                             size="large"
                             icon={<FileTextOutlined />}
                             onClick={() => navigate('/reports')}
+                            block
                         >
                             Ver Reportes
                         </Button>

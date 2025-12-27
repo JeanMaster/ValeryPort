@@ -173,7 +173,7 @@ export const AccountsPayablePage = () => {
                 </Space>
             </div>
 
-            <Card bodyStyle={{ padding: 10 }}>
+            <Card styles={{ body: { padding: 10 } }}>
                 <Tabs defaultActiveKey="1" items={items} />
             </Card>
 

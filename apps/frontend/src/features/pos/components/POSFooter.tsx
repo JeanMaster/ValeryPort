@@ -1,4 +1,4 @@
-import { Button, Typography } from 'antd';
+import { Button, Typography, Grid } from 'antd';
 import {
     ShoppingCartOutlined,
     UserOutlined,
@@ -52,43 +52,68 @@ interface POSFooterProps {
 }
 
 export const POSFooter = ({ onClientClick, onCheckoutClick }: POSFooterProps) => {
-    return (
-        <div style={{ padding: '10px 20px', background: '#e6e6e6', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            {/* Botones Alineados a la Derecha */}
-            <FunctionKey fKey="F3 Cli." label="Cliente" icon={<UserOutlined />} onClick={onClientClick} />
-            <FunctionKey fKey="F10 Caja" label="Caja" icon={<SaveOutlined />} />
-            <FunctionKey fKey="F11 Cargar" label="Cargar" icon={<ReloadOutlined />} />
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.lg;
 
-            {/* Botón Totalizar Grande */}
+    return (
+        <div style={{
+            padding: isMobile ? '5px 10px' : '10px 20px',
+            background: '#e6e6e6',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: isMobile ? 5 : 10,
+            width: '100%'
+        }}>
+            {/* Botones de Función */}
+            <div style={{ display: 'flex', gap: isMobile ? 5 : 10, flexWrap: 'wrap' }}>
+                <FunctionKey
+                    fKey="F3"
+                    label={isMobile ? "" : "Cliente"}
+                    icon={<UserOutlined />}
+                    onClick={onClientClick}
+                />
+                {!isMobile && (
+                    <>
+                        <FunctionKey fKey="F10" label="Caja" icon={<SaveOutlined />} />
+                        <FunctionKey fKey="F11" label="Cargar" icon={<ReloadOutlined />} />
+                    </>
+                )}
+            </div>
+
+            {/* Botón Totalizar - Más destacado en móvil */}
             <Button
                 type="primary"
                 style={{
-                    height: '50px',
-                    minWidth: '200px', // Ensure visibility
+                    height: isMobile ? '45px' : '50px',
+                    minWidth: isMobile ? '120px' : '200px',
+                    flex: isMobile ? 1 : 'unset',
                     display: 'flex',
                     flexDirection: 'row',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: 10,
-                    fontSize: 16
+                    gap: 8,
+                    fontSize: isMobile ? 14 : 16
                 }}
                 onClick={onCheckoutClick}
             >
-                <ShoppingCartOutlined style={{ fontSize: 24 }} />
-                <span>F9 Totalizar</span>
+                <ShoppingCartOutlined style={{ fontSize: isMobile ? 20 : 24 }} />
+                <span>{isMobile ? "Pagar" : "F9 Totalizar"}</span>
             </Button>
 
-            <FunctionKey
-                fKey="ESC"
-                label="Reset"
-                icon={<ReloadOutlined />}
-                color="#fff1f0"
-                onClick={() => {
-                    import('../../../store/posStore').then(({ usePOSStore }) => {
-                        usePOSStore.getState().resetPOS();
-                    });
-                }}
-            />
+            {!isMobile && (
+                <FunctionKey
+                    fKey="ESC"
+                    label="Reset"
+                    icon={<ReloadOutlined />}
+                    color="#fff1f0"
+                    onClick={() => {
+                        import('../../../store/posStore').then(({ usePOSStore }) => {
+                            usePOSStore.getState().resetPOS();
+                        });
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Table, Button, Card, Select, Modal, Tag } from 'antd';
+import { Table, Button, Card, Select, Modal, Tag, Grid } from 'antd';
 import { usePOSStore } from '../../../store/posStore';
 import { formatVenezuelanPrice, formatVenezuelanPriceOnly } from '../../../utils/formatters';
 import type { CartItem } from '../../../store/posStore';
@@ -12,6 +12,8 @@ import { PriceModal } from './PriceModal';
 import { DeleteOutlined, PercentageOutlined, NumberOutlined, DollarOutlined, ExclamationCircleOutlined, WarningOutlined, SyncOutlined } from '@ant-design/icons';
 
 export const POSLeftPanel = () => {
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.lg;
     const {
         cart,
         addItem,
@@ -161,7 +163,7 @@ export const POSLeftPanel = () => {
                 </div>
             )
         },
-        {
+        !isMobile ? {
             title: 'Stock',
             key: 'stock',
             width: 70,
@@ -187,7 +189,7 @@ export const POSLeftPanel = () => {
                     </div>
                 );
             }
-        },
+        } : null,
         {
             title: 'Total',
             dataIndex: 'total',
@@ -229,7 +231,7 @@ export const POSLeftPanel = () => {
                 );
             }
         }
-    ];
+    ].filter(Boolean) as any;
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -285,7 +287,7 @@ export const POSLeftPanel = () => {
                     columns={columns}
                     pagination={false}
                     size="small"
-                    scroll={{ y: 'calc(100vh - 300px)' }}
+                    scroll={{ y: isMobile ? 'calc(100vh - 430px)' : 'calc(100vh - 300px)' }}
                     rowKey={(record) => record.product.id}
                     locale={{ emptyText: 'No hay items' }}
                     rowClassName={(record) => record.product.id === selectedItemId ? 'pos-row-selected' : 'pos-row'}
@@ -296,47 +298,53 @@ export const POSLeftPanel = () => {
             </div>
 
             {/* Botones de Acción Rápida (Visual Keys) */}
-            <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 5 }}>
+            <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 5, marginTop: isMobile ? 0 : 5 }}>
                 <Button
-                    size="small"
+                    size={isMobile ? "middle" : "small"}
                     icon={<NumberOutlined />}
                     disabled={!selectedItemId}
                     onClick={() => setIsQuantityModalOpen(true)}
                 >
-                    F4 Cant.
+                    {isMobile ? "Cant." : "F4 Cant."}
                 </Button>
                 <Button
-                    size="small"
+                    size={isMobile ? "middle" : "small"}
                     icon={<DollarOutlined />}
                     disabled={!selectedItemId}
                     onClick={() => setIsPriceModalOpen(true)}
                 >
-                    F5 Precio
+                    {isMobile ? "Precio" : "F5 Precio"}
                 </Button>
                 <Button
-                    size="small"
+                    size={isMobile ? "middle" : "small"}
                     icon={<DeleteOutlined />}
                     danger
                     disabled={!selectedItemId}
-                    onClick={() => removeItem(selectedItemId!)}
+                    onClick={() => {
+                        Modal.confirm({
+                            title: '¿Eliminar item?',
+                            content: 'Se eliminará el producto del carrito',
+                            onOk: () => removeItem(selectedItemId!),
+                        });
+                    }}
                 >
-                    F6 Eliminar
+                    {isMobile ? "Borrar" : "F6 Borrar"}
                 </Button>
                 <Button
-                    size="small"
+                    size={isMobile ? "middle" : "small"}
                     icon={<PercentageOutlined />}
                     disabled={!selectedItemId}
                     onClick={() => setIsDiscountModalOpen(true)}
                 >
-                    F7 Dcto
+                    {isMobile ? "Dcto" : "F7 Dcto"}
                 </Button>
                 <Button
-                    size="small"
+                    size={isMobile ? "middle" : "small"}
                     icon={<SyncOutlined />}
                     disabled={!selectedItemId}
                     onClick={toggleSelectedItemUnit}
                 >
-                    F8 Alt
+                    {isMobile ? "Alt" : "F8 Alt"}
                 </Button>
             </div>
 

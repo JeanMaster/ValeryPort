@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Table, Button, Input, Space, message, Popconfirm, Tooltip } from 'antd';
+import { Card, Table, Button, Input, Space, message, Popconfirm, Tooltip, Grid, Row, Col, Typography } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, WhatsAppOutlined, InstagramOutlined, FacebookOutlined, TwitterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsApi } from '../../services/clientsApi';
@@ -9,6 +9,8 @@ import { ClientPurchaseHistory } from '../../components/ClientPurchaseHistory';
 import type { ColumnsType } from 'antd/es/table';
 
 export const ClientsPage = () => {
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.lg;
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -134,7 +136,8 @@ export const ClientsPage = () => {
         {
             title: 'Acciones',
             key: 'actions',
-            width: 180,
+            width: 150,
+            fixed: isMobile ? false : ('right' as const),
             render: (_, record) => (
                 <Space>
                     <ClientPurchaseHistory clientId={record.id} clientName={record.name} />
@@ -158,50 +161,59 @@ export const ClientsPage = () => {
                     </Popconfirm>
                 </Space>
             ),
-        },
+        }
     ];
 
     return (
-        <>
-            <Card
-                title="Gestión de Clientes"
-                extra={
-                    <Space>
-                        <Button
-                            icon={<ReloadOutlined />}
-                            onClick={() => queryClient.invalidateQueries({ queryKey: ['clients'] })}
-                        />
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            Nuevo Cliente
-                        </Button>
-                    </Space>
-                }
-            >
-                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <div style={{ padding: isMobile ? '8px' : '24px' }}>
+            <Card>
+                <Row justify="space-between" align="middle" gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                    <Col xs={24} md={12}>
+                        <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>👥 Gestión de Clientes</Typography.Title>
+                    </Col>
+                    <Col xs={24} md={12} style={{ textAlign: isMobile ? 'left' : 'right' }}>
+                        <Space wrap={isMobile}>
+                            <Button
+                                icon={<ReloadOutlined />}
+                                onClick={() => queryClient.invalidateQueries({ queryKey: ['clients'] })}
+                            />
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => setIsModalOpen(true)}
+                                block={isMobile}
+                            >
+                                Nuevo Cliente
+                            </Button>
+                        </Space>
+                    </Col>
+                </Row>
+
+                <div style={{ marginBottom: 16 }}>
                     <Input
                         placeholder="Buscar por nombre, ID o email"
                         prefix={<SearchOutlined />}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        style={{ maxWidth: 400 }}
+                        style={{ maxWidth: isMobile ? '100%' : 400 }}
+                        size={isMobile ? 'middle' : 'large'}
                     />
+                </div>
 
-                    <Table
-                        columns={columns}
-                        dataSource={clients}
-                        loading={isLoading}
-                        rowKey="id"
-                        pagination={{
-                            pageSize: 10,
-                            showSizeChanger: true,
-                            showTotal: (total) => `Total: ${total} clientes`,
-                        }}
-                    />
-                </Space>
+                <Table
+                    columns={columns}
+                    dataSource={clients}
+                    loading={isLoading}
+                    rowKey="id"
+                    scroll={{ x: 800 }}
+                    size={isMobile ? 'small' : 'middle'}
+                    pagination={{
+                        pageSize: 10,
+                        showSizeChanger: true,
+                        size: isMobile ? 'small' : 'default',
+                        showTotal: (total) => `Total: ${total} clientes`,
+                    }}
+                />
             </Card>
 
             <ClientFormModal
@@ -209,6 +221,6 @@ export const ClientsPage = () => {
                 client={editingClient}
                 onClose={handleModalClose}
             />
-        </>
+        </div>
     );
 };

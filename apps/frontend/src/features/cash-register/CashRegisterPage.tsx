@@ -386,6 +386,7 @@ export const CashRegisterPage = () => {
                                                 precision={2}
                                                 prefix="Bs."
                                                 valueStyle={{ color: '#722ed1' }}
+                                                styles={{ content: { color: '#722ed1' } }}
                                             />
                                         </Card>
                                     </Col>
@@ -397,6 +398,7 @@ export const CashRegisterPage = () => {
                                                 precision={2}
                                                 prefix="Bs."
                                                 valueStyle={{ color: '#52c41a' }}
+                                                styles={{ content: { color: '#52c41a' } }}
                                             />
                                         </Card>
                                     </Col>
@@ -408,6 +410,7 @@ export const CashRegisterPage = () => {
                                                 precision={2}
                                                 prefix="Bs."
                                                 valueStyle={{ color: '#ff4d4f' }}
+                                                styles={{ content: { color: '#ff4d4f' } }}
                                             />
                                         </Card>
                                     </Col>
@@ -419,6 +422,7 @@ export const CashRegisterPage = () => {
                                                 precision={2}
                                                 prefix="Bs."
                                                 valueStyle={{ color: '#1890ff', fontSize: 24 }}
+                                                styles={{ content: { color: '#1890ff', fontSize: 24 } }}
                                             />
                                         </Card>
                                     </Col>

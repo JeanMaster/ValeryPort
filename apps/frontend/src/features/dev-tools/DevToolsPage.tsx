@@ -11,6 +11,7 @@ export const DevToolsPage = () => {
 
     // Estados para restauración
     const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
+    const [isFinancialResetConfirmOpen, setIsFinancialResetConfirmOpen] = useState(false);
     const [restoreFile, setRestoreFile] = useState<File | null>(null);
     const [confirmText, setConfirmText] = useState('');
 
@@ -57,12 +58,33 @@ export const DevToolsPage = () => {
         },
     });
 
+    const financialResetMutation = useMutation({
+        mutationFn: devToolsApi.financialReset,
+        onSuccess: (data) => {
+            Modal.success({
+                title: '✅ Reinicio Financiero Completado',
+                content: data.message,
+            });
+            setIsFinancialResetConfirmOpen(false);
+        },
+        onError: (error: any) => {
+            Modal.error({
+                title: '❌ Error',
+                content: error.response?.data?.message || 'Error al realizar el reinicio financiero',
+            });
+        },
+    });
+
     const handleResetClick = () => {
         setIsConfirmModalOpen(true);
     };
 
     const handleConfirmReset = () => {
         resetMutation.mutate();
+    };
+
+    const handleConfirmFinancialReset = () => {
+        financialResetMutation.mutate();
     };
 
     const handleConfirmRestore = () => {
@@ -98,7 +120,43 @@ export const DevToolsPage = () => {
                         title={
                             <Space>
                                 <DatabaseOutlined />
-                                <span>Resetear Base de Datos</span>
+                                <span>Reinicio Financiero (Limpiar Movimientos)</span>
+                            </Space>
+                        }
+                        style={{ backgroundColor: '#f0f5ff', borderColor: '#2f54eb' }}
+                    >
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                            <Paragraph>
+                                Esta acción borrará <strong>ventas, compras, gastos, pagos y movimientos de caja</strong>.
+                                <br />
+                                <strong>NO se borrarán:</strong> Productos, Clientes, Proveedores ni el Inventario actual.
+                            </Paragraph>
+
+                            <Alert
+                                message="Uso Recomendado"
+                                description="Ideal cuando quieres empezar un nuevo período contable o limpiar datos de prueba sin perder tu catálogo de productos."
+                                type="info"
+                                showIcon
+                            />
+
+                            <Button
+                                type="primary"
+                                size="large"
+                                icon={<ReloadOutlined />}
+                                onClick={() => setIsFinancialResetConfirmOpen(true)}
+                                loading={financialResetMutation.isPending}
+                                style={{ marginTop: 16 }}
+                            >
+                                Reiniciar Datos Financieros
+                            </Button>
+                        </Space>
+                    </Card>
+
+                    <Card
+                        title={
+                            <Space>
+                                <DatabaseOutlined />
+                                <span>Resetear Base de Datos (Total)</span>
                             </Space>
                         }
                         style={{ backgroundColor: '#fff7e6', borderColor: '#ffa940' }}
@@ -111,13 +169,12 @@ export const DevToolsPage = () => {
                             <div style={{ backgroundColor: '#fff', padding: 16, borderRadius: 4, border: '1px solid #d9d9d9' }}>
                                 <strong>Se eliminarán:</strong>
                                 <ul style={{ marginTop: 8, marginBottom: 0 }}>
-                                    <li>Todos los clientes</li>
-                                    <li>Todos los productos</li>
-                                    <li>Todos los proveedores</li>
-                                    <li>Todas las monedas</li>
-                                    <li>Todos los departamentos</li>
-                                    <li>Todas las unidades</li>
+                                    <li>Todos los clientes y proveedores</li>
+                                    <li>Todos los productos y departamentos</li>
+                                    <li>Historial de ventas y compras</li>
+                                    <li>Movimientos de caja y bancos</li>
                                     <li>Configuración de empresa</li>
+                                    <li><strong>Nota:</strong> El usuario <code>admin</code> será recreado automáticamente.</li>
                                 </ul>
                             </div>
 
@@ -295,6 +352,32 @@ export const DevToolsPage = () => {
 
                     <Paragraph>
                         ¿Estás seguro de que deseas resetear la base de datos?
+                    </Paragraph>
+                </Space>
+            </Modal>
+            <Modal
+                title={
+                    <Space>
+                        <WarningOutlined style={{ color: '#ff4d4f' }} />
+                        <span>⚠️ Confirmación de Reinicio Financiero</span>
+                    </Space>
+                }
+                open={isFinancialResetConfirmOpen}
+                onOk={handleConfirmFinancialReset}
+                onCancel={() => setIsFinancialResetConfirmOpen(false)}
+                okText="Sí, Limpiar Finanzas"
+                cancelText="Cancelar"
+                okButtonProps={{ danger: true, loading: financialResetMutation.isPending }}
+            >
+                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                    <Alert
+                        message="Atención"
+                        description="Se eliminarán permanentemente todas las transacciones históricas. Los productos y clientes permanecerán intactos."
+                        type="warning"
+                        showIcon
+                    />
+                    <Paragraph>
+                        ¿Estás seguro de que deseas limpiar todo el historial financiero?
                     </Paragraph>
                 </Space>
             </Modal>

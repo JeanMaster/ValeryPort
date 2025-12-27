@@ -57,6 +57,10 @@ export class UsersService {
   }
 
   async remove(id: string) {
+    const user = await this.findOne(id);
+    if (user.username === 'admin') {
+      throw new Error('No se puede eliminar el usuario administrador principal');
+    }
     return (this.prisma as any).user.delete({ where: { id } });
   }
 }

@@ -8,6 +8,11 @@ export const devToolsApi = {
         return data;
     },
 
+    financialReset: async (): Promise<{ success: boolean; message: string }> => {
+        const { data } = await axios.post(`${API_URL}/dev-tools/financial-reset`);
+        return data;
+    },
+
     downloadBackup: () => {
         // Trigger browser download by opening the URL
         window.open(`${API_URL}/dev-tools/backup`, '_blank');

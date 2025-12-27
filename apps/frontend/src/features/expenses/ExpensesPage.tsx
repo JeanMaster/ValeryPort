@@ -156,6 +156,7 @@ export const ExpensesPage = () => {
                                 value={totalTodayUSD}
                                 precision={2}
                                 valueStyle={{ color: '#cf1322' }}
+                                styles={{ content: { color: '#cf1322' } }}
                                 prefix={<DollarOutlined />}
                                 suffix="$"
                             />
@@ -168,6 +169,7 @@ export const ExpensesPage = () => {
                                 value={totalMonthUSD}
                                 precision={2}
                                 valueStyle={{ color: '#cf1322' }}
+                                styles={{ content: { color: '#cf1322' } }}
                                 prefix={<DollarOutlined />}
                                 suffix="$"
                             />

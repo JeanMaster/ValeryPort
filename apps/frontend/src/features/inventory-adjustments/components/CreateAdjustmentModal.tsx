@@ -144,6 +144,7 @@ export const CreateAdjustmentModal = ({ open, onCancel, onSuccess }: CreateAdjus
                                 value={selectedProduct.stock}
                                 suffix="unidades"
                                 valueStyle={{ fontSize: 20 }}
+                                styles={{ content: { fontSize: 20 } }}
                             />
                         }
                         type="info"

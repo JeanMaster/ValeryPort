@@ -107,6 +107,7 @@ export const FinancialReports = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#52c41a' }}
+                            styles={{ content: { color: '#52c41a' } }}
                             suffix={<DollarOutlined />}
                         />
                     </Card>
@@ -119,6 +120,7 @@ export const FinancialReports = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#ff4d4f' }}
+                            styles={{ content: { color: '#ff4d4f' } }}
                             suffix={<ShoppingOutlined />}
                         />
                     </Card>
@@ -131,6 +133,7 @@ export const FinancialReports = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: cashFlow >= 0 ? '#52c41a' : '#ff4d4f' }}
+                            styles={{ content: { color: cashFlow >= 0 ? '#52c41a' : '#ff4d4f' } }}
                             suffix={<RiseOutlined />}
                         />
                         <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
@@ -144,6 +147,7 @@ export const FinancialReports = () => {
                             title="Métodos de Pago"
                             value={report.paymentMethodsBreakdown.length}
                             valueStyle={{ color: '#1890ff' }}
+                            styles={{ content: { color: '#1890ff' } }}
                             suffix={<CreditCardOutlined />}
                         />
                     </Card>
@@ -212,7 +216,7 @@ export const FinancialReports = () => {
                                         transition: 'all 0.3s ease',
                                     }}
                                     hoverable
-                                    bodyStyle={{ padding: 16 }}
+                                    styles={{ body: { padding: 16 } }}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <div style={{ flex: 1 }}>

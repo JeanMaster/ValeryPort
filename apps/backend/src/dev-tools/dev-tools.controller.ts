@@ -18,6 +18,14 @@ export class DevToolsController {
         return this.devToolsService.resetDatabase();
     }
 
+    @Post('financial-reset')
+    @HttpCode(200)
+    @ApiOperation({ summary: 'Reinicio financiero (Borrar transacciones pero mantener maestros)' })
+    @ApiResponse({ status: 200, description: 'Datos financieros borrados' })
+    async financialReset() {
+        return this.devToolsService.financialReset();
+    }
+
     @Get('backup')
     @ApiOperation({ summary: 'Descargar respaldo de base de datos' })
     @ApiResponse({ status: 200, description: 'Archivo SQL de respaldo' })

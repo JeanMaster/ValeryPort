@@ -122,6 +122,7 @@ export const InventoryReports = () => {
                                     precision={2}
                                     prefix="Bs."
                                     valueStyle={{ color: '#1890ff' }}
+                                    styles={{ content: { color: '#1890ff' } }}
                                     suffix={<DollarOutlined />}
                                 />
                             </div>
@@ -134,6 +135,7 @@ export const InventoryReports = () => {
                             title="Departamentos"
                             value={report.stockByDepartment.length}
                             valueStyle={{ color: '#52c41a' }}
+                            styles={{ content: { color: '#52c41a' } }}
                             suffix={<ShopOutlined />}
                         />
                     </Card>
@@ -144,6 +146,7 @@ export const InventoryReports = () => {
                             title="Productos con Stock Bajo"
                             value={report.lowStockProducts.length}
                             valueStyle={{ color: '#faad14' }}
+                            styles={{ content: { color: '#faad14' } }}
                             suffix={<WarningOutlined />}
                         />
                     </Card>

@@ -130,7 +130,7 @@ export const ServicesPage = () => {
                 </Space>
             </div>
 
-            <Card bodyStyle={{ padding: 0 }}>
+            <Card styles={{ body: { padding: 0 } }}>
                 <Table
                     columns={columns}
                     dataSource={filteredServices}

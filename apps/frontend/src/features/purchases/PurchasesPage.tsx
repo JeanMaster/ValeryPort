@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Tag, Row, Col, Card, App } from 'antd';
+import { Table, Button, Tag, Row, Col, Card, App, Grid, Typography, Space } from 'antd';
 import { PlusOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { purchasesApi } from '../../services/purchasesApi';
@@ -13,6 +13,8 @@ import { PurchaseDetailsModal } from './components/PurchaseDetailsModal';
 // Confirmed.
 
 export const PurchasesPage: React.FC = () => {
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.lg;
     const { message } = App.useApp();
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     const [loading, setLoading] = useState(true);
@@ -87,6 +89,8 @@ export const PurchasesPage: React.FC = () => {
         {
             title: 'Acciones',
             key: 'actions',
+            width: 80,
+            fixed: isMobile ? false : ('right' as const),
             render: (_: any, record: Purchase) => (
                 <Button
                     icon={<EyeOutlined />}
@@ -98,21 +102,24 @@ export const PurchasesPage: React.FC = () => {
     ];
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: isMobile ? '8px' : '24px' }}>
             <Card>
-                <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-                    <Col>
-                        <h1 style={{ margin: 0, fontSize: '24px' }}>Recepción de Compras</h1>
+                <Row justify="space-between" align="middle" gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                    <Col xs={24} md={12}>
+                        <Typography.Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>📦 Recepción de Compras</Typography.Title>
                     </Col>
-                    <Col>
-                        <Button icon={<ReloadOutlined />} onClick={fetchPurchases} style={{ marginRight: 8 }} />
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => setModalVisible(true)}
-                        >
-                            Registrar Compra
-                        </Button>
+                    <Col xs={24} md={12} style={{ textAlign: isMobile ? 'left' : 'right' }}>
+                        <Space wrap={isMobile}>
+                            <Button icon={<ReloadOutlined />} onClick={fetchPurchases} />
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => setModalVisible(true)}
+                                block={isMobile}
+                            >
+                                Registrar Compra
+                            </Button>
+                        </Space>
                     </Col>
                 </Row>
 
@@ -121,7 +128,13 @@ export const PurchasesPage: React.FC = () => {
                     dataSource={purchases}
                     rowKey="id"
                     loading={loading}
-                    pagination={{ pageSize: 10 }}
+                    scroll={{ x: 800 }}
+                    size={isMobile ? 'small' : 'middle'}
+                    pagination={{
+                        pageSize: 10,
+                        size: isMobile ? 'small' : 'default',
+                        responsive: true
+                    }}
                 />
             </Card>
 

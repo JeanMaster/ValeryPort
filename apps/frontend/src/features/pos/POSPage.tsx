@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Layout, message } from 'antd';
+import { Layout, message, Tabs, Grid } from 'antd';
+import { ShoppingCartOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { POSHeader } from './components/POSHeader';
 import { POSLeftPanel } from './components/POSLeftPanel';
 import { POSRightPanel } from './components/POSRightPanel';
@@ -11,8 +12,12 @@ import { usePOSStore } from '../../store/posStore';
 import type { Sale } from '../../services/salesApi';
 
 const { Content, Sider, Footer } = Layout;
+const { useBreakpoint } = Grid;
 
 export const POSPage = () => {
+    const screens = useBreakpoint();
+    const isMobile = !screens.lg;
+    const [activeTab, setActiveTab] = useState('catalog');
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -24,10 +29,8 @@ export const POSPage = () => {
             const sale = await processSale(paymentData);
             message.success(`Venta procesada exitosamente. Factura: ${sale.invoiceNumber}`);
             setIsCheckoutOpen(false);
-            // Open invoice modal with sale data
             setCompletedSale(sale);
             setIsInvoiceModalOpen(true);
-            // Refresh the next invoice number for the next sale
             await refreshInvoiceNumber();
         } catch (error) {
             message.error('Error al procesar la venta');
@@ -51,50 +54,93 @@ export const POSPage = () => {
     }, []);
 
     return (
-        <Layout style={{ height: '100vh', overflow: 'hidden' }}>
-            {/* Header Superior (Datos Empresa y Totales) */}
+        <Layout style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <POSHeader />
 
-            <Layout style={{ height: 'calc(100vh - 80px)' }}> {/* Resto de la altura menos header aprox */}
-                {/* Panel Izquierdo (Carrito y Buscador) - Altura completa */}
-                <Sider
-                    width="40%"
-                    style={{
-                        background: '#f0f2f5',
-                        padding: '10px 10px 10px 20px',
-                        borderRight: '1px solid #d9d9d9',
-                        height: '100%',
-                        overflow: 'hidden'
-                    }}
-                >
-                    <POSLeftPanel />
-                </Sider>
-
-                {/* Columna Derecha (Grid + Footer) */}
-                <Layout style={{ height: '100%' }}>
-                    {/* Grid de Productos */}
-                    <Content style={{ background: '#f0f2f5', padding: '10px 20px 10px 10px', flex: 1, overflow: 'hidden' }}>
-                        <div style={{
-                            background: '#e6e6e6',
+            {!isMobile ? (
+                <Layout style={{ flex: 1, overflow: 'hidden' }}>
+                    <Sider
+                        width="35%"
+                        style={{
+                            background: '#f0f2f5',
+                            padding: '10px 0 10px 10px',
+                            borderRight: '1px solid #d9d9d9',
                             height: '100%',
-                            borderRadius: 8,
-                            padding: 10,
-                            border: '1px solid #d9d9d9',
                             overflow: 'hidden'
-                        }}>
-                            <POSRightPanel />
-                        </div>
-                    </Content>
+                        }}
+                    >
+                        <POSLeftPanel />
+                    </Sider>
 
-                    {/* Footer (Solo columna derecha) */}
-                    <Footer style={{ padding: 0, background: 'transparent' }}>
+                    <Layout style={{ height: '100%' }}>
+                        <Content style={{ background: '#f0f2f5', padding: '10px 10px 10px 10px', flex: 1, overflow: 'hidden' }}>
+                            <div style={{
+                                background: '#e6e6e6',
+                                height: '100%',
+                                borderRadius: 8,
+                                padding: 10,
+                                border: '1px solid #d9d9d9',
+                                overflow: 'hidden'
+                            }}>
+                                <POSRightPanel />
+                            </div>
+                        </Content>
+
+                        <Footer style={{ padding: 0, background: 'transparent' }}>
+                            <POSFooter
+                                onClientClick={() => setIsClientModalOpen(true)}
+                                onCheckoutClick={() => setIsCheckoutOpen(true)}
+                            />
+                        </Footer>
+                    </Layout>
+                </Layout>
+            ) : (
+                <Content style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <Tabs
+                        activeKey={activeTab}
+                        onChange={setActiveTab}
+                        centered
+                        style={{ background: '#fff' }}
+                        tabBarStyle={{ marginBottom: 0 }}
+                        items={[
+                            {
+                                key: 'catalog',
+                                label: (
+                                    <span>
+                                        <AppstoreOutlined />
+                                        Catálogo
+                                    </span>
+                                ),
+                                children: (
+                                    <div style={{ padding: 8, height: 'calc(100vh - 180px)', overflow: 'hidden' }}>
+                                        <POSRightPanel />
+                                    </div>
+                                )
+                            },
+                            {
+                                key: 'cart',
+                                label: (
+                                    <span>
+                                        <ShoppingCartOutlined />
+                                        Carrito
+                                    </span>
+                                ),
+                                children: (
+                                    <div style={{ padding: 8, height: 'calc(100vh - 180px)', overflow: 'hidden' }}>
+                                        <POSLeftPanel />
+                                    </div>
+                                )
+                            }
+                        ]}
+                    />
+                    <Footer style={{ padding: 0, marginTop: 'auto' }}>
                         <POSFooter
                             onClientClick={() => setIsClientModalOpen(true)}
                             onCheckoutClick={() => setIsCheckoutOpen(true)}
                         />
                     </Footer>
-                </Layout>
-            </Layout>
+                </Content>
+            )}
 
             <CheckoutModal
                 open={isCheckoutOpen}

@@ -65,6 +65,7 @@ export const BalanceReports = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#52c41a' }}
+                            styles={{ content: { color: '#52c41a' } }}
                         />
                     </Card>
                 </Col>
@@ -76,6 +77,7 @@ export const BalanceReports = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: '#ff4d4f' }}
+                            styles={{ content: { color: '#ff4d4f' } }}
                         />
                     </Card>
                 </Col>
@@ -87,6 +89,7 @@ export const BalanceReports = () => {
                             precision={2}
                             prefix="Bs."
                             valueStyle={{ color: netBalance >= 0 ? '#1890ff' : '#cf1322' }}
+                            styles={{ content: { color: netBalance >= 0 ? '#1890ff' : '#cf1322' } }}
                             suffix={netBalance >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
                         />
                     </Card>

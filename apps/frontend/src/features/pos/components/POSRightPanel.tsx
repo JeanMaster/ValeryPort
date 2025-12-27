@@ -93,7 +93,7 @@ export const POSRightPanel = () => {
     };
 
     const renderProductCard = (prod: Product) => (
-        <Col span={6} key={prod.id}>
+        <Col xs={12} sm={8} lg={6} key={prod.id}>
             <Card
                 hoverable
                 onClick={() => handleProductClick(prod)}
@@ -148,7 +148,7 @@ export const POSRightPanel = () => {
         // VIEW: ROOT (Departments)
         if (viewMode === 'ROOT') {
             return departments.map(dept => (
-                <Col span={6} key={dept.id}>
+                <Col xs={12} sm={8} lg={6} key={dept.id}>
                     <Card
                         hoverable
                         onClick={() => handleDeptClick(dept)}
@@ -167,7 +167,7 @@ export const POSRightPanel = () => {
             const subDepts = currentDept.children || [];
 
             const subDeptNodes = subDepts.map(sub => (
-                <Col span={6} key={sub.id}>
+                <Col xs={12} sm={8} lg={6} key={sub.id}>
                     <Card
                         hoverable
                         onClick={() => handleSubDeptClick(sub)}

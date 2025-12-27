@@ -25,10 +25,45 @@ body {
 }
 
 .pos-row-selected {
-    background-color: #e6f7ff !important; /* Ant Design Info Blue Light */
+    background-color: #e6f7ff !important;
     cursor: pointer;
 }
 
 .pos-row-selected > td {
     background-color: #e6f7ff !important;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+    
+    .show-mobile {
+        display: block !important;
+    }
+    
+    .mobile-padding-sm {
+        padding: 8px !important;
+    }
+
+    .responsive-title {
+        font-size: 20px !important;
+    }
+
+    /* Forzar tablas con scroll horizontal en móvil */
+    .ant-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+}
+
+@media (min-width: 769px) {
+    .show-mobile {
+        display: none !important;
+    }
+}
+
+.full-width-mobile {
+    width: 100% !important;
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Avatar, Space, Button, Dropdown } from 'antd';
+import { Layout, Menu, Typography, Avatar, Space, Button, Dropdown, Drawer, Grid } from 'antd';
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -16,23 +16,18 @@ import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
-/**
- * MainLayout - Layout principal de la aplicación
- * 
- * Características:
- * - Sidebar colapsable con menú de navegación
- * - Header con logo, notificaciones y perfil de usuario
- * - Área de contenido que renderiza las rutas hijas
- */
 export const MainLayout = () => {
+    const screens = useBreakpoint();
+    const isMobile = !screens.lg;
     const [collapsed, setCollapsed] = useState(false);
+    const [drawerVisible, setDrawerVisible] = useState(false);
     const [companyName, setCompanyName] = useState('Zenith');
     const [companyLogo, setCompanyLogo] = useState<string | null>(null);
     const [isDarkMode, setIsDarkMode] = useState(() => {
-        // Cargar preferencia del usuario desde localStorage
         const saved = localStorage.getItem('theme');
-        return saved === 'light' ? false : true; // default dark
+        return saved === 'light' ? false : true;
     });
     const navigate = useNavigate();
     const location = useLocation();
@@ -42,27 +37,19 @@ export const MainLayout = () => {
     useEffect(() => {
         const filterItems = (items: AppMenuItem[]): any[] => {
             return items.reduce((acc: any[], item) => {
-                // Verificar roles
                 if (item.roles && item.roles.length > 0) {
                     const hasAllowedRole = item.roles.some(role => hasRole(role));
                     if (!hasAllowedRole) return acc;
                 }
-
-                // Verificar permisos
                 if (item.permissions && item.permissions.length > 0) {
                     const hasAllowedPermission = item.permissions.some(permission => hasPermission(permission));
                     if (!hasAllowedPermission) return acc;
                 }
-
-                // Si tiene hijos, filtrarlos recursivamente
                 if (item.children) {
                     const filteredChildren = filterItems(item.children);
-                    // Si después de filtrar no quedan hijos y no es un link directo, quizás ocultarlo?
-                    // Por ahora mantendremos el padre si pasa sus propios checks
                     if (filteredChildren.length > 0 || (item.key && !item.children.length)) {
                         acc.push({ ...item, children: filteredChildren.length > 0 ? filteredChildren : undefined });
                     } else if (item.children.length > 0 && filteredChildren.length === 0) {
-                        // Si tenía hijos y todos fueron filtrados, no mostrar el padre (ej. submenu Configuración vacío)
                         return acc;
                     } else {
                         acc.push({ ...item, children: undefined });
@@ -70,18 +57,13 @@ export const MainLayout = () => {
                 } else {
                     acc.push(item);
                 }
-
                 return acc;
             }, []);
         };
-
         const visibleItems = filterItems(menuItems);
-        // Cast to any to avoid strict MenuProps mismatch with custom AppMenuItem props
         setFilteredMenuItems(visibleItems as MenuProps['items']);
-
     }, [user, hasRole, hasPermission]);
 
-    // Cargar configuración de empresa
     useEffect(() => {
         companySettingsApi.getSettings().then(settings => {
             setCompanyName(settings.name);
@@ -93,110 +75,130 @@ export const MainLayout = () => {
         });
     }, []);
 
-    // Guardar preferencia de tema
     useEffect(() => {
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     }, [isDarkMode]);
 
     const handleMenuClick = ({ key }: { key: string }) => {
         navigate(key);
+        if (isMobile) {
+            setDrawerVisible(false);
+        }
     };
 
     const toggleTheme = () => {
         setIsDarkMode(!isDarkMode);
     };
 
+    const renderLogo = (isCollapsed: boolean) => (
+        <div style={{
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isCollapsed ? 'center' : 'flex-start',
+            paddingLeft: isCollapsed ? 0 : 16,
+            paddingRight: isCollapsed ? 0 : 16,
+            color: isDarkMode ? '#fff' : '#000',
+            background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+            gap: 12,
+        }}>
+            {companyLogo && (
+                <img
+                    src={companyLogo}
+                    alt="Logo"
+                    style={{
+                        height: isCollapsed ? 40 : 48,
+                        width: 'auto',
+                        aspectRatio: '1',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        border: `2px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
+                    }}
+                />
+            )}
+            {!isCollapsed && (
+                <span style={{
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                }}>
+                    {companyName}
+                </span>
+            )}
+        </div>
+    );
+
+    const sidebarMenu = (
+        <>
+            {renderLogo(isMobile ? false : collapsed)}
+            <Menu
+                theme={isDarkMode ? 'dark' : 'light'}
+                mode="inline"
+                selectedKeys={[location.pathname]}
+                items={filteredMenuItems}
+                onClick={handleMenuClick}
+            />
+        </>
+    );
+
     return (
         <Layout style={{ minHeight: '100vh' }}>
-            <Sider
-                trigger={null}
-                collapsible
-                collapsed={collapsed}
-                theme={isDarkMode ? 'dark' : 'light'}
-                style={{
-                    overflow: 'auto',
-                    height: '100vh',
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                }}
-            >
-                <div style={{
-                    height: 64,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    paddingLeft: collapsed ? 0 : 16,
-                    paddingRight: collapsed ? 0 : 16,
-                    color: isDarkMode ? '#fff' : '#000',
-                    background: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                    gap: 12,
-                }}>
-                    {companyLogo && !collapsed && (
-                        <img
-                            src={companyLogo}
-                            alt="Logo"
-                            style={{
-                                height: '100%',
-                                width: 'auto',
-                                maxHeight: 48,
-                                aspectRatio: '1',
-                                objectFit: 'cover',
-                                borderRadius: '50%',
-                                border: `2px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
-                            }}
-                        />
-                    )}
-                    {companyLogo && collapsed && (
-                        <img
-                            src={companyLogo}
-                            alt="Logo"
-                            style={{
-                                height: '100%',
-                                width: 'auto',
-                                maxHeight: 40,
-                                aspectRatio: '1',
-                                objectFit: 'cover',
-                                borderRadius: '50%',
-                                border: `2px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
-                            }}
-                        />
-                    )}
-                    {!collapsed && (
-                        <span style={{
-                            fontSize: collapsed ? 18 : 18,
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                        }}>
-                            {collapsed ? companyName.charAt(0) : companyName}
-                        </span>
-                    )}
-                </div>
-                <Menu
+            {!isMobile ? (
+                <Sider
+                    trigger={null}
+                    collapsible
+                    collapsed={collapsed}
                     theme={isDarkMode ? 'dark' : 'light'}
-                    mode="inline"
-                    selectedKeys={[location.pathname]}
-                    items={filteredMenuItems}
-                    onClick={handleMenuClick}
-                />
-            </Sider>
+                    style={{
+                        overflow: 'auto',
+                        height: '100vh',
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        zIndex: 100,
+                    }}
+                >
+                    {sidebarMenu}
+                </Sider>
+            ) : (
+                <Drawer
+                    placement="left"
+                    onClose={() => setDrawerVisible(false)}
+                    open={drawerVisible}
+                    styles={{ body: { padding: 0 } }}
+                    width={250}
+                    closable={false}
+                >
+                    <div style={{ height: '100%', background: isDarkMode ? '#001529' : '#fff' }}>
+                        {sidebarMenu}
+                    </div>
+                </Drawer>
+            )}
 
-            <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
+            <Layout style={{
+                marginLeft: isMobile ? 0 : (collapsed ? 80 : 200),
+                transition: 'margin-left 0.2s',
+                minWidth: 0
+            }}>
                 <Header style={{
-                    padding: '0 24px',
+                    padding: isMobile ? '0 12px' : '0 24px',
                     background: isDarkMode ? '#001529' : '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 99,
+                    width: '100%',
                 }}>
                     <Button
                         type="text"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed(!collapsed)}
+                        icon={isMobile ? <MenuUnfoldOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
+                        onClick={() => isMobile ? setDrawerVisible(true) : setCollapsed(!collapsed)}
                         style={{ fontSize: '16px', width: 64, height: 64, color: isDarkMode ? '#fff' : '#000' }}
                     />
 
@@ -232,10 +234,11 @@ export const MainLayout = () => {
                 </Header>
 
                 <Content style={{
-                    margin: location.pathname.includes('/pos') ? '0' : '24px 16px',
-                    padding: location.pathname.includes('/pos') ? 0 : 24,
+                    margin: location.pathname.includes('/pos') ? '0' : (isMobile ? '8px' : '24px 16px'),
+                    padding: location.pathname.includes('/pos') ? 0 : (isMobile ? 12 : 24),
                     background: '#fff',
                     minHeight: 280,
+                    borderRadius: isMobile ? 8 : 0,
                 }}>
                     <Outlet />
                 </Content>

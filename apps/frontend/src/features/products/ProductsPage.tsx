@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { formatVenezuelanPrice } from '../../utils/formatters';
-import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Tooltip, Popover, Image } from 'antd';
+import { Card, Table, Button, Space, Input, message, Popconfirm, Tag, Tooltip, Popover, Image, Grid } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, PictureOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '../../services/productsApi';
@@ -8,6 +8,8 @@ import type { Product } from '../../services/productsApi';
 import { ProductFormModal } from './ProductFormModal';
 
 export const ProductsPage = () => {
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.lg;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -227,8 +229,8 @@ export const ProductsPage = () => {
 
     return (
         <Card
-            title="Productos Terminados"
-            extra={
+            title={!isMobile ? "Productos Terminados" : undefined}
+            extra={!isMobile ? (
                 <Space>
                     <Input
                         placeholder="Buscar producto..."
@@ -236,20 +238,59 @@ export const ProductsPage = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: 250 }}
+                        allowClear
                     />
                     <Button icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries({ queryKey: ['products'] })} />
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                         Nuevo Producto
                     </Button>
                 </Space>
-            }
+            ) : null}
         >
+            {isMobile && (
+                <div style={{ marginBottom: 16 }}>
+                    <h2 style={{ fontSize: 20, marginBottom: 16 }}>📦 Productos Terminados</h2>
+                    <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                        <Input
+                            placeholder="Buscar producto..."
+                            prefix={<SearchOutlined />}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ width: '100%' }}
+                            size="large"
+                            allowClear
+                        />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={handleAdd}
+                                style={{ flex: 1 }}
+                                size="large"
+                            >
+                                Nuevo
+                            </Button>
+                            <Button
+                                icon={<ReloadOutlined />}
+                                onClick={() => queryClient.invalidateQueries({ queryKey: ['products'] })}
+                                size="large"
+                            />
+                        </div>
+                    </Space>
+                </div>
+            )}
+
             <Table
                 columns={columns}
                 dataSource={filteredData}
                 rowKey="id"
                 loading={isLoading}
-                pagination={{ pageSize: 15 }}
+                scroll={{ x: 800 }}
+                pagination={{
+                    pageSize: 15,
+                    size: isMobile ? 'small' : 'default',
+                    responsive: true
+                }}
             />
 
             <ProductFormModal
